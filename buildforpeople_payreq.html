@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(주)사람사는집 | 현장 결제 및 지출 요청서</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ed;
+    --surface: #ffffff;
+    --border: #d4cfc7;
+    --border-strong: #2c2c2c;
+    --accent: #c8521a;
+    --accent-light: #f0e8e0;
+    --text: #1a1a1a;
+    --text-muted: #7a746c;
+    --label: #3d3730;
+    --input-bg: #faf9f7;
+    --success: #2d6a4f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--text);
+    color: white;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-header .brand {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #aaa;
+    text-transform: uppercase;
+  }
+  .site-header .brand strong { color: white; }
+  .site-header .doc-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #666;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: var(--accent);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '입금요청';
+    position: absolute;
+    right: -10px;
+    top: -20px;
+    font-size: 140px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.06);
+    letter-spacing: -6px;
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .hero-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .hero p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  /* ── Main layout ── */
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    position: sticky;
+    top: 56px;
+    z-index: 90;
+  }
+  .progress-steps {
+    display: flex;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .progress-steps .step {
+    flex: 1;
+    padding: 14px 0 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    text-align: center;
+    cursor: default;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .progress-steps .step.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+  .progress-steps .step.done {
+    color: var(--success);
+    border-bottom-color: var(--success);
+  }
+
+  /* ── Form sections ── */
+  .form-section {
+    margin-top: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--label);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-header .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: rgba(255,255,255,0.15);
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  .section-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .field-group { padding: 0; }
+
+  .field {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 16px;
+    align-items: start;
+    transition: background 0.15s;
+  }
+  .field:last-child { border-bottom: none; }
+  .field:focus-within { background: var(--accent-light); }
+
+  .field-label {
+    padding-top: 10px;
+  }
+  .field-label .q-num {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .field-label label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--label);
+    display: block;
+    line-height: 1.4;
+  }
+  .field-label .required {
+    color: var(--accent);
+    font-size: 14px;
+    margin-left: 2px;
+  }
+  .field-label .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ── Inputs ── */
+  select, input[type="text"], input[type="number"], input[type="date"], textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select:focus, input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200, 82, 26, 0.1);
+    background: white;
+  }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  /* Amount field */
+  .amount-wrap {
+    position: relative;
+  }
+  .amount-wrap input {
+    padding-right: 50px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .amount-wrap .unit {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    pointer-events: none;
+  }
+  .amount-preview {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 18px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Radio group */
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+  }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+    font-size: 13px;
+    background: var(--input-bg);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .radio-group label:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .radio-group input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .radio-group input[type="radio"]:checked + span {
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .radio-group label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  /* ── Submit section ── */
+  .submit-section {
+    margin-top: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  .submit-section p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .submit-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 16px 56px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+  }
+  .submit-btn:hover::before { background: rgba(255,255,255,0.1); }
+  .submit-btn:active { transform: scale(0.98); }
+
+  /* ── Success overlay ── */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,26,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .success-overlay.show { display: flex; }
+  .success-card {
+    background: white;
+    border-radius: 4px;
+    padding: 48px 40px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    border-top: 4px solid var(--success);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .success-card .check {
+    width: 56px;
+    height: 56px;
+    background: #e8f5ee;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 24px;
+  }
+  .success-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--label);
+  }
+  .success-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .success-card .site-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 2px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .success-card button {
+    background: var(--label);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 2px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── Vendor status ── */
+  .vendor-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .vendor-tag.known {
+    background: #e8f5ee;
+    color: var(--success);
+    border: 1px solid #b7dfc8;
+  }
+  .vendor-tag.new-vendor {
+    background: #fff3ec;
+    color: var(--accent);
+    border: 1px solid #f5c4a8;
+  }
+  .vendor-tag .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .account-saved {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #e8f5ee;
+    border: 1px solid #b7dfc8;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--success);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+  }
+  #accountField.highlight-required {
+    background: #fff8f5;
+  }
+  #accountField.highlight-required input {
+    border-color: var(--accent);
+  }
+
+  /* ── DB 관리 버튼 ── */
+  .db-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--label);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 2px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: transform 0.15s;
+  }
+  .db-btn:hover { transform: translateY(-1px); }
+
+  /* ── DB 모달 ── */
+  .db-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,26,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .db-overlay.show { display: flex; }
+  .db-modal {
+    background: white;
+    border-radius: 4px;
+    width: 90%;
+    max-width: 520px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+  }
+  .db-modal-header {
+    background: var(--label);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .db-modal-header h3 { font-size: 14px; font-weight: 700; }
+  .db-modal-header .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #aaa;
+  }
+  .db-modal-body { overflow-y: auto; padding: 16px; }
+  .db-empty {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .db-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .db-item-info { flex: 1; min-width: 0; }
+  .db-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--label);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .db-item-account {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .db-item-del {
+    background: none;
+    border: 1px solid #ddd;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .db-item-del:hover { border-color: #e55; color: #e55; }
+  .db-modal-footer {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .db-modal-footer button {
+    background: var(--label);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 2px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── 거래처 자동완성 드롭다운 ── */
+  .vendor-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0; right: 0;
+    background: white;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 50;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+  }
+  .vendor-dropdown.open { display: block; }
+  .vendor-dropdown-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vendor-dropdown-item:last-child { border-bottom: none; }
+  .vendor-dropdown-item:hover,
+  .vendor-dropdown-item.active { background: var(--accent-light); }
+  .vendor-dropdown-item .match { font-weight: 700; color: var(--accent); }
+  .vendor-dropdown-item .sub { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+  /* ── 유효성 에러 */
+  .input-error {
+    border-color: #e55 !important;
+    box-shadow: 0 0 0 3px rgba(220, 80, 80, 0.12) !important;
+  }
+  .field-error {
+    color: #c0392b;
+    font-size: 11px;
+    margin-top: 5px;
+    font-weight: 600;
+  }
+
+  /* ── 파일 첨부 ── */
+  .upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 2px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--input-bg);
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+  .upload-box:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .upload-box.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    transform: scale(1.01);
+  }
+  .upload-icon { font-size: 24px; margin-bottom: 6px; }
+  .upload-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .upload-text span { font-size: 11px; }
+
+  .file-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 12px;
+  }
+  .file-item .file-icon { font-size: 16px; flex-shrink: 0; }
+  .file-item .file-name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    color: var(--label);
+  }
+  .file-item .file-size { color: var(--text-muted); flex-shrink: 0; }
+  .file-item .file-del {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 2px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .file-item .file-del:hover { color: #e55; }
+
+  #taxField {
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 36px 20px 32px; }
+    .hero h1 { font-size: 20px; }
+    .container { padding: 0 16px; }
+    .field { grid-template-columns: 1fr; gap: 8px; }
+    .field-label { padding-top: 0; }
+    .progress-wrap { padding: 0 16px; }
+    .site-header { padding: 0 16px; }
+    .hero::before { font-size: 80px; }
+    .submit-btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="brand"><strong>(주)사람사는집</strong> · 현장관리시스템</div>
+  <div class="doc-id" id="docId">DOC-——</div>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-label">PAYMENT REQUEST FORM</div>
+    <h1>현장 결제 및 지출 요청서</h1>
+    <p>각 현장 소장님들은 지출 내역을 정확히 입력하고<br>증빙 자료를 첨부해 주세요. 회계팀이 확인 후 처리합니다.</p>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="container">
+    <div class="progress-steps">
+      <div class="step active" id="step1">현장 기본</div>
+      <div class="step" id="step2">지출 내역</div>
+      <div class="step" id="step3">증빙·계좌</div>
+    </div>
+  </div>
+</div>
+
+<!-- Form -->
+<div class="container">
+<form id="mainForm" novalidate>
+
+  <!-- Section 1 -->
+  <div class="form-section">
+    <div class="section-header">
+      <span class="num">SECTION 01</span>
+      <h2>현장 기본 정보</h2>
+    </div>
+    <div class="field-group">
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">1.</span>
+          <label>현장명 <span class="required">*</span></label>
+        </div>
+        <div class="select-wrap">
+          <select name="site" id="siteSelect" required>
+            <option value="">현장을 선택하세요</option>
+            <option>원주 반곡동</option>
+            <option>용인 양지 푸르메마을</option>
+            <option>아산 유곡리5</option>
+            <option>가평 묵안리</option>
+            <option>용인 수지동천(경계없는)</option>
+            <option>양주 덕정(JL)</option>
+            <option>아산 동정리</option>
+            <option>충주 야동리</option>
+            <option>평창 유포리</option>
+            <option>청도 수월리</option>
+            <option>제천 신월동</option>
+            <option>화성 송산</option>
+            <option>안산 대부</option>
+            <option>강화 창리</option>
+            <option>화성 동탄(OH)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">2.</span>
+          <label>결제 요청일 <span class="required">*</span></label>
+          <span class="hint">지출이 발생한 날짜</span>
+        </div>
+        <input type="date" name="date" id="dateInput" required>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="form-section">
+    <div class="section-header">
+      <span class="num">SECTION 02</span>
+      <h2>지출 내역</h2>
+    </div>
+    <div class="field-group">
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">3.</span>
+          <label>공종 <span class="required">*</span></label>
+        </div>
+        <div class="select-wrap">
+          <select name="category" required>
+            <option value="">공종을 선택하세요</option>
+            <option>가설</option>
+            <option>기초</option>
+            <option>목구조/토대</option>
+            <option>창호</option>
+            <option>외부도어</option>
+            <option>내부도어</option>
+            <option>기밀/방수/환기</option>
+            <option>단열/흡음</option>
+            <option>외장 마감</option>
+            <option>지붕/금속</option>
+            <option>내부구조</option>
+            <option>타일/석공사</option>
+            <option>도장공사</option>
+            <option>바닥마감</option>
+            <option>도기수전</option>
+            <option>전기/설비</option>
+            <option>옥외 및 기타</option>
+            <option>현장일반관리비</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">4.</span>
+          <label>지출 구분 <span class="required">*</span></label>
+        </div>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="expenseType" value="재료비 (주자재, 부자재 등)" required>
+            <span>재료비 <span style="color:var(--text-muted);font-weight:400">(주자재, 부자재 등)</span></span>
+          </label>
+          <label>
+            <input type="radio" name="expenseType" value="노무비 (일당, 도급 등)">
+            <span>노무비 <span style="color:var(--text-muted);font-weight:400">(일당, 도급 등)</span></span>
+          </label>
+          <label>
+            <input type="radio" name="expenseType" value="경비 (운반, 식대, 장비 등)">
+            <span>경비 <span style="color:var(--text-muted);font-weight:400">(운반, 식대, 장비 등)</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">5.</span>
+          <label>거래처명/입금자 이름 <span class="required">*</span></label>
+        </div>
+        <div style="position:relative;">
+          <input type="text" name="vendor" id="vendorInput" placeholder="거래처명 또는 입금자 이름 입력" required autocomplete="off">
+          <div id="vendorDropdown" class="vendor-dropdown"></div>
+          <div id="vendorStatus"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">6.</span>
+          <label>품목 및 수량 <span class="required">*</span></label>
+          <span class="hint">예: 철근 10톤</span>
+        </div>
+        <input type="text" name="item" placeholder="품목명 및 수량 입력" required>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">7.</span>
+          <label>청구 총액 <span class="required">*</span></label>
+          <span class="hint">숫자만 입력</span>
+        </div>
+        <div>
+          <div class="amount-wrap">
+            <input type="number" name="amount" id="amountInput" placeholder="0" min="0" required>
+            <span class="unit">원</span>
+          </div>
+          <div class="amount-preview" id="amountPreview"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="form-section">
+    <div class="section-header">
+      <span class="num">SECTION 03</span>
+      <h2>증빙 및 입금 정보</h2>
+    </div>
+    <div class="field-group">
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">8.</span>
+          <label>세금계산서 발행 여부 <span class="required">*</span></label>
+        </div>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="proof" value="발행" required>
+            <span>발행</span>
+          </label>
+          <label>
+            <input type="radio" name="proof" value="미발행">
+            <span>미발행</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="accountField">
+        <div class="field-label">
+          <span class="q-num">9.</span>
+          <label>은행</label>
+          <span class="hint">신규 거래처만 입력</span>
+        </div>
+        <div>
+          <input type="text" name="bank" id="bankInput" placeholder="예: 농협, 국민, 신한...">
+          <div id="accountStatus"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">10.</span>
+          <label>계좌번호</label>
+          <span class="hint">신규 거래처만 입력</span>
+        </div>
+        <input type="text" name="account" id="accountInput" placeholder="계좌번호 입력" inputmode="numeric" pattern="[0-9\-]*" oninput="this.value=this.value.replace(/[^0-9\-]/g,'')">
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span class="q-num">11.</span>
+          <label>견적서 첨부</label>
+          <span class="hint">이미지 또는 PDF<br>여러 파일 가능</span>
+        </div>
+        <div class="upload-box" id="quoteUploadBox" onclick="document.getElementById('quoteFiles').click()">
+          <input type="file" id="quoteFiles" name="quoteFiles" multiple accept="image/*,.pdf" style="display:none" onchange="handleFiles(this,'quotePreview')">
+          <div class="upload-icon">📎</div>
+          <div class="upload-text">클릭하여 파일 선택<br><span>이미지(JPG, PNG) · PDF</span></div>
+        </div>
+        <div class="file-preview" id="quotePreview"></div>
+      </div>
+
+      <div class="field" id="taxField" style="display:none;">
+        <div class="field-label">
+          <span class="q-num">12.</span>
+          <label>세금계산서 첨부</label>
+          <span class="hint">이미지 또는 PDF</span>
+        </div>
+        <div class="upload-box" id="taxUploadBox" onclick="document.getElementById('taxFiles').click()">
+          <input type="file" id="taxFiles" name="taxFiles" multiple accept="image/*,.pdf" style="display:none" onchange="handleFiles(this,'taxPreview')">
+          <div class="upload-icon">🧾</div>
+          <div class="upload-text">클릭하여 파일 선택<br><span>이미지(JPG, PNG) · PDF</span></div>
+        </div>
+        <div class="file-preview" id="taxPreview"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="submit-section">
+    <p>입력하신 내용은 회계 담당자에게 자동으로 전달되며<br>검토 후 처리됩니다. 제출 전 내용을 다시 한번 확인해 주세요.</p>
+    <button type="submit" class="submit-btn">결제 요청 제출</button>
+  </div>
+
+</form>
+</div>
+
+<!-- DB 관리 버튼 -->
+<button class="db-btn" onclick="openDB()">📋 거래처 DB</button>
+
+<!-- DB 모달 -->
+<div class="db-overlay" id="dbOverlay">
+  <div class="db-modal">
+    <div class="db-modal-header">
+      <h3>거래처 DB</h3>
+      <span class="count" id="dbCount">0건</span>
+    </div>
+    <div class="db-modal-body" id="dbModalBody"></div>
+    <div class="db-modal-footer">
+      <button onclick="closeDB()">닫기</button>
+    </div>
+  </div>
+</div>
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="check">✓</div>
+    <h3>요청이 접수되었습니다</h3>
+    <div class="site-badge" id="successSite"></div>
+    <p>결제 요청이 회계팀에 전달되었습니다.<br>처리 현황은 담당자에게 문의해 주세요.</p>
+    <button onclick="resetForm()">새 요청 작성하기</button>
+  </div>
+</div>
+
+<script>
+  // ── 세금계산서 칸 토글
+  document.querySelectorAll('input[name="proof"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const taxField = document.getElementById('taxField');
+      if (this.value === '발행') {
+        taxField.style.display = '';
+      } else {
+        taxField.style.display = 'none';
+        document.getElementById('taxFiles').value = '';
+        document.getElementById('taxPreview').innerHTML = '';
+      }
+    });
+  });
+
+  // ── 파일 첨부 처리
+  const fileStores = { quotePreview: [], taxPreview: [] };
+
+  function handleFiles(input, previewId) {
+    const files = Array.from(input.files);
+    fileStores[previewId] = fileStores[previewId].concat(files);
+    renderPreview(previewId);
+    input.value = ''; // 같은 파일 재선택 허용
+  }
+
+  function renderPreview(previewId) {
+    const container = document.getElementById(previewId);
+    const files = fileStores[previewId];
+    container.innerHTML = files.map((f, i) => `
+      <div class="file-item">
+        <span class="file-icon">${f.type === 'application/pdf' ? '📄' : '🖼️'}</span>
+        <span class="file-name">${f.name}</span>
+        <span class="file-size">${(f.size / 1024).toFixed(0)}KB</span>
+        <button type="button" class="file-del" onclick="removeFile('${previewId}',${i})" title="삭제">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removeFile(previewId, idx) {
+    fileStores[previewId].splice(idx, 1);
+    renderPreview(previewId);
+  }
+
+  // 드래그 앤 드롭
+  ['quoteUploadBox', 'taxUploadBox'].forEach(boxId => {
+    const box = document.getElementById(boxId);
+    const inputId = boxId === 'quoteUploadBox' ? 'quoteFiles' : 'taxFiles';
+    const previewId = boxId === 'quoteUploadBox' ? 'quotePreview' : 'taxPreview';
+
+    box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
+    box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+    box.addEventListener('drop', e => {
+      e.preventDefault();
+      box.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files).filter(f =>
+        f.type.startsWith('image/') || f.type === 'application/pdf'
+      );
+      fileStores[previewId] = fileStores[previewId].concat(files);
+      renderPreview(previewId);
+    });
+  });
+
+  // ── 오늘 날짜 기본값
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateInput').value = today;
+
+  // ── 문서 ID
+  const docId = 'REQ-' + Date.now().toString(36).toUpperCase().slice(-6);
+  document.getElementById('docId').textContent = docId;
+
+  // ── 거래처 DB (localStorage)
+  const DB_KEY = 'saramdb_vendors';
+
+  function loadDB() {
+    try { return JSON.parse(localStorage.getItem(DB_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+  function addVendor(name, bank, account) {
+    const db = loadDB();
+    const key = name.trim();
+    db[key] = { bank, account, addedAt: new Date().toISOString() };
+    saveDB(db);
+  }
+
+  function searchVendors(input) {
+    if (!input || input.length < 2) return [];
+    const db = loadDB();
+    const q = input.toLowerCase();
+    return Object.keys(db).filter(k => k.toLowerCase().includes(q)).map(k => ({ key: k, ...db[k] }));
+  }
+
+  function findExactVendor(input) {
+    const db = loadDB();
+    const key = input.trim();
+    if (db[key]) return { key, ...db[key] };
+    // 완전 포함 일치
+    for (const k of Object.keys(db)) {
+      if (k === key) return { key: k, ...db[k] };
+    }
+    return null;
+  }
+
+  // ── 자동완성 드롭다운
+  const vendorInput  = document.getElementById('vendorInput');
+  const vendorDropdown = document.getElementById('vendorDropdown');
+  const vendorStatus = document.getElementById('vendorStatus');
+  const bankInput    = document.getElementById('bankInput');
+  const accountInput = document.getElementById('accountInput');
+  const accountField = document.getElementById('accountField');
+  const accountStatus = document.getElementById('accountStatus');
+
+  let dropdownItems = [];
+  let activeIdx = -1;
+
+  function renderDropdown(matches) {
+    if (matches.length === 0) { vendorDropdown.classList.remove('open'); return; }
+    const val = vendorInput.value;
+    vendorDropdown.innerHTML = matches.map((m, i) => {
+      const highlighted = m.key.replace(new RegExp('(' + escapeReg(val) + ')', 'gi'),
+        '<span class="match">$1</span>');
+      const sub = m.bank ? m.bank + ' ' + (m.account || '') : (m.account || '');
+      return `<div class="vendor-dropdown-item" data-idx="${i}">
+        <span>${highlighted}</span>
+        ${sub ? `<span class="sub">${sub}</span>` : ''}
+      </div>`;
+    }).join('');
+    dropdownItems = matches;
+    activeIdx = -1;
+    vendorDropdown.classList.add('open');
+
+    vendorDropdown.querySelectorAll('.vendor-dropdown-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        selectVendor(dropdownItems[parseInt(el.dataset.idx)]);
+      });
+    });
+  }
+
+  function selectVendor(v) {
+    vendorInput.value = v.key;
+    vendorDropdown.classList.remove('open');
+    vendorStatus.innerHTML = `<div class="vendor-tag known"><span class="dot"></span>등록된 거래처</div>`;
+    if (v.bank)    { bankInput.value    = v.bank;    accountStatus.innerHTML = `<div class="account-saved">✓ 저장된 계좌: ${v.bank} ${v.account || ''}</div>`; }
+    if (v.account) { accountInput.value = v.account; }
+    accountField.classList.remove('highlight-required');
+  }
+
+  function closeDropdown() {
+    vendorDropdown.classList.remove('open');
+    activeIdx = -1;
+  }
+
+  function escapeReg(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  let vendorTimer = null;
+  vendorInput.addEventListener('input', () => {
+    clearTimeout(vendorTimer);
+    const val = vendorInput.value;
+    // 드롭다운: 2글자부터 즉시
+    if (val.length >= 2) {
+      const matches = searchVendors(val);
+      renderDropdown(matches);
+    } else {
+      closeDropdown();
+    }
+    // 신규/기존 판단은 0.6초 뒤
+    vendorStatus.innerHTML = '';
+    accountStatus.innerHTML = '';
+    accountField.classList.remove('highlight-required');
+    vendorTimer = setTimeout(() => {
+      const v = findExactVendor(val.trim());
+      if (v) {
+        vendorStatus.innerHTML = `<div class="vendor-tag known"><span class="dot"></span>등록된 거래처</div>`;
+      } else if (val.trim().length >= 2) {
+        vendorStatus.innerHTML = `<div class="vendor-tag new-vendor"><span class="dot"></span>신규 거래처 · 9~10번 계좌 정보를 입력해 주세요</div>`;
+        accountField.classList.add('highlight-required');
+      }
+    }, 600);
+  });
+
+  // 키보드 탐색
+  vendorInput.addEventListener('keydown', e => {
+    if (!vendorDropdown.classList.contains('open')) return;
+    const items = vendorDropdown.querySelectorAll('.vendor-dropdown-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIdx = Math.min(activeIdx + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(activeIdx - 1, 0);
+    } else if (e.key === 'Enter' && activeIdx >= 0) {
+      e.preventDefault();
+      selectVendor(dropdownItems[activeIdx]);
+      return;
+    } else if (e.key === 'Escape') {
+      closeDropdown(); return;
+    }
+    items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+  });
+
+  vendorInput.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+
+  // ── datalist (하위호환 유지)
+  function refreshDatalist() { /* 드롭다운으로 대체 */ }
+
+
+  // ── 금액 한글 변환
+  function toKoreanAmount(num) {
+    if (!num || num === 0) return '';
+    const n = parseInt(num);
+    const jo   = Math.floor(n / 1e12);
+    const eok  = Math.floor((n % 1e12) / 1e8);
+    const man  = Math.floor((n % 1e8) / 1e4);
+    const rest = n % 1e4;
+    let result = '';
+    if (jo)   result += jo + '조 ';
+    if (eok)  result += eok + '억 ';
+    if (man)  result += man + '만 ';
+    if (rest) result += rest;
+    return result.trim() + '원';
+  }
+
+  document.getElementById('amountInput').addEventListener('input', function() {
+    const val = parseInt(this.value) || 0;
+    const preview = document.getElementById('amountPreview');
+    if (val > 0) {
+      preview.textContent = val.toLocaleString('ko-KR') + '원 · ' + toKoreanAmount(val);
+      this.classList.remove('input-error');
+      const err = preview.nextSibling;
+      if (err && err.classList?.contains('field-error')) err.remove();
+    } else {
+      preview.textContent = '';
+    }
+  });
+
+  // ── 진행 상태
+  const siteEl = document.getElementById('siteSelect');
+  const step1El = document.getElementById('step1');
+  const step2El = document.getElementById('step2');
+  const step3El = document.getElementById('step3');
+
+  function updateProgress() {
+    const s1Done = siteEl.value && document.querySelector('input[name="date"]').value;
+    const s2Done = document.querySelector('select[name="category"]').value &&
+                   document.querySelector('input[name="expenseType"]:checked') &&
+                   vendorInput.value &&
+                   document.querySelector('input[name="amount"]').value;
+    const s3Done = document.querySelector('input[name="proof"]:checked');
+    step1El.className = 'step ' + (s1Done ? (s2Done || s3Done ? 'done' : 'active') : 'active');
+    step2El.className = 'step ' + (!s1Done ? '' : s2Done ? (s3Done ? 'done' : 'active') : 'active');
+    step3El.className = 'step ' + (s2Done && s3Done ? 'active' : '');
+  }
+
+  document.getElementById('mainForm').addEventListener('input', updateProgress);
+
+  // ── Google Apps Script 웹앱 URL
+  // Apps Script 배포 후 여기에 붙여넣으세요
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRES0FnDAyb4nfu0bE2pAglUsMWXmNmFlMOVV4XDN61r-0MvQlNhX8grZsZzjYWjPS/exec';
+
+  // ── 파일 → Base64 변환
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve({ name: file.name, type: file.type, data: reader.result.split(',')[1] });
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── 폼 제출
+  document.getElementById('mainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // 기존 에러 스타일 초기화
+    this.querySelectorAll('.field-error').forEach(el => el.remove());
+    this.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+    document.getElementById('amountInput').classList.remove('input-error');
+
+    let ok = true;
+    let firstError = null;
+
+    function markError(el, msg) {
+      ok = false;
+      el.classList.add('input-error');
+      if (!firstError) firstError = el;
+      // 이미 에러 메시지 있으면 중복 방지
+      if (!el.parentNode.querySelector('.field-error')) {
+        const err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = msg;
+        el.parentNode.appendChild(err);
+      }
+    }
+
+    // 필수 입력 체크
+    const site = this.querySelector('select[name="site"]');
+    if (!site.value) markError(site, '현장명을 선택해 주세요.');
+
+    const date = this.querySelector('input[name="date"]');
+    if (!date.value) markError(date, '날짜를 선택해 주세요.');
+
+    const category = this.querySelector('select[name="category"]');
+    if (!category.value) markError(category, '공종을 선택해 주세요.');
+
+    if (!this.querySelector('input[name="expenseType"]:checked')) {
+      const grp = this.querySelector('.radio-group');
+      ok = false;
+      if (!grp.querySelector('.field-error')) {
+        const err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = '지출 구분을 선택해 주세요.';
+        grp.appendChild(err);
+        if (!firstError) firstError = grp;
+      }
+    }
+
+    const vendor = this.querySelector('input[name="vendor"]');
+    if (!vendor.value.trim()) markError(vendor, '거래처명을 입력해 주세요.');
+
+    const item = this.querySelector('input[name="item"]');
+    if (!item.value.trim()) markError(item, '품목 및 수량을 입력해 주세요.');
+
+    const amount = this.querySelector('input[name="amount"]');
+    if (!amount.value || Number(amount.value) <= 0) {
+      ok = false;
+      amount.classList.add('input-error');
+      if (!firstError) firstError = amount;
+      const amountPreview = document.getElementById('amountPreview');
+      if (!amountPreview.nextSibling || !amountPreview.nextSibling.classList?.contains('field-error')) {
+        const err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = '청구 총액을 입력해 주세요.';
+        amountPreview.parentNode.insertBefore(err, amountPreview.nextSibling);
+      }
+    }
+
+    if (!this.querySelector('input[name="proof"]:checked')) {
+      const grpProof = this.querySelectorAll('.radio-group')[1];
+      ok = false;
+      if (grpProof && !grpProof.querySelector('.field-error')) {
+        const err = document.createElement('div');
+        err.className = 'field-error';
+        err.textContent = '세금계산서 발행 여부를 선택해 주세요.';
+        grpProof.appendChild(err);
+        if (!firstError) firstError = grpProof;
+      }
+    }
+
+    if (!ok) {
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    // 신규 거래처이고 계좌번호 입력됐으면 DB 저장
+    const vendorVal  = vendorInput.value.trim();
+    const bankVal    = bankInput.value.trim();
+    const accountVal = accountInput.value.trim();
+    const isNew = !findExactVendor(vendorVal);
+    if (isNew && vendorVal) {
+      addVendor(vendorVal, bankVal, accountVal);
+      refreshDatalist();
+    }
+
+    // 버튼 로딩
+    const btn = document.querySelector('.submit-btn');
+    const btnOriginal = btn.textContent;
+    btn.textContent = '파일 업로드 중...';
+    btn.disabled = true;
+
+    // 파일 Base64 변환
+    let quoteFilesData = [];
+    let taxFilesData   = [];
+    try {
+      quoteFilesData = await Promise.all(fileStores.quotePreview.map(fileToBase64));
+      taxFilesData   = await Promise.all(fileStores.taxPreview.map(fileToBase64));
+    } catch (err) {
+      console.warn('파일 변환 오류:', err);
+    }
+
+    btn.textContent = '전송 중...';
+
+    const payload = {
+      docId:       document.getElementById('docId').textContent,
+      date:        document.querySelector('input[name="date"]').value,
+      site:        siteEl.value,
+      category:    document.querySelector('select[name="category"]').value,
+      expenseType: document.querySelector('input[name="expenseType"]:checked').value,
+      vendor:      vendorVal,
+      item:        document.querySelector('input[name="item"]').value,
+      amount:      document.querySelector('input[name="amount"]').value,
+      proof:       document.querySelector('input[name="proof"]:checked').value,
+      bank:        bankVal,
+      account:     accountVal,
+      isNewVendor: isNew,
+      quoteFiles:  quoteFilesData,
+      taxFiles:    taxFilesData,
+    };
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+      btn.textContent = btnOriginal;
+      btn.disabled = false;
+      if (data.status === 'ok') {
+        document.getElementById('successSite').textContent = siteEl.value;
+        document.getElementById('successOverlay').classList.add('show');
+      } else {
+        alert('저장 실패: ' + data.message);
+      }
+    })
+    .catch(err => {
+      console.error('전송 오류:', err);
+      alert('네트워크 오류가 발생했습니다. (파일 용량이 너무 크거나 인터넷 연결 문제일 수 있습니다.)');
+      btn.textContent = btnOriginal;
+      btn.disabled = false;
+    });
+  });
+
+  // ── 거래처 DB 모달
+  function openDB() {
+    renderDB();
+    document.getElementById('dbOverlay').classList.add('show');
+  }
+  function closeDB() {
+    document.getElementById('dbOverlay').classList.remove('show');
+  }
+  function renderDB() {
+    const db = loadDB();
+    const keys = Object.keys(db);
+    const body = document.getElementById('dbModalBody');
+    document.getElementById('dbCount').textContent = keys.length + '건';
+    if (keys.length === 0) {
+      body.innerHTML = '<div class="db-empty">아직 등록된 거래처가 없습니다.<br>폼 제출 시 신규 거래처가 자동 등록됩니다.</div>';
+      return;
+    }
+    body.innerHTML = keys.map(k => `
+      <div class="db-item">
+        <div class="db-item-info">
+          <div class="db-item-name">${k}</div>
+          <div class="db-item-account">${db[k].bank || ''} ${db[k].account || '계좌 미등록'}</div>
+        </div>
+        <button class="db-item-del" onclick="deleteVendor('${k.replace(/'/g, "\\'")}')">삭제</button>
+      </div>
+    `).join('');
+  }
+  function deleteVendor(key) {
+    if (!confirm(`"${key}" 거래처를 삭제할까요?`)) return;
+    const db = loadDB();
+    delete db[key];
+    saveDB(db);
+    refreshDatalist();
+    renderDB();
+  }
+
+  // 모달 외부 클릭 닫기
+  document.getElementById('dbOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeDB();
+  });
+
+  function resetForm() {
+    document.getElementById('mainForm').reset();
+    document.getElementById('dateInput').value = today;
+    document.getElementById('amountPreview').textContent = '';
+    vendorStatus.innerHTML = '';
+    accountStatus.innerHTML = '';
+    accountField.classList.remove('highlight-required');
+    fileStores.quotePreview = [];
+    fileStores.taxPreview = [];
+    document.getElementById('quotePreview').innerHTML = '';
+    document.getElementById('taxPreview').innerHTML = '';
+    document.getElementById('taxField').style.display = 'none';
+    bankInput.value = '';
+    document.getElementById('successOverlay').classList.remove('show');
+    document.getElementById('docId').textContent = 'REQ-' + Date.now().toString(36).toUpperCase().slice(-6);
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
