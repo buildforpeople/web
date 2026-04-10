@@ -234,10 +234,80 @@
   .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
   @media (max-width: 640px) {
-    .container { padding: 16px; }
-    .card { padding: 16px; }
-    th, td { padding: 8px 6px; font-size: 12px; }
-    .header { padding: 12px 16px; }
+    body { font-size: 13px; }
+    .container { padding: 12px; }
+    .card { padding: 14px; margin-bottom: 12px; overflow-x: auto; }
+    .card-title { font-size: 15px; margin-bottom: 12px; }
+
+    /* HEADER: compact single row */
+    .header { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; }
+    .header > div:first-child { gap: 8px !important; min-width: 0; flex: 1; }
+    .header img#logoHeader { height: 26px !important; flex-shrink: 0; }
+    .header-title { font-size: 18px; }
+    .header-user { gap: 6px; font-size: 11px; flex-shrink: 0; }
+    #userLabel {
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    .header-user .btn-sm { padding: 4px 8px; font-size: 11px; }
+    #calendarSetupBtn { font-size: 0; padding: 6px 8px; }
+    #calendarSetupBtn::before { content: "⚙️"; font-size: 14px; }
+
+    /* LOGIN */
+    .login-card { padding: 32px 24px; }
+    .login-card h1 { font-size: 52px; }
+
+    /* TABS: horizontal scroll instead of wrap */
+    .tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      margin: 0 -12px 14px;
+      padding: 0 12px;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0;
+      padding: 10px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+      writing-mode: horizontal-tb;
+    }
+
+    /* STATS & ACTIONS: 2-column */
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { padding: 14px; }
+    .stat-value { font-size: 20px; }
+    .actions-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .action-btn { padding: 14px 8px; font-size: 13px; }
+
+    /* FORMS: force fixed-column grids to stack */
+    .card [style*="grid-template-columns"] {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    .card [style*="grid-template-columns"] > button {
+      grid-column: span 2;
+    }
+    .card [style*="grid-template-columns"] > input[type="text"],
+    .card [style*="grid-template-columns"] > textarea {
+      grid-column: span 2;
+    }
+
+    /* TABLES: allow horizontal scroll */
+    table { font-size: 11px; min-width: 100%; }
+    th, td { padding: 7px 5px; }
+    th { font-size: 10px; }
+
+    /* MODAL */
+    .modal { padding: 20px; max-width: 100%; }
+    .modal h3 { font-size: 15px; }
+
+    /* GREETING */
+    .greeting h2 { font-size: 18px; }
   }
 </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
