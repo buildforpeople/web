@@ -606,6 +606,21 @@ function load() {
     if (jang) jang.leaveRatio = 1;
     d.migrated_jang_full_leave_v1 = true;
   }
+  // 고성윤 음력 전환, 손동욱 양력 1984-12-24 정정 (1회)
+  if (!d.migrated_known_birthdays_v4) {
+    const ko = d.employees.find(e => e.id === 'ko');
+    if (ko) {
+      ko.birthdayLunar = true;
+      ko.birthdayLunarLeap = false;
+    }
+    const son = d.employees.find(e => e.id === 'son');
+    if (son) {
+      son.birthday = '1984-12-24';
+      son.birthdayLunar = false;
+      son.birthdayLunarLeap = false;
+    }
+    d.migrated_known_birthdays_v4 = true;
+  }
     if (!d.migrated_known_birthdays_v1) {
     const knownBirthdays = {
       admin: '1985-12-28', // 임상혁
