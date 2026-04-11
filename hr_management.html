@@ -2367,11 +2367,12 @@ function calcSeverance(contract, empId, refDate) {
   };
 }
 
-// 회사 전체 퇴직금 합계를 특정 시점으로 계산
+// 회사 전체 퇴직금 합계를 특정 시점으로 계산 (대표이사 제외)
 function totalSeveranceAt(refDate) {
   let total = 0;
   for (const c of _loadedContracts) {
     const emp = DB.employees.find(e => e.name === c['이름']);
+    if (emp && emp.id === 'admin') continue; // 대표이사 제외
     const empId = emp ? emp.id : c['사번'];
     const result = calcSeverance(c, empId, refDate);
     if (result && result.eligible) total += result.severance;
@@ -2440,13 +2441,15 @@ function renderSeveranceContent() {
   const el = document.getElementById('severanceBody');
   if (!el) return;
   const today = new Date();
-  // 직원별 계산 — 이름으로 식구 앱 직원 매칭 (empId 추가근무 데이터 가져오기 위함)
-  const rows = _loadedContracts.map(c => {
-    const emp = DB.employees.find(e => e.name === c['이름']);
-    const empId = emp ? emp.id : c['사번'];
-    const result = calcSeverance(c, empId, today);
-    return { contract: c, emp, result };
-  });
+  // 직원별 계산 — 이름으로 식구 앱 직원 매칭 (대표이사 제외)
+  const rows = _loadedContracts
+    .map(c => {
+      const emp = DB.employees.find(e => e.name === c['이름']);
+      const empId = emp ? emp.id : c['사번'];
+      const result = calcSeverance(c, empId, today);
+      return { contract: c, emp, result };
+    })
+    .filter(r => r.emp?.id !== 'admin');
   const totalNow = rows.reduce((s, r) => s + (r.result?.eligible ? r.result.severance : 0), 0);
   const eligibleCount = rows.filter(r => r.result?.eligible).length;
 
@@ -2529,7 +2532,7 @@ function renderSeveranceContent() {
 
     <div class="card-title" style="margin-top:28px;">미래 시점 시뮬레이션</div>
     <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">
-      ※ <b>현재 9명이 모두 그대로 근무하고, 급여 변동이 없다</b>는 가정 하의 단순 시뮬레이션입니다. 추가근무·상여금은 직전 3개월 데이터로 추정.
+      ※ <b>대표이사 제외, 현재 직원이 모두 그대로 근무하고 급여 변동이 없다</b>는 가정 하의 단순 시뮬레이션입니다. 추가근무·상여금은 직전 3개월 데이터로 추정.
     </p>
     <table>
       <thead><tr><th>시점</th><th>날짜</th><th style="text-align:right;">전체 퇴직금 부채</th></tr></thead>
