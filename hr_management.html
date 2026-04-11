@@ -2313,6 +2313,27 @@ function showContractDetail(index) {
    퇴직금 시뮬레이션 (관리자 전용)
    ============================================================ */
 
+// 월급여에 따른 연 인상률 (구간별)
+function getAnnualRaiseRate(monthlySalary) {
+  if (monthlySalary < 3000000) return 0.09;
+  if (monthlySalary < 4000000) return 0.07;
+  if (monthlySalary < 5000000) return 0.05;
+  if (monthlySalary < 6000000) return 0.03;
+  return 0.015;
+}
+
+// 매년 구간별 인상률을 적용해서 yearsFromNow년 후의 월급/상여금을 계산
+function projectSalaryAndBonus(initialMonthly, initialBonus, yearsFromNow) {
+  let monthly = initialMonthly;
+  let bonus = initialBonus;
+  for (let i = 0; i < yearsFromNow; i++) {
+    const rate = getAnnualRaiseRate(monthly);
+    monthly = monthly * (1 + rate);
+    bonus = bonus * (1 + rate);
+  }
+  return { monthly: Math.round(monthly), bonus: Math.round(bonus) };
+}
+
 // 1년 = 365일
 function tenureDaysAt(joinDateStr, refDate) {
   if (!joinDateStr) return 0;
@@ -2323,7 +2344,7 @@ function tenureDaysAt(joinDateStr, refDate) {
 }
 
 // 직원 한 명의 퇴직금 계산 (옵션 2: 정확)
-// refDate 시점 기준
+// refDate 시점 기준 — 미래 시점이면 인상률을 누적 적용
 function calcSeverance(contract, empId, refDate) {
   const joinDateStr = contract['입사일'];
   if (!joinDateStr) return null;
@@ -2331,9 +2352,16 @@ function calcSeverance(contract, empId, refDate) {
   if (tenure < 365) {
     return { eligible: false, tenureDays: tenure, severance: 0, avgDaily: 0, monthsToEligible: Math.ceil((365 - tenure) / 30) };
   }
-  const monthlySalary = Number(contract['월급여총액']) || 0;
-  const annualBonus = Number(contract['상여금_연간총액']) || 0;
-  // 직전 3개월(90일) 추가근무수당 — DB.overtime에서 집계
+  const initialMonthly = Number(contract['월급여총액']) || 0;
+  const initialBonus = Number(contract['상여금_연간총액']) || 0;
+  // 오늘부터 refDate까지의 연수 (인상률 누적용, 음수면 0)
+  const today = new Date();
+  const yearsFromNow = Math.max(0, (refDate - today) / (1000 * 60 * 60 * 24 * 365));
+  const fullYearsFromNow = Math.floor(yearsFromNow);
+  const projected = projectSalaryAndBonus(initialMonthly, initialBonus, fullYearsFromNow);
+  const monthlySalary = projected.monthly;
+  const annualBonus = projected.bonus;
+  // 직전 3개월(90일) 추가근무수당 — DB.overtime에서 집계 (오늘 기준만 의미 있음)
   const ninetyDaysAgo = new Date(refDate.getTime() - 90 * 86400 * 1000);
   const otHours = (DB.overtime || [])
     .filter(o => o.empId === empId)
@@ -2342,10 +2370,13 @@ function calcSeverance(contract, empId, refDate) {
       return d >= ninetyDaysAgo && d <= refDate;
     })
     .reduce((s, o) => s + Number(o.hours), 0);
-  // 통상시급 = 기본급 / 월소정근로시간
-  const baseSalary = Number(contract['기본급']) || monthlySalary;
+  // 통상시급 = (인상된) 기본급 / 월소정근로시간
+  // 기본급은 월급여총액에 비례한다고 가정
+  const initialBase = Number(contract['기본급']) || initialMonthly;
+  const baseRatio = initialMonthly > 0 ? initialBase / initialMonthly : 1;
+  const projectedBase = monthlySalary * baseRatio;
   const monthlyHours = parseMonthlyWorkHours(contract['소정근로시간']);
-  const hourlyRate = monthlyHours > 0 ? baseSalary / monthlyHours : 0;
+  const hourlyRate = monthlyHours > 0 ? projectedBase / monthlyHours : 0;
   const otMultiplier = parseOvertimeMultiplier(contract['연장근무수당기준']);
   const otPay = Math.round(hourlyRate * otMultiplier * otHours);
   // 평균임금 산정 임금 총액 (3개월)
@@ -2363,7 +2394,8 @@ function calcSeverance(contract, empId, refDate) {
     otPay,
     otHours,
     monthlySalary,
-    annualBonus
+    annualBonus,
+    yearsProjected: fullYearsFromNow
   };
 }
 
@@ -2406,7 +2438,8 @@ function renderSeveranceAdmin() {
       <div class="card-title">💰 퇴직금 시뮬레이션</div>
       <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:14px;">
         근로기준법 정확 산정 방식(직전 3개월 평균임금 기준)으로 계산합니다.<br>
-        <b>1일 평균임금 × 30일 × (재직일수 ÷ 365)</b> · 직전 3개월 임금 = 월급여 × 3 + 상여금 환산(연간 × 3/12) + 추가근무수당
+        <b>1일 평균임금 × 30일 × (재직일수 ÷ 365)</b> · 직전 3개월 임금 = 월급여 × 3 + 상여금 환산(연간 × 3/12) + 추가근무수당<br>
+        <b>📈 미래 시점은 연 인상률 자동 적용:</b> 월급 300만 미만 9% / 400만 미만 7% / 500만 미만 5% / 600만 미만 3% / 600만 이상 1.5% (매년 구간 재평가, 상여금도 동일 인상)
       </p>
       <div id="severanceBody">
         <p style="color:var(--muted); text-align:center; padding:20px 0;">⏳ 계약 정보를 불러오는 중...</p>
@@ -2485,28 +2518,37 @@ function renderSeveranceContent() {
       </div>
     </div>
 
-    <div class="card-title" style="margin-top:18px;">직원별 퇴직금 내역 (오늘 기준)</div>
+    <div class="card-title" style="margin-top:18px;">직원별 퇴직금 내역</div>
+    <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">
+      각 시점의 예상 퇴직금. 1년 미만 직원은 발생 전이며, 5년/10년 후 컬럼은 그 시점에 1년 이상이 되는 직원만 표시됩니다.
+    </p>
     <table>
       <thead>
         <tr>
           <th>이름</th>
           <th>입사일</th>
-          <th>근속</th>
+          <th>현재 근속</th>
           <th>월급여</th>
-          <th>1일 평균임금</th>
-          <th style="text-align:right;">예상 퇴직금</th>
+          <th style="text-align:right;">오늘 기준</th>
+          <th style="text-align:right;">5년 후</th>
+          <th style="text-align:right;">10년 후</th>
         </tr>
       </thead>
       <tbody>
         ${rows.map(r => {
+          const empId = r.emp ? r.emp.id : r.contract['사번'];
+          const future5 = calcSeverance(r.contract, empId, new Date(today.getFullYear()+5, today.getMonth(), today.getDate()));
+          const future10 = calcSeverance(r.contract, empId, new Date(today.getFullYear()+10, today.getMonth(), today.getDate()));
           if (!r.result?.eligible) {
             return `
-              <tr style="opacity:0.6;">
+              <tr style="opacity:0.7;">
                 <td><b>${r.emp?.name || r.contract['이름'] || '-'}</b></td>
                 <td>${r.contract['입사일'] || '-'}</td>
                 <td>${(r.result?.tenureDays || 0)}일 <span style="font-size:10px; color:var(--muted);">(1년 미만)</span></td>
                 <td>${money(r.contract['월급여총액'])}</td>
-                <td colspan="2" style="color:var(--muted); text-align:center;">발생 전 — ${r.result?.monthsToEligible || '?'}개월 후 발생</td>
+                <td style="color:var(--muted); text-align:center;">발생 전</td>
+                <td style="text-align:right; color:var(--primary); font-weight:600;">${future5?.eligible ? money(future5.severance) : '-'}</td>
+                <td style="text-align:right; color:var(--primary); font-weight:600;">${future10?.eligible ? money(future10.severance) : '-'}</td>
               </tr>
             `;
           }
@@ -2518,21 +2560,24 @@ function renderSeveranceContent() {
               <td>${r.contract['입사일']}</td>
               <td>${yrs}년 ${dys}일</td>
               <td>${money(r.result.monthlySalary)}</td>
-              <td>${money(r.result.avgDaily)}</td>
               <td style="text-align:right; color:var(--primary); font-weight:700;">${money(r.result.severance)}</td>
+              <td style="text-align:right; color:var(--primary); font-weight:600;">${future5?.eligible ? money(future5.severance) : '-'}</td>
+              <td style="text-align:right; color:var(--primary); font-weight:600;">${future10?.eligible ? money(future10.severance) : '-'}</td>
             </tr>
           `;
         }).join('')}
         <tr style="background:#f9fafb; font-weight:700;">
-          <td colspan="5" style="text-align:right;">합계</td>
+          <td colspan="4" style="text-align:right;">합계</td>
           <td style="text-align:right; color:var(--primary); font-size:15px;">${money(totalNow)}</td>
+          <td style="text-align:right; color:var(--primary); font-size:15px;">${money(totalSeveranceAt(new Date(today.getFullYear()+5, today.getMonth(), today.getDate())))}</td>
+          <td style="text-align:right; color:var(--primary); font-size:15px;">${money(totalSeveranceAt(new Date(today.getFullYear()+10, today.getMonth(), today.getDate())))}</td>
         </tr>
       </tbody>
     </table>
 
     <div class="card-title" style="margin-top:28px;">미래 시점 시뮬레이션</div>
     <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">
-      ※ <b>대표이사 제외, 현재 직원이 모두 그대로 근무하고 급여 변동이 없다</b>는 가정 하의 단순 시뮬레이션입니다. 추가근무·상여금은 직전 3개월 데이터로 추정.
+      ※ <b>대표이사 제외, 현재 직원 모두 그대로 근무, 매년 구간별 인상률 자동 반영</b>한 시뮬레이션입니다. 추가근무는 직전 3개월 데이터로 추정.
     </p>
     <table>
       <thead><tr><th>시점</th><th>날짜</th><th style="text-align:right;">전체 퇴직금 부채</th></tr></thead>
@@ -2544,6 +2589,63 @@ function renderSeveranceContent() {
             <td style="text-align:right; color:var(--primary); font-weight:600;">${money(f.total)}</td>
           </tr>
         `).join('')}
+      </tbody>
+    </table>
+
+    <div class="card-title" style="margin-top:28px;">💼 직원별 미래 연봉 추이</div>
+    <p style="font-size:11px; color:var(--muted); margin-bottom:10px;">
+      매년 구간별 인상률을 자동 적용한 예상 <b>연봉 (월급여×12 + 연 상여금)</b>입니다. 인원 변동·실제 인상 협의·성과급은 반영되지 않으며 참고용입니다.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>이름</th>
+          <th style="text-align:right;">현재</th>
+          <th style="text-align:right;">1년 후</th>
+          <th style="text-align:right;">3년 후</th>
+          <th style="text-align:right;">5년 후</th>
+          <th style="text-align:right;">10년 후</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const initialMonthly = Number(r.contract['월급여총액']) || 0;
+          const initialBonus = Number(r.contract['상여금_연간총액']) || 0;
+          const annualNow = initialMonthly * 12 + initialBonus;
+          const proj = (yrs) => {
+            const p = projectSalaryAndBonus(initialMonthly, initialBonus, yrs);
+            return p.monthly * 12 + p.bonus;
+          };
+          const a1 = proj(1), a3 = proj(3), a5 = proj(5), a10 = proj(10);
+          return `
+            <tr>
+              <td><b>${r.emp?.name || r.contract['이름'] || '-'}</b><br><span style="font-size:10px; color:var(--muted);">${r.contract['직무'] || ''}</span></td>
+              <td style="text-align:right;">${money(annualNow)}</td>
+              <td style="text-align:right;">${money(a1)}</td>
+              <td style="text-align:right;">${money(a3)}</td>
+              <td style="text-align:right; font-weight:600;">${money(a5)}</td>
+              <td style="text-align:right; color:var(--primary); font-weight:700;">${money(a10)}</td>
+            </tr>
+          `;
+        }).join('')}
+        ${(() => {
+          const sum = (yrs) => rows.reduce((s, r) => {
+            const im = Number(r.contract['월급여총액']) || 0;
+            const ib = Number(r.contract['상여금_연간총액']) || 0;
+            const p = projectSalaryAndBonus(im, ib, yrs);
+            return s + p.monthly * 12 + p.bonus;
+          }, 0);
+          return `
+            <tr style="background:#f9fafb; font-weight:700;">
+              <td style="text-align:right;">합계</td>
+              <td style="text-align:right;">${money(sum(0))}</td>
+              <td style="text-align:right;">${money(sum(1))}</td>
+              <td style="text-align:right;">${money(sum(3))}</td>
+              <td style="text-align:right;">${money(sum(5))}</td>
+              <td style="text-align:right; color:var(--primary);">${money(sum(10))}</td>
+            </tr>
+          `;
+        })()}
       </tbody>
     </table>
 
@@ -2565,7 +2667,7 @@ function renderSeveranceContent() {
     </table>
 
     <p style="margin-top:18px; padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:11px; color:#92400e; line-height:1.6;">
-      ⚠️ <b>참고용 추정치</b>입니다. 실제 퇴직금은 퇴직 직전 3개월 실제 급여와 상여금 지급 시기에 따라 달라질 수 있습니다. 또한 이 시뮬레이션은 신규 입사·퇴사·급여 인상을 반영하지 않으며, 인원 변동이 생기면 다시 확인이 필요합니다.
+      ⚠️ <b>참고용 추정치</b>입니다. 매년 구간별 인상률(9%·7%·5%·3%·1.5%)이 자동 누적 적용되었지만, 실제 인상 협의·성과·인원 변동은 반영되지 않습니다. 인원이나 급여 정책이 바뀌면 다시 시뮬레이션해 주세요.
     </p>
   `;
 }
