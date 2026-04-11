@@ -450,7 +450,13 @@ async function dbCall(action, payload) {
 }
 
 async function dbLoadAll() {
-  const data = await dbCall('get_all');
+  // 현재 사용자의 권한 정보를 같이 보내서 서버에서 필터링 — 다른 사람 데이터가 브라우저에 절대 안 들어옴
+  const session = DB.session;
+  const emp = session ? DB.employees.find(e => e.id === session.empId) : null;
+  const data = await dbCall('get_all', {
+    empId: emp ? emp.id : null,
+    role: emp ? emp.role : null
+  });
   return data.tables;
 }
 async function dbInsert(table, row) {
