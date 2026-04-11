@@ -651,7 +651,15 @@ function calcAnnualLeave(emp) {
   base = Math.round(base * ratio);
   // 생일연차: 생일이 등록된 직원만 +1
   const birthday = emp.birthday ? 1 : 0;
-  return { base, birthday, total: base + birthday, years, ratio };
+  // 근속 포상휴가: 해당 연차 주년 해에만 부여 (비례 미적용, 전원 동일)
+  // 3년차(입사 3주년~4주년 전): +2일
+  // 5년차(입사 5주년~6주년 전): +3일
+  // 10년차(입사 10주년~11주년 전): +5일 (해외여행 포상)
+  let tenureBonus = 0;
+  if (years === 3) tenureBonus = 2;
+  else if (years === 5) tenureBonus = 3;
+  else if (years === 10) tenureBonus = 5;
+  return { base, birthday, tenureBonus, total: base + birthday + tenureBonus, years, ratio };
 }
 
 function usedLeaveDays(empId) {
@@ -1035,16 +1043,17 @@ function employeeDashboardHTML(emp) {
         <div class="stat success">
           <div class="stat-label">전체 연차</div>
           <div class="stat-value">${totalLeave}<span style="font-size:14px; color:var(--muted);">일</span></div>
-          <div class="stat-sub">${leave.base}일 + 🎂 ${leave.birthday}일 · ${new Date().getFullYear()}년 기준</div>
+          <div class="stat-sub">${leave.base}일${leave.tenureBonus > 0 ? ` + 🏆 ${leave.tenureBonus}일` : ''} + 🎂 ${leave.birthday}일 · ${new Date().getFullYear()}년 기준</div>
         </div>
         <div class="stat warning">
           <div class="stat-label">사용 / 잔여</div>
           <div class="stat-value">${used} / ${remaining}<span style="font-size:14px; color:var(--muted);">일</span></div>
-          <div class="stat-sub">${emp.birthday ? (bdayUsed ? '🎂 생일연차 사용 완료' : '🎂 생일연차 ' + bdayWindow.join('/') + '월 중 사용' + (emp.birthdayLunar ? ' (음력, 올해 양력 ' + (bdaySolarThisYear ? bdaySolarThisYear.slice(5).replace('-','/') : '?') + ')' : '')) : '🎂 생일연차: 생일 등록 필요'}</div>
+          <div class="stat-sub">${emp.birthday ? (bdayUsed ? '🎂 생일연차 사용 완료' : '🎂 생일연차 ' + bdayWindow.join('/') + '월 중 사용' + (emp.birthdayLunar ? ' (음력, 올해 양력 ' + (bdaySolarThisYear ? bdaySolarThisYear.slice(5).replace('-','/') : '?') + ')' : '')) : '🎂 생일연차: 생일 등록 필요'}${leave.tenureBonus > 0 ? `<br><span style="color:#d97706; font-weight:600;">${leave.years === 3 ? '🥉' : leave.years === 5 ? '🏆' : leave.years === 10 ? '👑✈️' : '🏆'} 근속 ${leave.years}년 포상휴가 ${leave.tenureBonus}일 ${leave.years === 10 ? '— 해외여행 다녀오세요!' : '🎉'}</span>` : ''}</div>
         </div>
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#f1f5f9; border-radius:6px; font-size:12px; color:var(--muted); line-height:1.6;">
-        ℹ️ 연차 일수 계산은 입사일 기준으로 1년 단위로 하며, 미 사용시 연차수당으로 지급해드립니다.
+        ℹ️ 연차 일수 계산은 입사일 기준으로 1년 단위로 하며, 미 사용시 연차수당으로 지급해드립니다.<br>
+        🏆 <b>근속 포상휴가</b>: 3년차 🥉 +2일, 5년차 🏆 +3일, 10년차 👑 +5일 (해외여행 보내드려요 ✈️). 그동안의 노고에 감사드리는 마음이에요.
       </p>
     </div>
 
@@ -2099,7 +2108,22 @@ function refreshSalaryEstimate() {
   const cardEntries = DB.cardUsage.filter(c => c.empId === emp.id && c.date.slice(0,7) === month);
   const cardTotal = cardEntries.reduce((s, c) => s + Number(c.amount), 0);
 
-  const grandTotal = baseMonthly + otPay + fuelFinal + cardTotal;
+  // 5) 상여금: 설·추석(음력) + 5월·12월(양력) 지급월에 1회분 반영
+  const bonusPerTime = Number(contract['상여금_회당']) || 0;
+  const bonusMonths = getBonusMonths(year); // [설날월, 추석월, 5, 12]
+  const isBonusMonth = bonusMonths.includes(mo);
+  const bonusPay = isBonusMonth ? bonusPerTime : 0;
+  let bonusReason = '';
+  if (isBonusMonth) {
+    const reasons = [];
+    if (mo === bonusMonths[0]) reasons.push('설날');
+    if (mo === bonusMonths[1]) reasons.push('추석');
+    if (mo === 5) reasons.push('5월 정기');
+    if (mo === 12) reasons.push('12월 정기');
+    bonusReason = reasons.join(' · ');
+  }
+
+  const grandTotal = baseMonthly + otPay + fuelFinal + cardTotal + bonusPay;
 
   const money = v => Number(v).toLocaleString() + '원';
   const row = (label, value, sub) => `
@@ -2118,15 +2142,28 @@ function refreshSalaryEstimate() {
     ${row('2. 추가근무수당', money(otPay), otHours > 0 ? `${otHours}시간 × 통상시급 ${Math.round(hourlyRate).toLocaleString()}원 × ${multiplier}배` : '추가근무 없음')}
     ${row('3. 유류비 + 톨게이트', money(fuelFinal), fuelBase > 0 || tollgateTotal > 0 ? `주행 ${totalDist.toLocaleString()}km + 감가 10% + 톨게이트 ${tollgateEntries.length}건` : '내역 없음')}
     ${row('4. 개인카드 사용내역', money(cardTotal), cardEntries.length > 0 ? `${cardEntries.length}건 업무용 지출` : '내역 없음')}
+    ${row('5. 상여금', money(bonusPay), isBonusMonth ? `🎁 ${bonusReason} 지급월` : `설·추석·5월·12월 지급월 아님`)}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:14px 16px; background:#eff6ff; border-radius:8px;">
       <span style="color:#1e40af; font-weight:700; font-size:14px;">총 예상 급여 (세전)</span>
       <span style="color:var(--primary); font-weight:800; font-size:20px;">${money(grandTotal)}</span>
     </div>
     <p style="margin-top:10px; padding:8px 12px; background:#f9fafb; border-radius:6px; font-size:10px; color:var(--muted); line-height:1.5;">
-      ※ 상여금(연 ${Number(contract['상여금_연간횟수']||0)}회), 성과급, 인센티브는 포함되지 않았습니다.<br>
+      ※ 상여금은 설날·추석(음력 기준)·5월·12월 지급월에 회당 ${bonusPerTime.toLocaleString()}원이 반영됩니다. 성과급·인센티브는 포함되지 않았습니다.<br>
       ※ 4대보험료·소득세 등 공제 전 금액입니다.
     </p>
   `;
+}
+
+// 특정 연도의 상여금 지급월 배열을 반환: [설날양력월, 추석양력월, 5, 12]
+function getBonusMonths(year) {
+  const months = new Set([5, 12]);
+  // 설날: 음력 1월 1일 → 양력 월
+  const seollalISO = lunarToSolar(year, 1, 1, false);
+  if (seollalISO) months.add(Number(seollalISO.split('-')[1]));
+  // 추석: 음력 8월 15일 → 양력 월
+  const chuseokISO = lunarToSolar(year, 8, 15, false);
+  if (chuseokISO) months.add(Number(chuseokISO.split('-')[1]));
+  return Array.from(months).sort((a, b) => a - b);
 }
 
 
@@ -2713,7 +2750,7 @@ function renderEmployeeStatus() {
                 <td>${e.dept} · ${e.position}</td>
                 <td>${e.joinDate}</td>
                 <td>${years}년 ${tenure - years*365}일</td>
-                <td>${total}일</td>
+                <td>${total}일${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">🏆 포상 ${leave.tenureBonus}일</span>` : ''}</td>
                 <td style="color:var(--warning);">${used}일</td>
                 <td style="color:var(--success); font-weight:600;">${remain}일</td>
                 <td>
