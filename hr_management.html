@@ -669,12 +669,17 @@ function calcAnnualLeave(emp) {
 
 function usedLeaveDays(empId) {
   const currentYear = new Date().getFullYear();
-  return DB.requests
+  const fromRequests = DB.requests
     .filter(r => r.empId === empId
       && (r.type === '연차' || r.type === '반차' || r.type === '생일연차')
       && r.status === 'approved')
     .filter(r => new Date(r.startDate).getFullYear() === currentYear)
     .reduce((sum, r) => sum + r.days, 0);
+  // 관리자 조정값 (앱 도입 전 사용 이력) — 일반 + 생일연차 합산
+  const emp = getEmployee(empId);
+  const adj = (emp && emp.legacyLeaveUsed) || 0;
+  const adjBday = (emp && emp.legacyBirthdayUsed) ? 1 : 0;
+  return fromRequests + adj + adjBday;
 }
 
 // 올해 생일연차 이미 사용 여부
@@ -711,9 +716,12 @@ function getSolarBirthdayInYear(emp, year) {
 
 function birthdayLeaveUsedThisYear(empId) {
   const currentYear = new Date().getFullYear();
-  return DB.requests.some(r =>
+  const fromRequests = DB.requests.some(r =>
     r.empId === empId && r.type === '생일연차' && r.status === 'approved'
     && new Date(r.startDate).getFullYear() === currentYear);
+  if (fromRequests) return true;
+  const emp = getEmployee(empId);
+  return !!(emp && emp.legacyBirthdayUsed);
 }
 
 // 생일연차 사용 가능 월 범위 (MM 배열, 1~12)
@@ -2823,31 +2831,58 @@ async function adminDeleteRequest(id) {
 }
 
 function renderEmployeeManage() {
-  const alreadyImported = !!DB.legacy_leave_imported_v1;
   return `
     <div class="card">
-      <div class="card-title">📥 앱 도입 전 사용 이력 일괄 등록</div>
+      <div class="card-title">📥 앱 도입 전 사용 이력 조정</div>
       <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:14px;">
-        식구 앱이 만들어지기 전에 이미 사용한 연차 기록을 한 번에 등록합니다. <b>중복 방지를 위해 1회만 실행됩니다.</b><br>
-        ${alreadyImported ? '<span style="color:var(--success); font-weight:600;">✅ 이미 등록 완료되었습니다.</span>' : '<span style="color:#d97706;">⚠️ 아직 등록 전 — 아래 버튼을 한 번만 눌러주세요.</span>'}
+        식구 앱이 만들어지기 전에 사용한 연차 일수를 직원별로 입력하세요. 
+        <b>일반 사용 일수</b>는 시스템이 잔여 연차에서 차감하고, <b>생일연차 사용</b>을 체크하면 올해 생일연차를 이미 쓴 것으로 처리됩니다.<br>
+        <span style="color:#d97706;">⚠️ 입력 후 [저장] 버튼을 꼭 눌러주세요. 저장하지 않으면 반영되지 않습니다.</span>
       </p>
-      <details style="margin-bottom:12px; font-size:12px;">
-        <summary style="cursor:pointer; color:var(--muted);">등록될 내역 보기</summary>
-        <table style="margin-top:10px; font-size:11px;">
-          <thead><tr><th>직원</th><th>일반 사용</th><th>생일연차 사용</th></tr></thead>
-          <tbody>
-            <tr><td>장숭월</td><td>4일</td><td>✅ 1일</td></tr>
-            <tr><td>임혜령</td><td>8.25일</td><td>-</td></tr>
-            <tr><td>천민기</td><td>5.5일</td><td>-</td></tr>
-            <tr><td>홍경표</td><td>11일</td><td>-</td></tr>
-          </tbody>
-        </table>
-      </details>
-      <button class="${alreadyImported ? 'btn-secondary' : 'btn-primary'}" 
-              ${alreadyImported ? 'disabled' : ''}
-              onclick="importLegacyLeaveRecords()" style="width:100%;">
-        ${alreadyImported ? '✅ 등록 완료됨' : '📥 과거 사용 이력 일괄 등록 실행'}
-      </button>
+      <table>
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>발생 연차</th>
+            <th>일반 사용 (조정)</th>
+            <th>생일연차 사용</th>
+            <th>예상 잔여</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${DB.employees.map(e => {
+            const leave = calcAnnualLeave(e);
+            const adjUsed = Number(e.legacyLeaveUsed) || 0;
+            const adjBday = !!e.legacyBirthdayUsed;
+            const totalUsed = adjUsed + (adjBday ? 1 : 0);
+            const remain = leave.total - totalUsed;
+            return `
+              <tr>
+                <td><b>${e.name}</b><br><span style="font-size:10px; color:var(--muted);">${e.position}</span></td>
+                <td>
+                  ${leave.base}일${leave.birthday > 0 ? '<br><span style="font-size:10px; color:var(--muted);">+ 🎂 1일</span>' : ''}${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">+ 🏆 ${leave.tenureBonus}일</span>` : ''}
+                </td>
+                <td>
+                  <input type="number" id="adjUsed_${e.id}" value="${adjUsed}" step="0.5" min="0" style="width:80px;">
+                </td>
+                <td style="text-align:center;">
+                  ${e.birthday ? `<input type="checkbox" id="adjBday_${e.id}" ${adjBday ? 'checked' : ''} style="width:auto; transform:scale(1.3);">` : '<span style="color:var(--muted); font-size:10px;">생일 미등록</span>'}
+                </td>
+                <td id="preview_${e.id}" style="font-weight:600; color:${remain >= 0 ? 'var(--success)' : 'var(--danger)'};">
+                  ${remain}일
+                </td>
+                <td>
+                  <button class="btn-sm btn-primary" onclick="saveLegacyLeave('${e.id}')">저장</button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      <p style="margin-top:12px; padding:10px 12px; background:#eff6ff; border-radius:6px; font-size:11px; color:#1e40af; line-height:1.6;">
+        💡 <b>예상 잔여 = 발생 연차 - (일반 사용 + 생일연차 사용)</b>. 마이너스가 나와도 저장 가능합니다 (초과 사용분).
+      </p>
     </div>
 
     <div class="card">
@@ -2878,78 +2913,33 @@ function renderEmployeeManage() {
   `;
 }
 
-async function importLegacyLeaveRecords() {
-  if (DB.legacy_leave_imported_v1) {
-    alert('이미 등록되었습니다.');
-    return;
-  }
-  if (!confirm('과거 사용 이력 4명분(장숭월·임혜령·천민기·홍경표)을 일괄 등록합니다. 이 작업은 1회만 실행할 수 있습니다. 계속할까요?')) return;
+async function saveLegacyLeave(empId) {
+  const emp = getEmployee(empId);
+  if (!emp) return;
+  const usedInput = document.getElementById('adjUsed_' + empId);
+  const bdayInput = document.getElementById('adjBday_' + empId);
+  const newUsed = Number(usedInput.value) || 0;
+  const newBday = bdayInput ? bdayInput.checked : false;
 
-  const records = [];
-  let counter = 0;
-  const baseTs = Date.now() - 90 * 86400 * 1000;
+  if (newUsed < 0) { alert('사용 일수는 0 이상이어야 합니다.'); return; }
 
-  function addRec(empId, days, dateStr, type, halfType) {
-    counter++;
-    records.push({
-      id: 'rmig' + Date.now() + '_' + empId + '_' + counter,
-      empId,
-      type,
-      startDate: dateStr,
-      endDate: dateStr,
-      days,
-      reason: '앱 도입 전 사용 이력 일괄 등록',
-      status: 'approved',
-      halfType: halfType || null,
-      specialType: null,
-      eventId: null,
-      decidedBy: null,
-      decidedAt: null,
-      createdAt: baseTs + counter * 1000
-    });
-  }
-
-  function splitDays(empId, totalDays, hasBirthday) {
-    const fullDays = Math.floor(totalDays);
-    const hasHalf = (totalDays - fullDays) > 0;
-    let dayCounter = 1;
-    let month = 1;
-    for (let i = 0; i < fullDays; i++) {
-      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
-      addRec(empId, 1, date, '연차');
-      dayCounter += 3;
-      if (dayCounter > 25) { dayCounter = 1; month++; }
-    }
-    if (hasHalf) {
-      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
-      addRec(empId, 0.5, date, '반차', 'morning');
-      dayCounter += 3;
-      if (dayCounter > 25) { dayCounter = 1; month++; }
-    }
-    if (hasBirthday) {
-      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
-      addRec(empId, 1, date, '생일연차');
-    }
-  }
-
-  splitDays('jang',  4,    true);
-  splitDays('lim',   8.25, false);
-  splitDays('cheon', 5.5,  false);
-  splitDays('hong',  11,   false);
-
-  showLoader('과거 이력 등록 중...');
+  showLoader('저장 중...');
   try {
-    await dbBulkInsert('requests', records);
-    DB.requests.push(...records);
-    DB.legacy_leave_imported_v1 = true;
+    // 중앙 DB에 upsert (다른 기기에서도 동일하게 보이도록)
+    await dbUpsert('legacyLeave', 'empId', {
+      empId,
+      used: newUsed,
+      birthdayUsed: newBday
+    });
+    emp.legacyLeaveUsed = newUsed;
+    emp.legacyBirthdayUsed = newBday;
     save(DB);
     hideLoader();
-    showToast(`${records.length}건 등록 완료`, 'success');
-    alert(`✅ 과거 사용 이력 ${records.length}건이 등록되었습니다.\n\n각 직원의 연차 잔여가 다음과 같이 반영됩니다:\n· 장숭월: 잔여 2일\n· 임혜령: 잔여 -1.25일 (초과 사용)\n· 천민기: 잔여 0.5일\n· 홍경표: 잔여 5일`);
-    renderApp();
+    showToast(`${emp.name} 조정 저장 완료`, 'success');
+    renderAdminBody();
   } catch (err) {
     hideLoader();
-    alert('등록 실패: ' + err.message);
+    alert('저장 실패: ' + err.message + '\n\n중앙 DB에 legacyLeave 테이블이 없을 수 있습니다. Apps Script setupTables를 다시 실행해 주세요.');
   }
 }
 
@@ -4033,6 +4023,14 @@ async function syncFromDB() {
   DB.tenureNotifications = {};
   (tables.tenureNotifications || []).forEach(t => {
     if (t.key) DB.tenureNotifications[t.key] = t.sentAt;
+  });
+  // legacyLeave: 직원별 앱 도입 전 사용 조정값 — employees에 주입
+  (tables.legacyLeave || []).forEach(l => {
+    const emp = DB.employees.find(e => e.id === l.empId);
+    if (emp) {
+      emp.legacyLeaveUsed = Number(l.used) || 0;
+      emp.legacyBirthdayUsed = !!l.birthdayUsed;
+    }
   });
   // 숫자 필드 정규화
   DB.requests.forEach(r => { r.days = Number(r.days) || 0; r.createdAt = Number(r.createdAt) || 0; if (r.decidedAt) r.decidedAt = Number(r.decidedAt); });
