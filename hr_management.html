@@ -481,7 +481,7 @@ function defaultData() {
     { id: 'lim',     pw: '1013', name: '임혜령',  role: 'employee',  position: '브랜딩마케팅', joinDate: '2025-10-13', dept: 'CX',    birthday: null, leaveRatio: 1 },
     { id: 'choi',    pw: '0410', name: '최선아',  role: 'employee',  position: '건축설계',   joinDate: '2026-04-10', dept: '설계',   birthday: null, leaveRatio: 1 },
     { id: 'son',     pw: '0504', name: '손동욱',  role: 'employee',  position: '공무',       joinDate: '2026-05-04', dept: '행정',   birthday: null, leaveRatio: 1 },
-    { id: 'jang',    pw: '1103', name: '장숭월',  role: 'admin',     position: '재무회계',   joinDate: '2025-11-03', dept: '행정',   birthday: null, leaveRatio: 0.6 },
+    { id: 'jang',    pw: '1103', name: '장숭월',  role: 'admin',     position: '재무회계',   joinDate: '2025-11-03', dept: '행정',   birthday: null, leaveRatio: 1 },
   ];
   return {
     employees,
@@ -600,6 +600,12 @@ function load() {
     }
     d.migrated_known_birthdays_v3 = true;
   }
+  // 장숭월 연차 비례 해제 (전원 동일 법정 기준으로 통일)
+  if (!d.migrated_jang_full_leave_v1) {
+    const jang = d.employees.find(e => e.id === 'jang');
+    if (jang) jang.leaveRatio = 1;
+    d.migrated_jang_full_leave_v1 = true;
+  }
     if (!d.migrated_known_birthdays_v1) {
     const knownBirthdays = {
       admin: '1985-12-28', // 임상혁
@@ -647,8 +653,7 @@ function calcAnnualLeave(emp) {
     base = Math.min(15 + extra, 25);
   }
 
-  // 파트타임 비례 적용 (장숭월 등)
-  base = Math.round(base * ratio);
+  // 전 직원 동일 기준 (파트타임 포함) — 법정 기준으로 계산
   // 생일연차: 생일이 등록된 직원만 +1
   const birthday = emp.birthday ? 1 : 0;
   // 근속 포상휴가: 해당 연차 주년 해에만 부여 (비례 미적용, 전원 동일)
@@ -2818,7 +2823,33 @@ async function adminDeleteRequest(id) {
 }
 
 function renderEmployeeManage() {
+  const alreadyImported = !!DB.legacy_leave_imported_v1;
   return `
+    <div class="card">
+      <div class="card-title">📥 앱 도입 전 사용 이력 일괄 등록</div>
+      <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:14px;">
+        식구 앱이 만들어지기 전에 이미 사용한 연차 기록을 한 번에 등록합니다. <b>중복 방지를 위해 1회만 실행됩니다.</b><br>
+        ${alreadyImported ? '<span style="color:var(--success); font-weight:600;">✅ 이미 등록 완료되었습니다.</span>' : '<span style="color:#d97706;">⚠️ 아직 등록 전 — 아래 버튼을 한 번만 눌러주세요.</span>'}
+      </p>
+      <details style="margin-bottom:12px; font-size:12px;">
+        <summary style="cursor:pointer; color:var(--muted);">등록될 내역 보기</summary>
+        <table style="margin-top:10px; font-size:11px;">
+          <thead><tr><th>직원</th><th>일반 사용</th><th>생일연차 사용</th></tr></thead>
+          <tbody>
+            <tr><td>장숭월</td><td>4일</td><td>✅ 1일</td></tr>
+            <tr><td>임혜령</td><td>8.25일</td><td>-</td></tr>
+            <tr><td>천민기</td><td>5.5일</td><td>-</td></tr>
+            <tr><td>홍경표</td><td>11일</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </details>
+      <button class="${alreadyImported ? 'btn-secondary' : 'btn-primary'}" 
+              ${alreadyImported ? 'disabled' : ''}
+              onclick="importLegacyLeaveRecords()" style="width:100%;">
+        ${alreadyImported ? '✅ 등록 완료됨' : '📥 과거 사용 이력 일괄 등록 실행'}
+      </button>
+    </div>
+
     <div class="card">
       <div class="card-title">직원 정보 관리</div>
       <button class="btn-primary btn-sm" style="margin-bottom:14px;" onclick="openEmployeeModal()">+ 직원 추가</button>
@@ -2845,6 +2876,81 @@ function renderEmployeeManage() {
       </table>
     </div>
   `;
+}
+
+async function importLegacyLeaveRecords() {
+  if (DB.legacy_leave_imported_v1) {
+    alert('이미 등록되었습니다.');
+    return;
+  }
+  if (!confirm('과거 사용 이력 4명분(장숭월·임혜령·천민기·홍경표)을 일괄 등록합니다. 이 작업은 1회만 실행할 수 있습니다. 계속할까요?')) return;
+
+  const records = [];
+  let counter = 0;
+  const baseTs = Date.now() - 90 * 86400 * 1000;
+
+  function addRec(empId, days, dateStr, type, halfType) {
+    counter++;
+    records.push({
+      id: 'rmig' + Date.now() + '_' + empId + '_' + counter,
+      empId,
+      type,
+      startDate: dateStr,
+      endDate: dateStr,
+      days,
+      reason: '앱 도입 전 사용 이력 일괄 등록',
+      status: 'approved',
+      halfType: halfType || null,
+      specialType: null,
+      eventId: null,
+      decidedBy: null,
+      decidedAt: null,
+      createdAt: baseTs + counter * 1000
+    });
+  }
+
+  function splitDays(empId, totalDays, hasBirthday) {
+    const fullDays = Math.floor(totalDays);
+    const hasHalf = (totalDays - fullDays) > 0;
+    let dayCounter = 1;
+    let month = 1;
+    for (let i = 0; i < fullDays; i++) {
+      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
+      addRec(empId, 1, date, '연차');
+      dayCounter += 3;
+      if (dayCounter > 25) { dayCounter = 1; month++; }
+    }
+    if (hasHalf) {
+      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
+      addRec(empId, 0.5, date, '반차', 'morning');
+      dayCounter += 3;
+      if (dayCounter > 25) { dayCounter = 1; month++; }
+    }
+    if (hasBirthday) {
+      const date = `2026-${String(month).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
+      addRec(empId, 1, date, '생일연차');
+    }
+  }
+
+  splitDays('jang',  4,    true);
+  splitDays('lim',   8.25, false);
+  splitDays('cheon', 5.5,  false);
+  splitDays('hong',  11,   false);
+
+  showLoader('과거 이력 등록 중...');
+  try {
+    await dbBulkInsert('requests', records);
+    DB.requests.push(...records);
+    DB.legacy_leave_imported_v1 = true;
+    save(DB);
+    hideLoader();
+    showToast(`${records.length}건 등록 완료`, 'success');
+    alert(`✅ 과거 사용 이력 ${records.length}건이 등록되었습니다.\n\n각 직원의 연차 잔여가 다음과 같이 반영됩니다:\n· 장숭월: 잔여 2일\n· 임혜령: 잔여 -1.25일 (초과 사용)\n· 천민기: 잔여 0.5일\n· 홍경표: 잔여 5일`);
+    renderApp();
+  } catch (err) {
+    hideLoader();
+    alert('등록 실패: ' + err.message);
+  }
 }
 
 /* ---------- INCENTIVE MODAL ---------- */
