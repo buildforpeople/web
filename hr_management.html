@@ -3113,7 +3113,7 @@ function renderEmployeeStatus() {
     <div class="card">
       <div class="card-title">직원별 연차 현황 (${new Date().getFullYear()}년)</div>
       <table>
-        <thead><tr><th>이름</th><th>부서/직책</th><th>입사일</th><th>근속</th><th>전체 연차</th><th>사용</th><th>잔여</th><th>사용률</th></tr></thead>
+        <thead><tr><th>이름</th><th>부서/직책</th><th>생년월일</th><th>입사일</th><th>근속</th><th>전체 연차</th><th>사용</th><th>잔여</th><th>사용률</th></tr></thead>
         <tbody>
           ${emps.map(e => {
             const leave = calcAnnualLeave(e);
@@ -3123,10 +3123,14 @@ function renderEmployeeStatus() {
             const rate = total > 0 ? Math.round(used/total*100) : 0;
             const tenure = daysBetween(e.joinDate, new Date());
             const years = Math.floor(tenure/365);
+            const bdayCell = e.birthday
+              ? `${e.birthday}<br><span style="font-size:10px; color:var(--muted);">${e.birthdayLunar ? '음력' + (e.birthdayLunarLeap ? ' 윤달' : '') : '양력'}</span>`
+              : '<span style="color:var(--muted); font-size:11px;">미등록</span>';
             return `
               <tr>
                 <td><b>${e.name}</b></td>
                 <td>${e.dept} · ${e.position}</td>
+                <td>${bdayCell}</td>
                 <td>${e.joinDate}</td>
                 <td>${years}년 ${tenure - years*365}일</td>
                 <td>${total}일${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">🏆 포상 ${leave.tenureBonus}일</span>` : ''}</td>
