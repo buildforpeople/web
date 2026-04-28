@@ -748,17 +748,6 @@
   </div>
 </div>
 
-<!-- Progress -->
-<div class="progress-wrap">
-  <div class="container">
-    <div class="progress-steps">
-      <div class="step active" id="step1">현장 기본</div>
-      <div class="step" id="step2">지출 내역</div>
-      <div class="step" id="step3">증빙·계좌</div>
-    </div>
-  </div>
-</div>
-
 <!-- Form -->
 <div class="container">
 <form id="mainForm" novalidate>
@@ -787,13 +776,15 @@
             <option>양주 덕정(JL)</option>
             <option>아산 동정리</option>
             <option>충주 야동리</option>
-            <option>평창 유포리</option>
             <option>청도 수월리</option>
             <option>제천 신월동</option>
             <option>화성 송산</option>
             <option>안산 대부</option>
             <option>강화 창리</option>
             <option>화성 동탄(OH)</option>
+            <option>청라GM사무동</option>
+            <option>화성동탄신동(정온)</option>
+            <option>포천일동수입</option>
           </select>
         </div>
       </div>
@@ -836,7 +827,7 @@
             <option>단열/흡음</option>
             <option>외장 마감</option>
             <option>지붕/금속</option>
-            <option>내부구조</option>
+            <option>방통/내부목공</option>
             <option>타일/석공사</option>
             <option>도장공사</option>
             <option>바닥마감</option>
@@ -1420,28 +1411,21 @@
       taxFiles:    taxFilesData,
     };
 
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-      btn.textContent = btnOriginal;
-      btn.disabled = false;
-      if (data.status === 'ok') {
-        document.getElementById('successSite').textContent = siteEl.value;
-        document.getElementById('successOverlay').classList.add('show');
-      } else {
-        alert('저장 실패: ' + data.message);
-      }
-    })
-    .catch(err => {
-      console.error('전송 오류:', err);
-      alert('네트워크 오류가 발생했습니다. (파일 용량이 너무 크거나 인터넷 연결 문제일 수 있습니다.)');
-      btn.textContent = btnOriginal;
-      btn.disabled = false;
-    });
+    if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload),
+      }).catch(err => console.warn('전송 오류:', err));
+    } else {
+      console.log('⚠️ SCRIPT_URL 미설정:', payload);
+    }
+
+    btn.textContent = btnOriginal;
+    btn.disabled = false;
+
+    document.getElementById('successSite').textContent = siteEl.value;
+    document.getElementById('successOverlay').classList.add('show');
   });
 
   // ── 거래처 DB 모달
