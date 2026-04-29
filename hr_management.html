@@ -642,7 +642,37 @@ function load() {
   }
   return d;
 }
-function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function save(data) {
+  // localStorage는 5MB 한도 — 대용량 base64(톨게이트 첨부, 카드 영수증)를 제외하고 저장
+  // 원본 데이터는 중앙 DB(Sheets)에 있으므로 안전
+  try {
+    const lite = JSON.parse(JSON.stringify(data));
+    if (lite.tollgate) lite.tollgate = lite.tollgate.map(function(t) {
+      const c = Object.assign({}, t);
+      delete c.fileData;
+      return c;
+    });
+    if (lite.cardUsage) lite.cardUsage = lite.cardUsage.map(function(c) {
+      const r = Object.assign({}, c);
+      delete r.imageData;
+      return r;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lite));
+  } catch (e) {
+    // 용량 초과 시 기존 데이터 삭제 후 재시도
+    console.warn('localStorage 저장 실패, 캐시 정리 후 재시도:', e.message);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      const lite2 = JSON.parse(JSON.stringify(data));
+      if (lite2.tollgate) lite2.tollgate = lite2.tollgate.map(function(t) { const c = Object.assign({}, t); delete c.fileData; return c; });
+      if (lite2.cardUsage) lite2.cardUsage = lite2.cardUsage.map(function(c) { const r = Object.assign({}, c); delete r.imageData; return r; });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lite2));
+    } catch (e2) {
+      console.warn('localStorage 재시도도 실패:', e2.message);
+      // 중앙 DB에는 이미 저장되어 있으므로 치명적이지 않음
+    }
+  }
+}
 
 let DB = load();
 
