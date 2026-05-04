@@ -222,7 +222,13 @@
     gap: 4px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 18px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
+  .tabs::-webkit-scrollbar { height: 3px; }
+  .tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
   .tab {
     background: transparent;
     padding: 11px 18px;
@@ -230,6 +236,8 @@
     border-bottom: 2px solid transparent;
     border-radius: 0;
     font-weight: 500;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
@@ -529,8 +537,8 @@ function load() {
   if (jang) {
     jang.name = '장숭월';
     jang.role = 'admin';
-    jang.position = '재무회계 (주3일)';
-    jang.dept = '재무회계';
+    jang.position = '재무회계';
+    jang.dept = '행정';
   }
   d.employees = d.employees.filter(e => e.id !== 'finance');
   // 정확한 입사일 동기화 (1회만 적용)
@@ -577,7 +585,7 @@ function load() {
   if (!d.migrated_birthday_ratio_v1) {
     d.employees.forEach(e => {
       if (!('birthday' in e)) e.birthday = null;
-      if (!('leaveRatio' in e)) e.leaveRatio = e.id === 'jang' ? 0.6 : 1;
+      if (!('leaveRatio' in e)) e.leaveRatio = 1;
     });
     d.migrated_birthday_ratio_v1 = true;
   }
@@ -1072,8 +1080,34 @@ async function renderApp() {
 }
 
 /* ---------- EMPLOYEE DASHBOARD ---------- */
+let empTab = 'dashboard';
+function setEmpTab(t) { empTab = t; renderEmployee(getEmployee(DB.session.empId)); }
+
 function renderEmployee(emp) {
-  document.getElementById('appContent').innerHTML = employeeDashboardHTML(emp);
+  const content = document.getElementById('appContent');
+  content.innerHTML = `
+    <div class="tabs">
+      <button class="tab ${empTab==='dashboard'?'active':''}" onclick="setEmpTab('dashboard')">내 근태</button>
+      <button class="tab ${empTab==='salary'?'active':''}" onclick="setEmpTab('salary')">💰 급여·계약</button>
+    </div>
+    <div id="empBody"></div>
+  `;
+  const body = document.getElementById('empBody');
+  if (empTab === 'salary') {
+    body.innerHTML = renderSalaryContractTab(emp);
+  } else {
+    body.innerHTML = employeeDashboardHTML(emp);
+  }
+}
+
+function renderSalaryContractTab(emp) {
+  return `
+    <div style="padding:10px 14px; background:#fef3c7; border-radius:8px; margin-bottom:18px; font-size:12px; color:#92400e; line-height:1.6;">
+      🔒 이 페이지는 본인의 급여·계약 정보입니다. 주변 사람이 볼 수 없는 환경에서 확인해 주세요.
+    </div>
+    ${renderMyContractCard(emp)}
+    ${renderSalaryEstimateCard(emp)}
+  `;
 }
 
 function employeeDashboardHTML(emp) {
@@ -1173,8 +1207,6 @@ function employeeDashboardHTML(emp) {
     ${renderOvertimeSection(emp)}
     ${renderMileageSection(emp)}
     ${renderCardUsageSection(emp)}
-    ${renderMyContractCard(emp)}
-    ${renderSalaryEstimateCard(emp)}
     ${renderMyWelfareCard(emp)}
   `;
 }
