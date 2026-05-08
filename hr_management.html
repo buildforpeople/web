@@ -1333,9 +1333,6 @@ let mileageMonth = new Date().toISOString().slice(0,7);
 
 function renderMileageSection(emp) {
   const vehicle = DB.vehicles[emp.id] || { fuelType: '휘발유', efficiency: 12 };
-  const fp = DB.fuelPrices[mileageMonth] || { gasoline: 0, diesel: 0 };
-  const priceKey = vehicle.fuelType === '경유' ? 'diesel' : 'gasoline';
-  const price = fp[priceKey] || 0;
 
   const entries = DB.mileage
     .filter(m => m.empId === emp.id && m.date.slice(0,7) === mileageMonth)
@@ -1344,10 +1341,11 @@ function renderMileageSection(emp) {
   let cumulative = 0;
   const rows = entries.map(e => {
     cumulative += Number(e.distance);
-    const amount = vehicle.efficiency > 0 && price > 0
-      ? Math.round((Number(e.distance) / vehicle.efficiency) * price)
+    const ep = Number(e.fuelPrice) || 0;
+    const amount = vehicle.efficiency > 0 && ep > 0
+      ? Math.round((Number(e.distance) / vehicle.efficiency) * ep)
       : 0;
-    return { ...e, cumulative, amount };
+    return { ...e, cumulative, amount, fuelPriceNum: ep };
   });
   const totalDistance = rows.reduce((s, r) => s + Number(r.distance), 0);
   const fuelAmount = rows.reduce((s, r) => s + r.amount, 0);
@@ -1381,31 +1379,29 @@ function renderMileageSection(emp) {
           <label>차량 연비 (km/L)</label>
           <input type="number" step="0.1" value="${vehicle.efficiency}" onchange="saveVehicle('${emp.id}','efficiency',this.value)">
         </div>
-        <div style="flex:0 0 160px;">
-          <label>해당 월 유가 (원/L)</label>
-          <input type="number" value="${price||''}" placeholder="0" onchange="saveFuelPrice('${mileageMonth}','${vehicle.fuelType}',this.value)">
-        </div>
       </div>
 
       <p style="padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:14px;">
-        ℹ️ 유가 적용 기준: <b>월말 시점</b>에 <a href="https://www.opinet.co.kr" target="_blank" style="color:#92400e; text-decoration:underline;"><b>오피넷(www.opinet.co.kr)</b></a> 메인화면의 <b>전국 평균 금액</b>을 확인하여 수동 입력합니다. 금액 산식: <b>(이동거리 ÷ 차량 연비) × 해당 월 유가 × 1.1</b> (감가·유지보수 10% 포함)
+        ℹ️ 주유 시 <b>리터당 단가</b>를 직접 입력해 주세요. 금액 산식: <b>(이동거리 ÷ 차량 연비) × 주유 유가 × 1.1</b> (감가·유지보수 10% 포함)
       </p>
 
-      <div style="display:grid; grid-template-columns: 155px 130px 1fr auto; gap:8px; margin-bottom:14px;">
+      <div style="display:grid; grid-template-columns: 140px 100px 110px 1fr auto; gap:8px; margin-bottom:14px;">
         <input type="date" id="mlDate" value="${new Date().toISOString().slice(0,10)}">
-        <input type="number" id="mlDist" placeholder="거리 (km)" step="0.1">
-        <input type="text" id="mlDesc" placeholder="이동 내용 (예: 용인수지 현장 이동)">
+        <input type="number" id="mlDist" placeholder="거리(km)" step="0.1">
+        <input type="number" id="mlFuelPrice" placeholder="유가(원/L)" step="10">
+        <input type="text" id="mlDesc" placeholder="이동 내용 (예: 용인수지 현장)">
         <button class="btn-primary btn-sm" onclick="addMileage('${emp.id}')">+ 추가</button>
       </div>
 
       ${rows.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">해당 월 운행 내역이 없습니다.</p>' : `
         <table>
-          <thead><tr><th>날짜</th><th>거리</th><th>이동 내용</th><th>누계</th><th>금액</th><th></th></tr></thead>
+          <thead><tr><th>날짜</th><th>거리</th><th>유가</th><th>이동 내용</th><th>누계</th><th>금액</th><th></th></tr></thead>
           <tbody>
             ${rows.map(r => `
               <tr>
                 <td>${r.date}</td>
                 <td>${Number(r.distance).toLocaleString()} km</td>
+                <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미입력</span>'}</td>
                 <td>${escapeHtml(r.description||'-')}</td>
                 <td style="color:var(--muted);">${r.cumulative.toLocaleString()} km</td>
                 <td style="font-weight:600;">${r.amount.toLocaleString()}원</td>
@@ -1483,43 +1479,40 @@ function renderMileageHistory(empId) {
   if (entries.length === 0) return '';
 
   const vehicle = DB.vehicles[empId] || { fuelType: '휘발유', efficiency: 12 };
-  const priceKey = vehicle.fuelType === '경유' ? 'diesel' : 'gasoline';
 
   const byMonth = {};
   entries.forEach(e => {
     const m = e.date.slice(0,7);
-    if (!byMonth[m]) byMonth[m] = { count: 0, dist: 0 };
+    if (!byMonth[m]) byMonth[m] = { count: 0, dist: 0, fuelTotal: 0 };
     byMonth[m].count++;
     byMonth[m].dist += Number(e.distance);
+    const ep = Number(e.fuelPrice) || 0;
+    byMonth[m].fuelTotal += vehicle.efficiency > 0 && ep > 0
+      ? Math.round((Number(e.distance) / vehicle.efficiency) * ep)
+      : 0;
   });
   const months = Object.keys(byMonth).sort((a,b) => b.localeCompare(a));
 
   const rows = months.map(m => {
-    const fp = DB.fuelPrices[m] || { gasoline: 0, diesel: 0 };
-    const price = fp[priceKey] || 0;
-    const base = (vehicle.efficiency > 0 && price > 0)
-      ? Math.round((byMonth[m].dist / vehicle.efficiency) * price)
-      : 0;
-    const surcharge = Math.round(base * 0.1);
-    const finalAmt = base + surcharge;
-    return { month: m, ...byMonth[m], price, base, surcharge, finalAmt };
+    const surcharge = Math.round(byMonth[m].fuelTotal * 0.1);
+    const finalAmt = byMonth[m].fuelTotal + surcharge;
+    return { month: m, ...byMonth[m], surcharge, finalAmt };
   });
 
   return `
     <div class="card-title" style="margin-top:28px;">월별 유류비 이력</div>
     <p style="font-size:11px; color:var(--muted); margin-bottom:10px; line-height:1.6;">
-      ※ 현재 차량 설정(${vehicle.fuelType}, 연비 ${vehicle.efficiency}km/L) 기준으로 각 월에 저장된 유가를 적용한 산출 결과입니다. 산식: (총거리 ÷ 연비) × 유가 × 1.1
+      ※ 각 운행 건별로 입력된 주유 유가와 차량 연비(${vehicle.efficiency}km/L) 기준 산출 결과입니다. 산식: 건별 (거리 ÷ 연비) × 유가 × 1.1
     </p>
     <table>
-      <thead><tr><th>월</th><th>건수</th><th>총 거리</th><th>적용 유가</th><th>유류비</th><th>감가 10%</th><th>최종 지급액</th><th></th></tr></thead>
+      <thead><tr><th>월</th><th>건수</th><th>총 거리</th><th>유류비</th><th>감가 10%</th><th>최종 지급액</th><th></th></tr></thead>
       <tbody>
         ${rows.map(r => `
           <tr>
             <td><b>${r.month}</b>${r.month === mileageMonth ? ' <span class="badge badge-approved">조회중</span>' : ''}</td>
             <td>${r.count}건</td>
             <td>${r.dist.toLocaleString()} km</td>
-            <td>${r.price ? r.price.toLocaleString()+'원/L' : '<span style="color:var(--danger);">미설정</span>'}</td>
-            <td>${r.base.toLocaleString()}원</td>
+            <td>${r.fuelTotal.toLocaleString()}원</td>
             <td style="color:var(--muted);">+ ${r.surcharge.toLocaleString()}원</td>
             <td style="color:var(--primary); font-weight:700;">${r.finalAmt.toLocaleString()}원</td>
             <td><button class="btn-sm btn-secondary" onclick="setMileageMonth('${r.month}')">상세 보기</button></td>
@@ -1570,11 +1563,13 @@ async function saveFuelPrice(month, fuelType, price) {
 async function addMileage(empId) {
   const date = document.getElementById('mlDate').value;
   const distance = document.getElementById('mlDist').value;
+  const fuelPrice = document.getElementById('mlFuelPrice').value;
   const description = document.getElementById('mlDesc').value.trim();
   if (!date || !distance) { alert('날짜와 거리를 입력해 주세요.'); return; }
+  if (!fuelPrice || Number(fuelPrice) <= 0) { alert('주유 유가(원/L)를 입력해 주세요.'); return; }
   const row = {
     id: 'm' + Date.now(),
-    empId, date, distance: Number(distance), description,
+    empId, date, distance: Number(distance), fuelPrice: Number(fuelPrice), description,
     createdAt: Date.now()
   };
   showLoader('저장 중...');
@@ -2187,15 +2182,14 @@ function refreshSalaryEstimate() {
   const otHours = otEntries.reduce((s, o) => s + Number(o.hours), 0);
   const otPay = Math.round(hourlyRate * multiplier * otHours);
 
-  // 3) 유류비 (주행 + 감가 10% + 톨게이트)
+  // 3) 유류비 (건별 유가 × 주행 + 감가 10% + 톨게이트)
   const vehicle = DB.vehicles[emp.id] || { fuelType: '휘발유', efficiency: 12 };
-  const fp = DB.fuelPrices[month] || { gasoline: 0, diesel: 0 };
-  const priceKey = vehicle.fuelType === '경유' ? 'diesel' : 'gasoline';
-  const price = fp[priceKey] || 0;
   const mlEntries = DB.mileage.filter(m => m.empId === emp.id && m.date.slice(0,7) === month);
   const totalDist = mlEntries.reduce((s, m) => s + Number(m.distance), 0);
-  const fuelBase = (vehicle.efficiency > 0 && price > 0)
-    ? Math.round((totalDist / vehicle.efficiency) * price) : 0;
+  const fuelBase = mlEntries.reduce((s, m) => {
+    const ep = Number(m.fuelPrice) || 0;
+    return s + (vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(m.distance) / vehicle.efficiency) * ep) : 0);
+  }, 0);
   const fuelSurcharge = Math.round(fuelBase * 0.1);
   const tollgateEntries = DB.tollgate.filter(t => t.empId === emp.id && t.date.slice(0,7) === month);
   const tollgateTotal = tollgateEntries.reduce((s, t) => s + Number(t.amount), 0);
@@ -3023,19 +3017,18 @@ function renderOvertimeStatus() {
 
 function renderFuelStatus() {
   const emps = DB.employees;
-  const fp = DB.fuelPrices[mileageMonth] || { gasoline: 0, diesel: 0 };
 
   const rows = emps.map(e => {
     const vehicle = DB.vehicles[e.id] || { fuelType: '휘발유', efficiency: 12 };
-    const price = vehicle.fuelType === '경유' ? fp.diesel : fp.gasoline;
     const entries = DB.mileage.filter(m => m.empId === e.id && m.date.slice(0,7) === mileageMonth);
     const totalDist = entries.reduce((s, x) => s + Number(x.distance), 0);
-    const fuelAmount = vehicle.efficiency > 0 && price > 0
-      ? Math.round((totalDist / vehicle.efficiency) * price)
-      : 0;
+    const fuelAmount = entries.reduce((s, x) => {
+      const ep = Number(x.fuelPrice) || 0;
+      return s + (vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(x.distance) / vehicle.efficiency) * ep) : 0);
+    }, 0);
     const surcharge = Math.round(fuelAmount * 0.1);
     const finalAmount = fuelAmount + surcharge;
-    return { emp: e, vehicle, price, count: entries.length, totalDist, fuelAmount, surcharge, finalAmount };
+    return { emp: e, vehicle, count: entries.length, totalDist, fuelAmount, surcharge, finalAmount };
   });
   const grandFuel = rows.reduce((s, r) => s + r.fuelAmount, 0);
   const grandSurcharge = rows.reduce((s, r) => s + r.surcharge, 0);
@@ -3046,12 +3039,9 @@ function renderFuelStatus() {
       <div class="card-title">직원별 유류비 지급 현황</div>
       <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
         <input type="month" value="${mileageMonth}" onchange="setMileageMonth(this.value)" style="max-width:180px;">
-        <span style="color:var(--muted); font-size:12px;">
-          해당 월 유가 — 휘발유: <b>${fp.gasoline ? fp.gasoline.toLocaleString()+'원/L' : '미설정'}</b> · 경유: <b>${fp.diesel ? fp.diesel.toLocaleString()+'원/L' : '미설정'}</b>
-        </span>
       </div>
       <p style="padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:14px;">
-        ℹ️ 유가 적용 기준: <b>월말 시점</b>에 <a href="https://www.opinet.co.kr" target="_blank" style="color:#92400e; text-decoration:underline;"><b>오피넷(www.opinet.co.kr)</b></a> 메인화면의 <b>전국 평균 금액</b>을 확인하여 수동 입력합니다. 금액 산식: <b>(거리 ÷ 연비) × 유가 × 1.1</b> (감가·유지보수 10% 포함)
+        ℹ️ 직원이 운행 기록 입력 시 <b>주유 유가(원/L)</b>를 직접 입력합니다. 금액 산식: <b>건별 (거리 ÷ 연비) × 주유 유가 × 1.1</b> (감가·유지보수 10% 포함)
       </p>
       <table>
         <thead><tr><th>이름</th><th>부서/직책</th><th>연료</th><th>연비</th><th>건수</th><th>총 거리</th><th>유류비</th><th>감가 10%</th><th>최종 지급액</th></tr></thead>
@@ -3087,43 +3077,42 @@ function renderFuelStatus() {
 function renderFuelHistoryAll() {
   if (DB.mileage.length === 0) return '';
 
-  // 월별 × 직원별 집계
-  const history = {}; // {month: {empId: {count, dist}}}
+  // 월별 × 직원별 집계 (건별 유가 기반)
+  const history = {}; // {month: {empId: {count, dist, fuelTotal}}}
   DB.mileage.forEach(m => {
     const mo = m.date.slice(0,7);
     if (!history[mo]) history[mo] = {};
-    if (!history[mo][m.empId]) history[mo][m.empId] = { count: 0, dist: 0 };
+    if (!history[mo][m.empId]) history[mo][m.empId] = { count: 0, dist: 0, fuelTotal: 0 };
     history[mo][m.empId].count++;
     history[mo][m.empId].dist += Number(m.distance);
+    const vehicle = DB.vehicles[m.empId] || { efficiency: 12 };
+    const ep = Number(m.fuelPrice) || 0;
+    history[mo][m.empId].fuelTotal += vehicle.efficiency > 0 && ep > 0
+      ? Math.round((Number(m.distance) / vehicle.efficiency) * ep)
+      : 0;
   });
   const months = Object.keys(history).sort((a,b) => b.localeCompare(a));
 
-  // 월별 합계 계산
   const monthTotals = months.map(mo => {
-    const fp = DB.fuelPrices[mo] || { gasoline: 0, diesel: 0 };
     const empRows = Object.keys(history[mo]).map(eid => {
       const e = getEmployee(eid);
       const vehicle = DB.vehicles[eid] || { fuelType: '휘발유', efficiency: 12 };
-      const price = vehicle.fuelType === '경유' ? fp.diesel : fp.gasoline;
       const data = history[mo][eid];
-      const base = (vehicle.efficiency > 0 && price > 0)
-        ? Math.round((data.dist / vehicle.efficiency) * price)
-        : 0;
-      const surcharge = Math.round(base * 0.1);
-      return { emp: e, vehicle, price, ...data, base, surcharge, finalAmt: base + surcharge };
+      const surcharge = Math.round(data.fuelTotal * 0.1);
+      return { emp: e, vehicle, ...data, surcharge, finalAmt: data.fuelTotal + surcharge };
     });
     const total = empRows.reduce((s, r) => s + r.finalAmt, 0);
-    return { month: mo, fp, empRows, total };
+    return { month: mo, empRows, total };
   });
 
   return `
     <div class="card">
       <div class="card-title">전체 월별 유류비 이력</div>
       <p style="font-size:11px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
-        ※ 각 직원의 현재 차량 설정(연료/연비) 기준으로 각 월에 저장된 유가를 적용하여 산출한 금액입니다.
+        ※ 각 운행 건별로 직원이 입력한 주유 유가와 차량 연비를 기준으로 산출한 금액입니다.
       </p>
       <table>
-        <thead><tr><th>월</th><th>유가 (휘발유/경유)</th><th>직원</th><th>건수</th><th>총 거리</th><th>유류비</th><th>최종 지급액</th></tr></thead>
+        <thead><tr><th>월</th><th>직원</th><th>건수</th><th>총 거리</th><th>유류비</th><th>최종 지급액</th></tr></thead>
         <tbody>
           ${monthTotals.flatMap(mt => {
             const rows = mt.empRows;
@@ -3135,15 +3124,11 @@ function renderFuelHistoryAll() {
                     ${mt.month === mileageMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}
                     <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setMileageMonth('${mt.month}')">상세 보기</button>
                   </td>
-                  <td rowspan="${rows.length}" style="vertical-align:top; font-size:12px; color:var(--muted);">
-                    ${mt.fp.gasoline ? mt.fp.gasoline.toLocaleString()+'원' : '<span style="color:var(--danger);">미설정</span>'}<br>
-                    ${mt.fp.diesel ? mt.fp.diesel.toLocaleString()+'원' : '<span style="color:var(--danger);">미설정</span>'}
-                  </td>
                 ` : ''}
                 <td>${r.emp?.name || '-'} <span style="color:var(--muted); font-size:11px;">(${r.vehicle.fuelType} ${r.vehicle.efficiency}km/L)</span></td>
                 <td>${r.count}건</td>
                 <td>${r.dist.toLocaleString()} km</td>
-                <td>${r.base.toLocaleString()}원</td>
+                <td>${r.fuelTotal.toLocaleString()}원</td>
                 <td style="color:var(--primary); font-weight:600;">${r.finalAmt.toLocaleString()}원</td>
               </tr>
             `).concat(`
@@ -4487,7 +4472,7 @@ async function syncFromDB() {
   // 숫자 필드 정규화
   DB.requests.forEach(r => { r.days = Number(r.days) || 0; r.createdAt = Number(r.createdAt) || 0; if (r.decidedAt) r.decidedAt = Number(r.decidedAt); });
   DB.overtime.forEach(o => { o.hours = Number(o.hours) || 0; o.createdAt = Number(o.createdAt) || 0; });
-  DB.mileage.forEach(m => { m.distance = Number(m.distance) || 0; m.createdAt = Number(m.createdAt) || 0; });
+  DB.mileage.forEach(m => { m.distance = Number(m.distance) || 0; m.fuelPrice = Number(m.fuelPrice) || 0; m.createdAt = Number(m.createdAt) || 0; });
   DB.tollgate.forEach(t => { t.amount = Number(t.amount) || 0; t.createdAt = Number(t.createdAt) || 0; });
   DB.cardUsage.forEach(c => { c.amount = Number(c.amount) || 0; c.createdAt = Number(c.createdAt) || 0; if (c.sentAt) c.sentAt = Number(c.sentAt); });
   DB.welfare.forEach(w => { w.year = Number(w.year) || 0; w.totalAmount = Number(w.totalAmount) || 0; w.companyAmount = Number(w.companyAmount) || 0; w.createdAt = Number(w.createdAt) || 0; });
