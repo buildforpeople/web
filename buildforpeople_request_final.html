@@ -791,8 +791,13 @@
   .lookup-hero .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .lookup-hero .lbadge {
     background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85);
-    font-size: 12px; padding: 4px 10px; border-radius: 2px;
+    font-size: 12px; padding: 4px 10px; border-radius: 2px; cursor: pointer;
+    transition: all 0.15s; border: 1px solid transparent;
   }
+  .lookup-hero .lbadge.active-filter {
+    background: white; color: var(--accent); border-color: white; font-weight: 700;
+  }
+  .lookup-hero .lbadge:hover { background: rgba(255,255,255,0.25); }
   .site-block { margin-bottom: 32px; }
   .site-block-title {
     font-size: 14px; font-weight: 700; color: var(--label);
@@ -947,7 +952,7 @@
 
     // 히어로 표시
     document.getElementById('lookupName').textContent = manager.name + ' 소장님';
-    document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge">${s}</span>`).join('');
+    document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge" onclick="filterSite('${s}', this)">${s}</span>`).join('');
     document.getElementById('lookupHero').style.display = '';
 
     content.innerHTML = '<div class="lookup-loading"><div class="lookup-spinner"></div>데이터를 불러오는 중...</div>';
@@ -974,6 +979,26 @@
     }
   }
 
+
+  function filterSite(site, el) {
+    // 배지 active 토글
+    const badges = document.querySelectorAll('#lookupBadges .lbadge');
+    const wasActive = el.classList.contains('active-filter');
+    badges.forEach(b => b.classList.remove('active-filter'));
+
+    const blocks = document.querySelectorAll('.site-block');
+    if (wasActive) {
+      // 이미 선택된 거 다시 누르면 전체 표시
+      blocks.forEach(b => b.style.display = '');
+    } else {
+      el.classList.add('active-filter');
+      const targetId = 'block-' + site.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      blocks.forEach(b => {
+        b.style.display = b.id === targetId ? '' : 'none';
+      });
+    }
+  }
+
   function renderLookup(rows, sites) {
     const content = document.getElementById('lookupContent');
     if (!rows || rows.length === 0) {
@@ -991,7 +1016,7 @@
       const total = sRows.reduce((s,r) => s + (Number(r.amount)||0), 0);
       const doneCount = sRows.filter(r => r.status === '완료').length;
 
-      html += `<div class="site-block">
+      html += `<div class="site-block" id="block-${site.replace(/[^a-zA-Z0-9가-힣]/g,'_')}">
         <div class="site-block-title">
           <span>${site}</span>
           <span class="ttl-total">합계 ${total.toLocaleString('ko-KR')}원</span>
@@ -1088,16 +1113,6 @@
 </div>
 
 <!-- Progress -->
-<div class="progress-wrap">
-  <div class="container">
-    <div class="progress-steps">
-      <div class="step active" id="step1">현장 기본</div>
-      <div class="step" id="step2">지출 내역</div>
-      <div class="step" id="step3">증빙·계좌</div>
-    </div>
-  </div>
-</div>
-
 <!-- Form -->
 <div class="container">
 <form id="mainForm" novalidate>
@@ -1965,7 +1980,7 @@
 
     // 히어로 표시
     document.getElementById('lookupName').textContent = manager.name + ' 소장님';
-    document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge">${s}</span>`).join('');
+    document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge" onclick="filterSite('${s}', this)">${s}</span>`).join('');
     document.getElementById('lookupHero').style.display = '';
 
     content.innerHTML = '<div class="lookup-loading"><div class="lookup-spinner"></div>데이터를 불러오는 중...</div>';
@@ -1992,6 +2007,26 @@
     }
   }
 
+
+  function filterSite(site, el) {
+    // 배지 active 토글
+    const badges = document.querySelectorAll('#lookupBadges .lbadge');
+    const wasActive = el.classList.contains('active-filter');
+    badges.forEach(b => b.classList.remove('active-filter'));
+
+    const blocks = document.querySelectorAll('.site-block');
+    if (wasActive) {
+      // 이미 선택된 거 다시 누르면 전체 표시
+      blocks.forEach(b => b.style.display = '');
+    } else {
+      el.classList.add('active-filter');
+      const targetId = 'block-' + site.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+      blocks.forEach(b => {
+        b.style.display = b.id === targetId ? '' : 'none';
+      });
+    }
+  }
+
   function renderLookup(rows, sites) {
     const content = document.getElementById('lookupContent');
     if (!rows || rows.length === 0) {
@@ -2009,7 +2044,7 @@
       const total = sRows.reduce((s,r) => s + (Number(r.amount)||0), 0);
       const doneCount = sRows.filter(r => r.status === '완료').length;
 
-      html += `<div class="site-block">
+      html += `<div class="site-block" id="block-${site.replace(/[^a-zA-Z0-9가-힣]/g,'_')}">
         <div class="site-block-title">
           <span>${site}</span>
           <span class="ttl-total">합계 ${total.toLocaleString('ko-KR')}원</span>
