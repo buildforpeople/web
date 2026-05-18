@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>(주)사람사는집 | 현장지출관리</title>
+<title>(주)사람사는집 | 현장관리시스템</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -834,18 +834,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .lookup-empty { text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px; }
   .no-access { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.9; }
-  
-  /* ── 모바일 테이블 최적화 ── */
-  @media (max-width: 640px) {
-    .data-table { min-width: unset; font-size: 12px; }
-    .data-table thead th,
-    .data-table tbody td { padding: 7px 6px; }
-    /* 품목, 세금계산서 숨김 */
-    .data-table .col-item,
-    .data-table .col-tax { display: none; }
-    .td-amount { font-size: 12px; }
-  }
-
   .no-access strong { display: block; font-size: 15px; color: var(--label); margin-bottom: 8px; }
 
 </style>
@@ -935,15 +923,17 @@
 
   // ── 소장 매핑 (이메일 → 현장)
   const MANAGER_MAP = [
-    { email: 'buildforpeople.sw@gmail.com', name: '장숭월', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GM_TCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
-    { email: 'my.new.homeplace@gmail.com', name: '임상혁(관리자)', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GM_TCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
-    { email: 'hgp0405@gmail.com',              name: '홍경표', sites: ['용인 양지 푸르메마을', '가평 묵안리','본사사무실'] },
-    { email: 'buildforpeople.ksy@gmail.com',   name: '고성윤', sites: ['아산 유곡리5','본사사무실'] },
-    { email: 'buildforpeople.jg@gmail.com',    name: '전종건', sites: ['충주 야동리','본사사무실'] },
+    { email: 'buildforpeople.sw@gmail.com', name: '장숭월', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GMTCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
+    { email: 'my.new.homeplace@gmail.com', name: '임상혁(관리자)', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GMTCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
+    { email: 'hgp0405@gmail.com',              name: '홍경표', sites: ['용인 양지 푸르메마을', '가평 묵안리', '본사사무실'] },
+    { email: 'buildforpeople.ksy@gmail.com',   name: '고성윤', sites: ['아산 유곡리5', '본사사무실'] },
+    { email: 'buildforpeople.jg@gmail.com',    name: '전종건', sites: ['충주 야동리', '본사사무실'] },
     { email: 'kkdbky48@gmail.com',               name: '강기동', sites: ['원주 반곡동', '청도 수월리'] },
     { email: 'cet690103@gmail.com',            name: '정은택', sites: ['용인 수지동천(경계없는)'] },
     { email: 'aid83430210@gmail.com',              name: '안일도', sites: ['양주 덕정(JL)'] },
-    { email: 'buildforpeople.hr@gmail.com',        name: '임혜령', sites: ['본사사무실'] },
+    { email: 'buildforpeople.hr@gmail.com',    name: '임혜령', sites: ['본사사무실'] },
+    { email: 'buildforpeople.mg@gmail.com',    name: '천민기', sites: ['본사사무실'] },
+    { email: 'buildforpeople.sa@gmail.com',    name: '최선아', sites: ['본사사무실'] },
   ];
 
   function getManagerInfo(email) {
@@ -965,7 +955,7 @@
     }
 
     // 히어로 표시
-    document.getElementById('lookupName').textContent = manager.name + ' 님';
+    document.getElementById('lookupName').textContent = manager.name + ' 소장님';
     document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge" onclick="filterSite('${s}', this)">${s}</span>`).join('');
     document.getElementById('lookupHero').style.display = '';
 
@@ -1037,8 +1027,8 @@
         </div>
         <div class="summary-bar">
           <div class="sb-item"><div class="sb-label">전체</div><div class="sb-value">${sRows.length}건</div></div>
-          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건 · ${sRows.filter(r=>r.status==='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
-          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건 · ${sRows.filter(r=>r.status!=='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
+          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건</div></div>
+          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건</div></div>
         </div>`;
 
       if (sRows.length === 0) {
@@ -1046,19 +1036,18 @@
       } else {
         html += `<div class="table-wrap"><table class="data-table">
           <thead><tr>
-            <th>날짜</th><th>공종</th><th>지출구분</th><th>거래처명</th>
-            <th class="col-item">품목 및 수량</th><th style="text-align:right">청구금액</th><th class="col-tax">세금계산서</th><th>상태</th><th>완료일</th>
+            <th>신청일</th><th>공종</th><th>지출구분</th><th>거래처명</th>
+            <th>품목 및 수량</th><th style="text-align:right">청구 총액</th><th>세금계산서</th><th>상태</th>
           </tr></thead><tbody>
           ${sRows.map(r => `<tr>
-            <td class="td-mono">${r.date ? r.date.slice(5).replace('-','/') : ''}</td>
+            <td class="td-mono">${r.date||''}</td>
             <td>${r.category||''}</td>
             <td>${r.expType||''}</td>
             <td><strong>${r.vendor||''}</strong></td>
-            <td class="col-item">${r.item||''}</td>
+            <td>${r.item||''}</td>
             <td class="td-amount">${Number(r.amount||0).toLocaleString('ko-KR')}원</td>
-            <td class="col-tax">${r.taxYn||''}</td>
+            <td>${r.taxYn||''}</td>
             <td><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
-            <td class="td-mono">${r.doneDate||''}</td>
           </tr>`).join('')}
           </tbody></table></div>`;
       }
@@ -1076,7 +1065,7 @@
   <div class="login-card">
     <div class="login-card-top">
       <div class="lc-label">SITE MANAGEMENT</div>
-      <h1>현장지출관리</h1>
+      <h1>현장관리시스템</h1>
       <p>(주)사람사는집 · Build for People</p>
     </div>
     <div class="login-card-body">
@@ -1102,7 +1091,7 @@
 
 <!-- Header -->
 <header class="site-header">
-  <div class="brand"><strong>(주)사람사는집</strong> · 현장지출관리</div>
+  <div class="brand"><strong>(주)사람사는집</strong> · 현장관리시스템</div>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="userNameBadge" style="font-size:12px;color:#aaa;font-family:'IBM Plex Mono',monospace;display:none"></span>
     <button id="logoutBtn" onclick="logout()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;padding:5px 12px;border-radius:2px;font-family:'Noto Sans KR',sans-serif;font-size:12px;cursor:pointer">로그아웃</button>
@@ -1162,7 +1151,7 @@
             <option>안산 대부</option>
             <option>강화 창리</option>
             <option>화성 동탄(OH)</option>
-            <option>청라GM사무동</option>
+            <option>청라GMTCK</option>
             <option>화성동탄신동(정온)</option>
             <option>포천일동수입</option>
             <option>본사사무실</option>
@@ -1208,7 +1197,7 @@
             <option>단열/흡음</option>
             <option>외장 마감</option>
             <option>지붕/금속</option>
-            <option>방통/내부목공</option>
+            <option>내부구조</option>
             <option>타일/석공사</option>
             <option>도장공사</option>
             <option>바닥마감</option>
@@ -1216,6 +1205,7 @@
             <option>전기/설비</option>
             <option>옥외 및 기타</option>
             <option>현장일반관리비</option>
+            <option>본사사무실</option>
           </select>
         </div>
       </div>
@@ -1807,28 +1797,21 @@
       taxFiles:    taxFilesData,
     };
 
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-      btn.textContent = btnOriginal;
-      btn.disabled = false;
-      if (data.status === 'ok') {
-        document.getElementById('successSite').textContent = siteEl.value;
-        document.getElementById('successOverlay').classList.add('show');
-      } else {
-        alert('저장 실패: ' + data.message);
-      }
-    })
-    .catch(err => {
-      console.error('전송 오류:', err);
-      alert('네트워크 오류가 발생했습니다.\n파일 용량이 너무 크거나 인터넷 연결 문제일 수 있습니다.');
-      btn.textContent = btnOriginal;
-      btn.disabled = false;
-    });
+    if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload),
+      }).catch(err => console.warn('전송 오류:', err));
+    } else {
+      console.log('⚠️ SCRIPT_URL 미설정:', payload);
+    }
+
+    btn.textContent = btnOriginal;
+    btn.disabled = false;
+
+    document.getElementById('successSite').textContent = siteEl.value;
+    document.getElementById('successOverlay').classList.add('show');
   });
 
   // ── 거래처 DB 모달
@@ -1976,15 +1959,17 @@
 
   // ── 소장 매핑 (이메일 → 현장)
   const MANAGER_MAP = [
-    { email: 'buildforpeople.sw@gmail.com', name: '장숭월', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GM사무동','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
-    { email: 'my.new.homeplace@gmail.com', name: '임상혁(관리자)', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GM사무동','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
+    { email: 'buildforpeople.sw@gmail.com', name: '장숭월', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GMTCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
+    { email: 'my.new.homeplace@gmail.com', name: '임상혁(관리자)', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','청라GMTCK','화성동탄신동(정온)','포천일동수입','본사사무실'], admin: true },
     { email: 'hgp0405@gmail.com',              name: '홍경표', sites: ['용인 양지 푸르메마을', '가평 묵안리', '본사사무실'] },
     { email: 'buildforpeople.ksy@gmail.com',   name: '고성윤', sites: ['아산 유곡리5', '본사사무실'] },
     { email: 'buildforpeople.jg@gmail.com',    name: '전종건', sites: ['충주 야동리', '본사사무실'] },
     { email: 'kkdbky48@gmail.com',               name: '강기동', sites: ['원주 반곡동', '청도 수월리'] },
     { email: 'cet690103@gmail.com',            name: '정은택', sites: ['용인 수지동천(경계없는)'] },
     { email: 'aid83430210@gmail.com',              name: '안일도', sites: ['양주 덕정(JL)'] },
-    { email: 'buildforpeople.ksy@gmail.com',           name: '임혜령', sites: ['본사사무실'] },
+    { email: 'buildforpeople.hr@gmail.com',    name: '임혜령', sites: ['본사사무실'] },
+    { email: 'buildforpeople.mg@gmail.com',    name: '천민기', sites: ['본사사무실'] },
+    { email: 'buildforpeople.sa@gmail.com',    name: '최선아', sites: ['본사사무실'] },
   ];
 
   function getManagerInfo(email) {
@@ -2006,7 +1991,7 @@
     }
 
     // 히어로 표시
-    document.getElementById('lookupName').textContent = manager.name + ' 님';
+    document.getElementById('lookupName').textContent = manager.name + ' 소장님';
     document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge" onclick="filterSite('${s}', this)">${s}</span>`).join('');
     document.getElementById('lookupHero').style.display = '';
 
@@ -2078,8 +2063,8 @@
         </div>
         <div class="summary-bar">
           <div class="sb-item"><div class="sb-label">전체</div><div class="sb-value">${sRows.length}건</div></div>
-          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건 · ${sRows.filter(r=>r.status==='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
-          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건 · ${sRows.filter(r=>r.status!=='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
+          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건</div></div>
+          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건</div></div>
         </div>`;
 
       if (sRows.length === 0) {
@@ -2087,19 +2072,18 @@
       } else {
         html += `<div class="table-wrap"><table class="data-table">
           <thead><tr>
-            <th>날짜</th><th>공종</th><th>지출구분</th><th>거래처명</th>
-            <th class="col-item">품목 및 수량</th><th style="text-align:right">청구금액</th><th class="col-tax">세금계산서</th><th>상태</th><th>완료일</th>
+            <th>신청일</th><th>공종</th><th>지출구분</th><th>거래처명</th>
+            <th>품목 및 수량</th><th style="text-align:right">청구 총액</th><th>세금계산서</th><th>상태</th>
           </tr></thead><tbody>
           ${sRows.map(r => `<tr>
-            <td class="td-mono">${r.date ? r.date.slice(5).replace('-','/') : ''}</td>
+            <td class="td-mono">${r.date||''}</td>
             <td>${r.category||''}</td>
             <td>${r.expType||''}</td>
             <td><strong>${r.vendor||''}</strong></td>
-            <td class="col-item">${r.item||''}</td>
+            <td>${r.item||''}</td>
             <td class="td-amount">${Number(r.amount||0).toLocaleString('ko-KR')}원</td>
-            <td class="col-tax">${r.taxYn||''}</td>
+            <td>${r.taxYn||''}</td>
             <td><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
-            <td class="td-mono">${r.doneDate||''}</td>
           </tr>`).join('')}
           </tbody></table></div>`;
       }
