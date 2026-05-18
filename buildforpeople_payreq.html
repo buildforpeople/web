@@ -1027,8 +1027,8 @@
         </div>
         <div class="summary-bar">
           <div class="sb-item"><div class="sb-label">전체</div><div class="sb-value">${sRows.length}건</div></div>
-          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건</div></div>
-          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건</div></div>
+          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건 · ${sRows.filter(r=>r.status==='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
+          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건 · ${sRows.filter(r=>r.status!=='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
         </div>`;
 
       if (sRows.length === 0) {
@@ -1971,6 +1971,7 @@
     { email: 'buildforpeople.mg@gmail.com', name: '천민기', sites: ['본사사무실'] },
     { email: 'buildforpeople.sa@gmail.com', name: '최선아', sites: ['본사사무실'] },
     { email: 'buildforpeople.dw@gmail.com',  name: '손동욱', sites: ['본사사무실'] },
+    { email: 'buildforpeople.dw@gmail.com',  name: '손동욱', sites: ['본사사무실'] },
   ];
 
   function getManagerInfo(email) {
@@ -2064,8 +2065,8 @@
         </div>
         <div class="summary-bar">
           <div class="sb-item"><div class="sb-label">전체</div><div class="sb-value">${sRows.length}건</div></div>
-          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건</div></div>
-          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건</div></div>
+          <div class="sb-item"><div class="sb-label">처리완료</div><div class="sb-value" style="color:var(--success)">${doneCount}건 · ${sRows.filter(r=>r.status==='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
+          <div class="sb-item"><div class="sb-label">미처리</div><div class="sb-value" style="color:var(--accent)">${sRows.length - doneCount}건 · ${sRows.filter(r=>r.status!=='완료').reduce((s,r)=>s+(Number(r.amount)||0),0).toLocaleString('ko-KR')}원</div></div>
         </div>`;
 
       if (sRows.length === 0) {
