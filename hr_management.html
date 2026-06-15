@@ -3747,12 +3747,11 @@ function openRequestModal(type) {
       return;
     }
   }
-  // 신청 가능 최소 날짜 = 내일 (로컬 타임존 기준)
-  const _tmr = new Date();
-  _tmr.setDate(_tmr.getDate() + 1);
-  const tomorrow = _tmr.getFullYear() + '-' +
-    String(_tmr.getMonth() + 1).padStart(2, '0') + '-' +
-    String(_tmr.getDate()).padStart(2, '0');
+  // 신청 가능 최소 날짜 = 오늘 (로컬 타임존 기준)
+  const _now = new Date();
+  const today = _now.getFullYear() + '-' +
+    String(_now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(_now.getDate()).padStart(2, '0');
   const isHalf = type === '반차';
   const isSpecial = type === '특별휴가';
   const isBirthday = type === '생일연차';
@@ -3802,7 +3801,7 @@ function openRequestModal(type) {
     ${isSpecial ? `
     <div class="form-row">
       <label>시작일</label>
-      <input type="date" id="specialStart" value="${tomorrow}" min="${tomorrow}" onchange="updateSpecialEnd()">
+      <input type="date" id="specialStart" value="${today}" min="${today}" onchange="updateSpecialEnd()">
     </div>
     <div class="form-row">
       <label>사용 일수</label>
@@ -3815,17 +3814,17 @@ function openRequestModal(type) {
     ` : `
     <div id="singleDateRow" class="form-row">
       <label>${isHalf ? '사용 일자' : '사용 일자 (1일)'}</label>
-      <input type="date" id="reqSingle" value="${tomorrow}" min="${tomorrow}">
+      <input type="date" id="reqSingle" value="${today}" min="${today}">
     </div>
 
     <div id="rangeRow" class="hidden">
       <div class="form-row">
         <label>시작일</label>
-        <input type="date" id="reqStart" value="${tomorrow}" min="${tomorrow}" onchange="updateDayCount()">
+        <input type="date" id="reqStart" value="${today}" min="${today}" onchange="updateDayCount()">
       </div>
       <div class="form-row">
         <label>종료일</label>
-        <input type="date" id="reqEnd" value="${tomorrow}" min="${tomorrow}" onchange="updateDayCount()">
+        <input type="date" id="reqEnd" value="${today}" min="${today}" onchange="updateDayCount()">
       </div>
       <div id="dateWarning" class="hidden" style="color:var(--danger); font-size:12px; margin-top:-8px; margin-bottom:12px; padding:8px 12px; background:#fee2e2; border-radius:6px;">⚠️ 종료일은 시작일보다 늦은 날짜를 선택해 주세요.</div>
       <div class="form-row">
@@ -3947,14 +3946,13 @@ async function submitRequest(type) {
 
   const reason = document.getElementById('reqReason').value.trim();
 
-  // 최소 신청일 검증: 당일·과거 신청 불가 (내일부터 가능)
-  const _tmr = new Date();
-  _tmr.setDate(_tmr.getDate() + 1);
-  const tomorrowStr = _tmr.getFullYear() + '-' +
-    String(_tmr.getMonth() + 1).padStart(2, '0') + '-' +
-    String(_tmr.getDate()).padStart(2, '0');
-  if (start < tomorrowStr) {
-    alert('신청일은 내일(' + tomorrowStr + ') 이후만 가능합니다.');
+  // 최소 신청일 검증: 과거 신청 불가 (당일부터 가능)
+  const _now2 = new Date();
+  const todayStr = _now2.getFullYear() + '-' +
+    String(_now2.getMonth() + 1).padStart(2, '0') + '-' +
+    String(_now2.getDate()).padStart(2, '0');
+  if (start < todayStr) {
+    alert('신청일은 오늘(' + todayStr + ') 이후만 가능합니다.');
     return;
   }
 
