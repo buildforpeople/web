@@ -445,9 +445,10 @@ async function dbCall(action, payload) {
     const res = await fetch(HARDCODED_DB_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(Object.assign({ action }, payload || {}))
+      body: JSON.stringify(Object.assign({ action, idToken: getIdToken() }, payload || {}))
     });
     const data = await res.json();
+    if (data.authError) { forceRelogin(data.error); throw new Error(data.error); }
     if (!data.success) throw new Error(data.error || 'DB 호출 실패');
     return data;
   } catch (err) {
@@ -588,65 +589,13 @@ function load() {
     });
     d.migrated_birthday_ratio_v1 = true;
   }
-  // 계약서·기존 기록으로 확인된 생일 1회 입력 (빈 값인 경우만)
-  // 추가 생일 정보 1회 반영 (장숭월 음력, 최선아·손동욱 양력)
-  if (!d.migrated_known_birthdays_v2) {
-    const extraBirthdays = {
-      jang: { birthday: '1977-03-12', birthdayLunar: true,  birthdayLunarLeap: false },
-      choi: { birthday: '1998-10-17', birthdayLunar: false, birthdayLunarLeap: false },
-      son:  { birthday: '1985-01-05', birthdayLunar: false, birthdayLunarLeap: false }
-    };
-    d.employees.forEach(e => {
-      if (!e.birthday && extraBirthdays[e.id]) {
-        Object.assign(e, extraBirthdays[e.id]);
-      }
-    });
-    d.migrated_known_birthdays_v2 = true;
-  }
-  // 전종건 생일 추가 (1회)
-  if (!d.migrated_known_birthdays_v3) {
-    const jeon = d.employees.find(e => e.id === 'jeon');
-    if (jeon && !jeon.birthday) {
-      jeon.birthday = '1996-09-24';
-      jeon.birthdayLunar = false;
-      jeon.birthdayLunarLeap = false;
-    }
-    d.migrated_known_birthdays_v3 = true;
-  }
   // 장숭월 연차 비례 해제 (전원 동일 법정 기준으로 통일)
   if (!d.migrated_jang_full_leave_v1) {
     const jang = d.employees.find(e => e.id === 'jang');
     if (jang) jang.leaveRatio = 1;
     d.migrated_jang_full_leave_v1 = true;
   }
-  // 고성윤 음력 전환, 손동욱 양력 1984-12-24 정정 (1회)
-  if (!d.migrated_known_birthdays_v4) {
-    const ko = d.employees.find(e => e.id === 'ko');
-    if (ko) {
-      ko.birthdayLunar = true;
-      ko.birthdayLunarLeap = false;
-    }
-    const son = d.employees.find(e => e.id === 'son');
-    if (son) {
-      son.birthday = '1984-12-24';
-      son.birthdayLunar = false;
-      son.birthdayLunarLeap = false;
-    }
-    d.migrated_known_birthdays_v4 = true;
-  }
-    if (!d.migrated_known_birthdays_v1) {
-    const knownBirthdays = {
-      admin: '1985-12-28', // 임상혁
-      hong:  '1990-04-05', // 홍경표
-      ko:    '1981-04-07', // 고성윤
-      cheon: '1991-11-28', // 천민기
-      lim:   '1991-11-19'  // 임혜령
-    };
-    d.employees.forEach(e => {
-      if (!e.birthday && knownBirthdays[e.id]) e.birthday = knownBirthdays[e.id];
-    });
-    d.migrated_known_birthdays_v1 = true;
-  }
+  // 생일 정보는 보안상 코드에서 제거하고 식구 DB 시트(birthdays)에서 불러옵니다.
   return d;
 }
 function save(data) {
@@ -934,6 +883,18 @@ function getIdToken() {
   return sessionStorage.getItem('sikgu_id_token') || '';
 }
 
+// 토큰이 없거나 만료되면 로그인 화면으로 보내고 안내
+let _reloginShown = false;
+function forceRelogin(msg) {
+  if (_reloginShown) return;
+  _reloginShown = true;
+  hideLoader();
+  closeModal();
+  logout();
+  showLoginError(msg || '보안을 위해 다시 로그인해 주세요.');
+  setTimeout(() => { _reloginShown = false; }, 1500);
+}
+
 function showLoginError(msg) {
   const el = document.getElementById('loginError');
   if (el) el.textContent = '⚠️ ' + msg;
@@ -1007,6 +968,7 @@ ${years}년 도래일: ${anniversaryISO}
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               action: 'send_card_statement', // 메일 발송 액션 재사용
+              idToken: getIdToken(),
               to: 'my.new.homeplace@gmail.com',
               subject,
               body,
@@ -1038,6 +1000,7 @@ let _dbLoadedThisSession = false;
 
 async function renderApp() {
   if (!DB.session) { return; }
+  if (!getIdToken()) { forceRelogin('보안을 위해 다시 로그인해 주세요.'); return; }
   const emp = getEmployee(DB.session.empId);
   if (!emp) { logout(); return; }
   document.getElementById('loginView').classList.add('hidden');
@@ -2001,6 +1964,7 @@ ${lines.join('\n')}
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'send_card_statement',
+        idToken: getIdToken(),
         to: 'buildforpeople.sw@gmail.com',
         subject,
         body: bodyText,
@@ -4051,6 +4015,7 @@ async function syncToCalendar(request) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'create',
+        idToken: getIdToken(),
         title: calendarEventTitle(request, emp),
         startDate: request.startDate,
         endDate: request.endDate,
@@ -4086,7 +4051,7 @@ async function deleteFromCalendar(eventId) {
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', eventId })
+      body: JSON.stringify({ action: 'delete', eventId, idToken: getIdToken() })
     });
   } catch (err) {
     console.warn('캘린더 이벤트 삭제 오류:', err);
@@ -4359,6 +4324,10 @@ function saveEmployee(existingId) {
   save(DB);
   closeModal();
   renderAdminBody();
+  const targetId = existingId || id;
+  dbUpsert('birthdays', 'empId', { empId: targetId, birthday: birthday || '', lunar: birthdayLunar, leap: birthdayLunarLeap })
+    .then(() => showToast('생일 정보 저장 완료', 'success'))
+    .catch(err => showToast('생일 저장 실패: ' + err.message, 'error'));
 }
 
 async function deleteEmployee(id) {
@@ -4472,6 +4441,15 @@ async function syncFromDB() {
       emp.legacyBirthdayUsed = !!l.birthdayUsed;
     }
   });
+  // birthdays: 생일 정보 (시트 보관) — employees에 주입
+  (tables.birthdays || []).forEach(b => {
+    const emp = DB.employees.find(e => e.id === b.empId);
+    if (emp && b.birthday) {
+      emp.birthday = String(b.birthday);
+      emp.birthdayLunar = b.lunar === true || String(b.lunar).toUpperCase() === 'TRUE';
+      emp.birthdayLunarLeap = b.leap === true || String(b.leap).toUpperCase() === 'TRUE';
+    }
+  });
   // 숫자 필드 정규화
   DB.requests.forEach(r => { r.days = Number(r.days) || 0; r.createdAt = Number(r.createdAt) || 0; if (r.decidedAt) r.decidedAt = Number(r.decidedAt); });
   DB.overtime.forEach(o => { o.hours = Number(o.hours) || 0; o.createdAt = Number(o.createdAt) || 0; });
@@ -4500,17 +4478,16 @@ async function migrateLocalToDB() {
       total += b.rows.length;
     }
   }
-  // vehicles 맵 → 배열
+  // vehicles 맵 → 배열 (본인 것만 이전 가능)
   for (const [empId, v] of Object.entries(DB.vehicles || {})) {
-    await dbUpsert('vehicles', 'empId', { empId, fuelType: v.fuelType, efficiency: v.efficiency });
+    try { await dbUpsert('vehicles', 'empId', { empId, fuelType: v.fuelType, efficiency: v.efficiency }); } catch (e) {}
   }
-  // fuelPrices 맵 → 배열
+  // fuelPrices·tenureNotifications는 관리자만 이전 가능
   for (const [month, f] of Object.entries(DB.fuelPrices || {})) {
-    await dbUpsert('fuelPrices', 'month', { month, gasoline: f.gasoline, diesel: f.diesel });
+    try { await dbUpsert('fuelPrices', 'month', { month, gasoline: f.gasoline, diesel: f.diesel }); } catch (e) {}
   }
-  // tenureNotifications 맵 → 배열
   for (const [key, sentAt] of Object.entries(DB.tenureNotifications || {})) {
-    await dbUpsert('tenureNotifications', 'key', { key, sentAt });
+    try { await dbUpsert('tenureNotifications', 'key', { key, sentAt }); } catch (e) {}
   }
   DB.migrated_to_sheets_v1 = true;
   save(DB);
