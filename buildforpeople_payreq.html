@@ -869,10 +869,7 @@
         data-theme="outline" data-text="signin_with"
         data-shape="rectangular" data-locale="ko" data-width="280">
       </div>
-      <div class="remember-row">
-        <input type="checkbox" id="rememberMe" checked>
-        <label for="rememberMe">로그인 상태 유지 (30일)</label>
-      </div>
+      <p id="loginMsg" style="font-size:12px;color:#c0392b;margin-top:14px;min-height:16px"></p>
     </div>
   </div>
 </div>
@@ -924,23 +921,7 @@
         </div>
         <div class="select-wrap">
           <select name="site" id="siteSelect" required>
-            <option value="">현장을 선택하세요</option>
-            <option>원주 반곡동</option>
-            <option>용인 양지 푸르메마을</option>
-            <option>아산 유곡리5</option>
-            <option>가평 묵안리</option>
-            <option>용인 수지동천(경계없는)</option>
-            <option>양주 덕정(JL)</option>
-            <option>아산 동정리</option>
-            <option>충주 야동리</option>
-            <option>청도 수월리</option>
-            <option>제천 신월동</option>
-            <option>화성 송산</option>
-            <option>안산 대부</option>
-            <option>강화 창리</option>
-            <option>화성 동탄(OH)</option>
-            <option>포천일동수입</option>
-            <option>본사사무실</option>
+            <option value="">로그인 후 담당 현장이 표시됩니다</option>
           </select>
         </div>
       </div>
@@ -1568,9 +1549,8 @@
     btn.textContent = '전송 중...';
 
     const payload = {
+      idToken:     getIdToken(),
       docId:       currentDocId,
-      requester:      currentUser ? currentUser.name  : '',
-      requesterEmail: currentUser ? currentUser.email : '',
       date:        document.querySelector('input[name="date"]').value,
       site:        siteEl.value,
       category:    document.querySelector('select[name="category"]').value,
@@ -1586,18 +1566,26 @@
       taxFiles:    taxFilesData,
     };
 
-    if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
-      fetch(SCRIPT_URL, {
+    try {
+      const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
-      }).catch(err => console.warn('전송 오류:', err));
-    } else {
-      console.log('⚠️ SCRIPT_URL 미설정:', payload);
+      });
+      const result = await res.json();
+      if (result.authError) {
+        // 입력 내용은 그대로 두고 다시 로그인만 요청
+        showLogin(result.message + ' 로그인 후 [결제 요청 제출]을 다시 눌러 주세요.');
+        return;
+      }
+      if (result.status !== 'ok') throw new Error(result.message || '저장 실패');
+    } catch (err) {
+      alert('제출에 실패했습니다: ' + err.message + '\n\n입력 내용은 그대로 남아 있으니 다시 시도해 주세요.');
+      return;
+    } finally {
+      btn.textContent = btnOriginal;
+      btn.disabled = false;
     }
-
-    btn.textContent = btnOriginal;
-    btn.disabled = false;
 
     document.getElementById('successSite').textContent = siteEl.value;
     document.getElementById('successOverlay').classList.add('show');
@@ -1663,71 +1651,93 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ── Google OAuth & 앱 초기화 ──────────────────────────
-  const CLIENT_ID = '573053436430-3mesnr4rsn5a49kd0o63ctpi907j8ikt.apps.googleusercontent.com';
-  const REMEMBER_KEY = 'bfp_user';
+  // ── Google 로그인 (서버에서 토큰 검증 · 권한은 사람사는집_마스터 기준)
+  const TOKEN_KEY = 'bfp_payreq_token';
+  localStorage.removeItem('bfp_user'); // 예전 30일 로그인 유지 정보 삭제
 
-  let currentUser = null; // { email, name, picture }
+  let currentUser = null; // { name, isAdmin, requestSites, lookupSites }
 
-  // 페이지 로드 시 저장된 로그인 확인
+  function getIdToken() {
+    const t = sessionStorage.getItem(TOKEN_KEY);
+    if (!t) return '';
+    try {
+      const exp = parseJwt(t).exp * 1000;
+      if (Date.now() > exp - 60000) { sessionStorage.removeItem(TOKEN_KEY); return ''; }
+    } catch (e) { return ''; }
+    return t;
+  }
+
+  async function api(body) {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ idToken: getIdToken() }, body)),
+    });
+    return res.json();
+  }
+
+  function showLogin(msg) {
+    sessionStorage.removeItem(TOKEN_KEY);
+    document.getElementById('loginMsg').textContent = msg || '';
+    document.getElementById('loginOverlay').classList.remove('hidden');
+  }
+
+  // 페이지 로드: 유효한 토큰이 있으면 바로 진입, 없으면 로그인 화면 (구글 자동 로그인 시도)
   (function initAuth() {
-    const stored = localStorage.getItem(REMEMBER_KEY);
-    if (stored) {
-      try {
-        const u = JSON.parse(stored);
-        if (u.expiry && Date.now() < u.expiry) {
-          currentUser = u;
-          showApp(u);
-          return;
-        }
-      } catch(e) {}
-    }
-    // 저장 없으면 로그인 화면 유지 (Google One Tap 자동 시도)
+    if (getIdToken()) loadMe();
   })();
 
   // Google 로그인 콜백
   function onGoogleLogin(response) {
-    const payload = parseJwt(response.credential);
-    const user = {
-      email: payload.email,
-      name:  payload.name,
-      picture: payload.picture,
-    };
-    // remember me 체크 여부
-    const remember = document.getElementById('rememberMe').checked;
-    if (remember) {
-      user.expiry = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30일
-      localStorage.setItem(REMEMBER_KEY, JSON.stringify(user));
+    sessionStorage.setItem(TOKEN_KEY, response.credential);
+    loadMe();
+  }
+
+  async function loadMe() {
+    document.getElementById('loginMsg').textContent = '확인 중...';
+    try {
+      const me = await api({ action: 'me' });
+      if (me.status !== 'ok') { showLogin(me.message); return; }
+      currentUser = me;
+      showApp(me);
+    } catch (e) {
+      showLogin('서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     }
-    currentUser = user;
-    showApp(user);
   }
 
   function showApp(user) {
     document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('loginMsg').textContent = '';
     document.getElementById('appTabs').style.display = '';
     document.getElementById('userNameBadge').textContent = user.name;
     document.getElementById('userNameBadge').style.display = '';
     document.getElementById('logoutBtn').style.display = '';
+    document.getElementById('lookupTabBtn').style.display = '';
 
-    // 소장 여부 확인
-    const manager = getManagerInfo(user.email);
-    if (manager) {
-      document.getElementById('lookupTabBtn').style.display = '';
+    // 담당 현장 목록 (마스터 시트 기준)
+    const prev = siteEl.value;
+    siteEl.innerHTML = '<option value="">현장을 선택하세요</option>' +
+      user.requestSites.map(s => `<option>${escapeHtml(s)}</option>`).join('');
+    if (user.requestSites.indexOf(prev) >= 0) siteEl.value = prev;
+    if (user.requestSites.length === 0) {
+      siteEl.innerHTML = '<option value="">요청 가능한 담당 현장이 없습니다 (관리자 문의)</option>';
     }
   }
 
   function logout() {
-    localStorage.removeItem(REMEMBER_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
     currentUser = null;
-    // Google 세션도 종료
     if (window.google && google.accounts) {
       google.accounts.id.disableAutoSelect();
     }
     location.reload();
   }
 
-  // JWT 파싱 (검증 없음 — 표시용만)
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // JWT 파싱 (화면 표시·만료 확인용 — 권한 판단은 서버가 함)
   function parseJwt(token) {
     const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
     return JSON.parse(decodeURIComponent(atob(base64).split('').map(c =>
@@ -1746,64 +1756,30 @@
     }
   }
 
-  // ── 소장 매핑 (이메일 → 현장)
-  const MANAGER_MAP = [
-    { email: 'buildforpeople.sw@gmail.com', name: '장숭월', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','포천일동수입','본사사무실'], admin: true },
-    { email: 'my.new.homeplace@gmail.com',  name: '임상혁(관리자)', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','포천일동수입','본사사무실'], admin: true },
-    { email: 'buildforpeople.dw@gmail.com', name: '손동욱', sites: ['원주 반곡동','용인 양지 푸르메마을','아산 유곡리5','가평 묵안리','용인 수지동천(경계없는)','양주 덕정(JL)','아산 동정리','충주 야동리','청도 수월리','제천 신월동','화성 송산','안산 대부','강화 창리','화성 동탄(OH)','포천일동수입','본사사무실'], admin: true },
-    { email: 'hgp0405@gmail.com',           name: '홍경표', sites: ['용인 양지 푸르메마을','가평 묵안리','본사사무실'] },
-    { email: 'buildforpeople.ksy@gmail.com',name: '고성윤', sites: ['아산 유곡리5','본사사무실'] },
-    { email: 'buildforpeople.jg@gmail.com', name: '전종건', sites: ['충주 야동리','본사사무실'] },
-    { email: 'kkdbky48@gmail.com',          name: '강기동', sites: ['원주 반곡동','청도 수월리'] },
-    { email: 'cet690103@gmail.com',         name: '정은택', sites: ['용인 수지동천(경계없는)'] },
-    { email: 'aid83430210@gmail.com',       name: '안일도', sites: ['양주 덕정(JL)'] },
-    { email: 'buildforpeople.hr@gmail.com', name: '임혜령', sites: ['본사사무실'] },
-    { email: 'buildforpeople.mg@gmail.com', name: '천민기', sites: ['본사사무실'] },
-    { email: 'buildforpeople.sa@gmail.com', name: '최선아', sites: ['본사사무실'] },
-  ];
-
-  function getManagerInfo(email) {
-    return MANAGER_MAP.find(m => m.email.toLowerCase() === (email||'').toLowerCase()) || null;
-  }
-
-  // ── 조회 탭 데이터 로드
+  // ── 조회 탭 데이터 로드 (서버가 담당 현장 기준으로만 내려줌)
   let lookupLoaded = false;
 
   async function loadLookup() {
     if (lookupLoaded) return;
-
-    const manager = getManagerInfo(currentUser?.email);
     const content = document.getElementById('lookupContent');
-
-    if (!manager) {
-      content.innerHTML = '<div class="no-access"><strong>조회 권한 없음</strong>현장 소장님만 내역을 조회할 수 있습니다.<br>담당자에게 문의해 주세요.</div>';
-      return;
-    }
-
-    // 히어로 표시
-    document.getElementById('lookupName').textContent = manager.name + ' 소장님';
-    document.getElementById('lookupBadges').innerHTML = manager.sites.map(s => `<span class="lbadge" onclick="filterSite('${s}', this)">${s}</span>`).join('');
-    document.getElementById('lookupHero').style.display = '';
-
     content.innerHTML = '<div class="lookup-loading"><div class="lookup-spinner"></div>데이터를 불러오는 중...</div>';
 
     try {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'getData',
-          email: currentUser.email,
-          sites: manager.sites,
-        })
-      });
-      const data = await res.json();
-      if (data.status === 'ok') {
-        lookupLoaded = true;
-        renderLookup(data.rows, manager.sites);
-      } else {
-        content.innerHTML = `<div class="no-access"><strong>오류</strong>${data.message}</div>`;
+      const data = await api({ action: 'getData' });
+      if (data.authError) { showLogin(data.message); return; }
+      if (data.status !== 'ok') {
+        content.innerHTML = `<div class="no-access"><strong>오류</strong>${escapeHtml(data.message)}</div>`;
+        return;
       }
+      lookupLoaded = true;
+      document.getElementById('lookupName').textContent = data.name + (currentUser && currentUser.isAdmin ? ' (전체 현장)' : ' 님 담당 현장');
+      document.getElementById('lookupBadges').innerHTML = data.sites.map((s, i) =>
+        `<span class="lbadge" data-site-idx="${i}">${escapeHtml(s)}</span>`).join('');
+      document.querySelectorAll('#lookupBadges .lbadge').forEach(el => {
+        el.onclick = () => filterSite(data.sites[Number(el.dataset.siteIdx)], el);
+      });
+      document.getElementById('lookupHero').style.display = '';
+      renderLookup(data.rows, data.sites);
     } catch(e) {
       content.innerHTML = '<div class="no-access"><strong>네트워크 오류</strong>다시 시도해 주세요.</div>';
     }
@@ -1848,7 +1824,7 @@
 
       html += `<div class="site-block" id="block-${site.replace(/[^a-zA-Z0-9가-힣]/g,'_')}">
         <div class="site-block-title">
-          <span>${site}</span>
+          <span>${escapeHtml(site)}</span>
           <span class="ttl-total">합계 ${total.toLocaleString('ko-KR')}원</span>
         </div>
         <div class="summary-bar">
@@ -1874,13 +1850,13 @@
               );
               return `<tr class="${isDup ? 'dup-warning' : ''}">
                 <td class="td-mono">${r.date||''}${isDup ? '<span class="dup-badge">⚠️ 중복의심</span>' : ''}</td>
-                <td>${r.requester||''}</td>
-                <td>${r.category||''}</td>
-                <td>${r.expType||''}</td>
-                <td><strong>${r.vendor||''}</strong></td>
-                <td>${r.item||''}</td>
+                <td>${escapeHtml(r.requester||'')}</td>
+                <td>${escapeHtml(r.category||'')}</td>
+                <td>${escapeHtml(r.expType||'')}</td>
+                <td><strong>${escapeHtml(r.vendor||'')}</strong></td>
+                <td>${escapeHtml(r.item||'')}</td>
                 <td class="td-amount">${Number(r.amount||0).toLocaleString('ko-KR')}원</td>
-                <td>${r.taxYn||''}</td>
+                <td>${escapeHtml(r.taxYn||'')}</td>
                 <td><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
               </tr>`;
             }).join('');
