@@ -919,6 +919,7 @@ function handleGoogleSignIn(response) {
     }
     const emp = DB.employees.find(e => e.id === empId);
     if (!emp) { showLoginError('직원 정보가 없습니다.'); return; }
+    sessionStorage.setItem('sikgu_id_token', response.credential); // 서버 검증용 로그인 토큰
     DB.session = { empId, email, name: payload.name || emp.name, picture: payload.picture || null, loginTime: Date.now() };
     save(DB);
     renderApp();
@@ -926,6 +927,11 @@ function handleGoogleSignIn(response) {
     console.error('handleGoogleSignIn error:', err);
     showLoginError('로그인 처리 중 오류: ' + err.message);
   }
+}
+
+// 계약 조회 서버에 보낼 구글 로그인 토큰 (약 1시간 유효, 브라우저 닫으면 삭제)
+function getIdToken() {
+  return sessionStorage.getItem('sikgu_id_token') || '';
 }
 
 function showLoginError(msg) {
@@ -2064,7 +2070,7 @@ async function loadMyContract(empId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_contract', empId })
+      body: JSON.stringify({ action: 'get_contract', idToken: getIdToken() })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2336,7 +2342,7 @@ async function loadAllContracts() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_all_contracts' })
+      body: JSON.stringify({ action: 'get_all_contracts', idToken: getIdToken() })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2533,7 +2539,7 @@ async function loadSeveranceData() {
       const res = await fetch(HARDCODED_CONTRACT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'get_all_contracts' })
+        body: JSON.stringify({ action: 'get_all_contracts', idToken: getIdToken() })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || '조회 실패');
