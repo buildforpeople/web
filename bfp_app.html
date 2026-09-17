@@ -184,6 +184,36 @@
   input[type=file] { width: 100%; font-size: 14px; color: var(--muted); }
   input[type=file]::file-selector-button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px; padding: 8px 14px; font-weight: 600; margin-right: 10px; font-family: inherit; cursor: pointer; }
   .fab { display: none; }
+  /* ===== 고객관리 ===== */
+  .badge { background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; padding: 0 5px; text-align: center; margin-left: 2px; }
+  .cx-alert { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cx-alert button { flex: 1 1 180px; text-align: left; border: 1px solid #E6B8B0; background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+  .cx-alert b { font-size: 22px; margin-right: 6px; vertical-align: -2px; font-variant-numeric: tabular-nums; }
+  .cx-ok { background: var(--green-soft); color: var(--green); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
+  .chip.warn b { color: var(--red); }
+  .cx-row.urgent { box-shadow: inset 4px 0 0 var(--red); }
+  .flag { font-size: 12px; font-weight: 700; color: #fff; background: var(--red); border-radius: 5px; padding: 1px 7px; margin-left: 6px; vertical-align: 1px; }
+  .cx-warn { background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
+  .cx-st.접수메일답장완료 { background: var(--amber-soft); color: var(--amber); }
+  .cx-st.반려 { background: var(--gray-soft); color: var(--gray); }
+
+  .cx-next { font-size: 13px; color: var(--muted); }
+  .cx-next.today { color: var(--amber); font-weight: 600; }
+  .cx-next.over { color: var(--red); font-weight: 600; }
+  .cx-st { background: var(--blue-soft); color: var(--blue); }
+  .cx-st.접수 { background: var(--amber-soft); color: var(--amber); }
+  .cx-st.계약완료 { background: var(--green-soft); color: var(--green); }
+  .cx-plan { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 0 10px; margin-top: 12px; }
+  .cx-plan .f input[type=date] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
+  .cx-contact { display: flex; gap: 8px; }
+  .cx-contact:empty { display: none; }
+  .cx-contact .btn { flex: 1; text-align: center; text-decoration: none; white-space: nowrap; }
+  .cx-ai { margin-top: 10px; background: var(--green-soft); border-radius: 8px; padding: 12px; font-size: 14px; }
+  .timeline li.k-통화::before, .timeline li.k-방문상담::before, .timeline li.k-미팅::before { background: var(--amber); }
+  @media (max-width: 760px) {
+    .cx-plan { grid-template-columns: 1fr 1fr; }
+    .cx-plan .f:first-child { grid-column: 1 / -1; }
+  }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -385,6 +415,7 @@ function renderShell() {
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
 
   selectTab(S.tabs.includes(S.tab) ? S.tab : S.tabs[0]);
+  if (S.tabs.includes('cx') && !CX.loaded) cxLoad().then(() => { if (S.tab === 'cx') cxRenderList(); }).catch(() => {});
 }
 
 function selectTab(t) {
@@ -896,12 +927,310 @@ function crActionForm(o, s, box) {
 }
 
 // ---------- 고객관리 ----------
-function renderCxTab() {
+const CX = { items: [], meta: null, filter: '진행중', q: '', loaded: false };
+const CX_FIELDS = [
+  ['landStatus', '고객 상황', 'land'], ['situation', '현재 상황 (문의 원문)', 'text'], ['location', '현장 소재지', 'text'],
+  ['landArea', '대지 면적', 'text', '㎡'], ['wantArea', '희망 건축면적', 'text', '평'], ['floors', '희망 층수', 'text'],
+  ['budget', '예산', 'text'], ['houseType', '유형', 'houseType'], ['struct', '구조', 'struct'], ['exterior', '외장 스타일', 'text'],
+  ['wantStart', '희망 착공 시기', 'text'], ['wantDesign', '희망 설계', 'area'], ['inquiry', '문의·특이사항', 'area']
+];
+
+function cxClosed(o) { return (CX.meta ? CX.meta.closed : ['계약완료', '반려']).includes(o.stage); }
+function cxDays(o) { return Math.max(0, dayDiff(String(o.createdAt).slice(0, 10), today())); }
+function cxNoContact(o) { return !cxClosed(o) && o.stage === '접수' && !o.firstContactAt; }
+function cxStale(o) {
+  if (cxClosed(o) || !o.lastActivityAt) return false;
+  const idle = dayDiff(String(o.lastActivityAt).slice(0, 10), today());
+  return idle >= (CX.meta ? CX.meta.staleDays : 14) && (!o.dueDate || o.dueDate <= today());
+}
+function cxOver(o) { return !cxClosed(o) && o.dueDate && o.dueDate < today(); }
+function cxDue(o) {
+  if (cxClosed(o) || !o.dueDate) return { cls: '', text: '' };
+  const d = dayDiff(today(), o.dueDate);
+  if (d < 0) return { cls: 'over', text: `${-d}일 지남` };
+  if (d === 0) return { cls: 'today', text: '오늘' };
+  return { cls: '', text: `D-${d}` };
+}
+function cxUrgentCount() { return CX.items.filter(o => cxNoContact(o) || cxOver(o) || cxStale(o)).length; }
+function cxUnit(v, unit) { return v && unit && !String(v).includes(unit) && /^[\d.~\s-]+$/.test(v) ? v + unit : v; }
+function cxBadge() {
+  const tab = document.querySelector('[data-tab="cx"]');
+  if (!tab || !CX.loaded) return;
+  const n = cxUrgentCount();
+  let b = tab.querySelector('.badge');
+  if (!n) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('span'); b.className = 'badge'; tab.appendChild(b); }
+  b.textContent = n;
+}
+async function cxLoad() {
+  const [meta, list] = await Promise.all([api({ action: 'cx_meta' }), api({ action: 'cx_list' })]);
+  CX.meta = meta; CX.items = list.items; CX.loaded = true;
+  cxBadge();
+}
+function cxReplace(item) { const i = CX.items.findIndex(x => x.id === item.id); if (i >= 0) CX.items[i] = item; else CX.items.unshift(item); cxBadge(); }
+
+async function renderCxTab() {
+  if (!CX.loaded) {
+    $('main').innerHTML = '<div class="loading">고객 목록을 불러오는 중...</div>';
+    try { await cxLoad(); } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'cx') return;
+  }
+  cxRenderList();
+}
+
+function cxRenderList() {
+  const groups = {
+    진행중: o => !cxClosed(o),
+    미연락: cxNoContact,
+    '기한 지남': cxOver,
+    방치: cxStale,
+    ...Object.fromEntries(CX.meta.stages.map(st => [st, o => o.stage === st])),
+    전체: () => true
+  };
+  const q = CX.q.trim().toLowerCase();
+  const rank = o => cxNoContact(o) ? 0 : cxOver(o) ? 1 : cxStale(o) ? 2 : cxClosed(o) ? 9 : 5;
+  const list = CX.items.filter(groups[CX.filter]).filter(o => !q || [o.name, o.phone, o.location, o.id].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => rank(a) - rank(b) || String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999')) || String(b.createdAt).localeCompare(String(a.createdAt)));
+  const nNo = CX.items.filter(cxNoContact).length, nOver = CX.items.filter(cxOver).length, nStale = CX.items.filter(cxStale).length;
+
   $('main').innerHTML = `
-    <section class="panel empty">
-      <h3>고객관리</h3>
-      상담 고객 관리 화면을 다음 단계에서 옮겨옵니다.
+    <div class="cr-bar">
+      <h2>고객관리</h2>
+      ${S.me.role === 'admin' ? '<button class="btn ghost" id="cxImport" type="button">메일 확인</button>' : ''}
+      <button class="btn" id="cxNew" type="button">+ 고객 등록</button>
+    </div>
+    ${nNo || nOver || nStale ? `<div class="cx-alert">
+      ${nNo ? `<button type="button" data-f="미연락"><b>${nNo}</b> 아직 연락 안 한 상담</button>` : ''}
+      ${nOver ? `<button type="button" data-f="기한 지남"><b>${nOver}</b> 연락 기한 지남</button>` : ''}
+      ${nStale ? `<button type="button" data-f="방치"><b>${nStale}</b> ${CX.meta.staleDays}일 이상 기록 없음</button>` : ''}
+    </div>` : `<div class="cx-ok">놓친 고객이 없습니다.</div>`}
+    <div class="f"><input type="text" id="cxQ" placeholder="이름·연락처·지역 검색" value="${esc(CX.q)}"></div>
+    <div class="filters">
+      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '진행중' || k === '전체') ? `<button class="chip ${['미연락', '기한 지남', '방치'].includes(k) && n ? 'warn' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
+    </div>
+    <section class="panel">
+      ${list.length ? list.map(o => { const due = cxDue(o); const flag = cxNoContact(o) ? `미연락 D+${cxDays(o)}` : cxOver(o) ? `기한 ${due.text}` : cxStale(o) ? '방치' : ''; return `
+        <button class="cr-row cx-row ${flag ? 'urgent' : ''}" data-id="${esc(o.id)}">
+          <span class="cr-id">${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(2, 10).replace(/-/g, '.'))} (D+${cxDays(o)})</span>
+          <span class="cr-title">${esc(o.name)}${flag ? `<span class="flag">${esc(flag)}</span>` : ''}${o.siteCode ? `<span class="tag">${esc(o.siteCode)}</span>` : ''}</span>
+          <span class="cr-sub">${esc([o.location, o.landStatus, o.wantArea ? cxUnit(o.wantArea, '평') : '', o.budget].filter(Boolean).join(' · '))}</span>
+          ${!cxClosed(o) ? `<span class="cr-sub cx-next ${due.cls}">다음: ${esc(o.nextAction || '미정')}${o.dueDate ? ` · ${esc(o.dueDate.slice(5).replace('-', '/'))} (${esc(due.text)})` : ''}${o.ownerName ? ' · ' + esc(o.ownerName) : ''}</span>`
+            : o.stage === '반려' && o.rejectReasons ? `<span class="cr-sub">반려 사유: ${esc(o.rejectReasons)}</span>` : ''}
+          <span class="cr-right"><span class="st cx-st ${esc(o.stage.replace(/[^\w가-힣]/g, ''))}">${esc(o.stage)}</span></span>
+        </button>`; }).join('') : `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`}
     </section>`;
+  $('cxNew').onclick = cxNewForm;
+  const imp = $('cxImport');
+  if (imp) imp.onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'cx_import' });
+    CX.items = d.items; cxBadge(); cxRenderList(); toast(d.imported ? `새 고객 ${d.imported}명 등록` : '새 상담 메일이 없습니다');
+  });
+  const qi = $('cxQ');
+  qi.oninput = () => { CX.q = qi.value; const pos = qi.selectionStart; cxRenderList(); const n = $('cxQ'); n.focus(); n.setSelectionRange(pos, pos); };
+  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CX.filter = b.dataset.f; cxRenderList(); });
+  $('main').querySelectorAll('.cx-row').forEach(b => b.onclick = () => cxOpen(b.dataset.id));
+}
+
+function cxFieldInput(f, v) {
+  const [k, label, type] = f;
+  if (type === 'houseType') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, CX.meta.houseTypes, v)}</div>`;
+  if (type === 'struct') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, CX.meta.structs, v)}</div>`;
+  if (type === 'land') return `<div class="f"><label>${label}</label><select data-k="${k}"><option value="">선택</option>${CX.meta.landStatuses.map(x => `<option ${x === v ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
+  if (type === 'area') return `<div class="f"><label>${label}</label><textarea data-k="${k}" rows="2">${esc(v)}</textarea></div>`;
+  return `<div class="f"><label>${label}</label><input type="text" data-k="${k}" value="${esc(v)}"></div>`;
+}
+function cxReadFields(root) {
+  const out = {};
+  root.querySelectorAll('[data-k]').forEach(el => out[el.dataset.k] = el.value);
+  ['houseType', 'struct'].forEach(k => { if (root.querySelector(`[data-seg="e_${k}"]`)) out[k] = segVal(root, 'e_' + k); });
+  return out;
+}
+function bindToggleSegs(root) {
+  root.querySelectorAll('[data-seg^="e_"] button').forEach(b => b.onclick = () => {
+    const on = b.getAttribute('aria-pressed') === 'true';
+    b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', !on && x === b));
+  });
+}
+
+// ---- 고객 등록 (전화·인스타·소개 등) ----
+function cxNewForm() {
+  const body = openSheet('고객 등록', '홈페이지 외 문의', `
+    <div class="card">
+      <div class="f"><span class="lb">유입 경로</span>${segHtml('src', CX.meta.sources.filter(s => s !== '홈페이지'), '전화')}</div>
+      <div class="f"><label>성함</label><input type="text" data-k="name"></div>
+      <div class="f"><label>연락처</label><input type="text" data-k="phone" inputmode="tel" placeholder="010-0000-0000"></div>
+      <div class="f"><label>이메일</label><input type="text" data-k="email" inputmode="email"></div>
+      <div class="hint">전화·사무실 전화·방문으로 등록하면 이미 통화한 것으로 기록됩니다.</div>
+    </div>
+    <div class="card">${CX_FIELDS.map(f => cxFieldInput(f, '')).join('')}</div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="xClose">닫기</button><button class="btn" type="button" id="xSave">등록</button></div>`);
+  bindSegs(body.querySelector('[data-seg="src"]').parentNode);
+  bindToggleSegs(body);
+  body.querySelector('#xClose').onclick = closeSheet;
+  body.querySelector('#xSave').onclick = e => submitting(e.target, async () => {
+    const d = await api(Object.assign({ action: 'cx_create', source: segVal(body, 'src') }, cxReadFields(body)));
+    cxReplace(d.item); CX.filter = '진행중';
+    closeSheet(); cxRenderList(); cxOpen(d.item.id);
+  });
+}
+
+// ---- 상세 ----
+function cxSiteNameGuess(loc) {
+  const t = String(loc || '').split(/\s+/);
+  const city = (t.find(x => /(시|군)$/.test(x) && !/(광역시|특별시|특별자치시)$/.test(x)) || t[0] || '').replace(/(광역시|특별시|특별자치시|특별자치도|도|시|군)$/, '');
+  const dong = [...t].reverse().find(x => /(동|리|읍|면)$/.test(x)) || '';
+  return [city, dong].filter(Boolean).join(' ');
+}
+function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+function cxOpen(id) {
+  const o = CX.items.find(x => x.id === id);
+  if (!o) return;
+  const due = cxDue(o);
+  const isAdmin = S.me.role === 'admin';
+  const reasons = String(o.rejectReasons || '').split(',').map(x => x.trim()).filter(Boolean);
+  const staffOpts = `<option value="">미지정</option>` + CX.meta.staff.map(s => `<option value="${esc(s.email)}" ${s.email === o.ownerEmail ? 'selected' : ''}>${esc(s.name)} (${esc(s.team)})</option>`).join('');
+  const actOpts = [...new Set([...(o.nextAction && !CX.meta.actions.includes(o.nextAction) ? [o.nextAction] : []), ...CX.meta.actions])]
+    .map(a => `<option ${a === o.nextAction ? 'selected' : ''}>${esc(a)}</option>`).join('');
+  const warn = cxNoContact(o) ? `접수 후 ${cxDays(o)}일째 연락 기록이 없습니다. 연락 후 바로 아래에 기록을 남겨주세요.`
+    : cxOver(o) ? `다음 연락 기한이 ${due.text}. 연락하고 기록을 남기거나 기한을 다시 정하세요.`
+    : cxStale(o) ? `${CX.meta.staleDays}일 넘게 기록이 없습니다. 진행 상황을 확인해 주세요.` : '';
+
+  const body = openSheet(esc(o.name), `${esc(o.id)} · ${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(0, 10))} (D+${cxDays(o)})`, `
+    ${warn ? `<div class="cx-warn">${esc(warn)}</div>` : ''}
+    <div class="card cx-contact">
+      ${o.phone ? `<a class="btn" href="tel:${esc(o.phone.replace(/[^\d+]/g, ''))}">전화 걸기</a>` : ''}
+      ${o.phone ? `<a class="btn ghost" href="sms:${esc(o.phone.replace(/[^\d+]/g, ''))}">문자</a>` : ''}
+      ${o.email ? `<a class="btn ghost" href="mailto:${esc(o.email)}">메일</a>` : ''}
+    </div>
+
+    <div class="card">
+      <h4>연락·상담 기록</h4>
+      ${segHtml('kind', CX.meta.logKinds, '통화')}
+      <div class="f" style="margin-top:10px"><textarea id="xLog" rows="3" placeholder="통화·상담 내용, 희망 사항, 다음에 연락하기로 한 시점 등"></textarea></div>
+      <div class="hint" id="xLogHint"></div>
+      <div class="actions"><button class="btn" type="button" id="xLogSave">기록 저장</button></div>
+    </div>
+
+    <div class="card">
+      <h4>진행 단계 · 다음 연락</h4>
+      ${segHtml('stage', CX.meta.stages, o.stage)}
+      <div id="rejBox" class="f" style="margin-top:10px" ${o.stage === '반려' ? '' : 'hidden'}>
+        <span class="lb">반려 사유 (여러 개 선택)</span>
+        <div class="seg" id="rejSeg">${CX.meta.rejectReasons.map(r => `<button type="button" data-r="${esc(r)}" aria-pressed="${reasons.includes(r)}">${esc(r)}</button>`).join('')}</div>
+      </div>
+      <div class="cx-plan" id="planBox" ${cxClosed(o) ? 'hidden' : ''}>
+        <div class="f"><label>다음 할 일</label><select id="xNext"><option value="">선택</option>${actOpts}</select></div>
+        <div class="f"><label>기한 <span class="cx-next ${due.cls}">${esc(due.text)}</span></label><input type="date" id="xDue" value="${esc(o.dueDate)}"></div>
+        <div class="f"><label>담당자</label><select id="xOwner">${staffOpts}</select></div>
+      </div>
+      <div class="actions"><button class="btn" type="button" id="xPlanSave">저장</button></div>
+    </div>
+
+    <div class="card" id="sumCard">
+      <div style="display:flex;align-items:center;margin-bottom:10px"><h4 style="margin:0">고객 정보</h4><button class="btn ghost" type="button" id="xEdit" style="margin-left:auto;padding:5px 12px">수정</button></div>
+      <dl class="kv">
+        <dt>연락처</dt><dd>${esc(o.phone || '—')}</dd><dt>이메일</dt><dd>${esc(o.email || '—')}</dd>
+        ${CX_FIELDS.map(f => `<dt>${f[1]}</dt><dd>${esc(cxUnit(o[f[0]], f[3]) || '—')}</dd>`).join('')}
+      </dl>
+    </div>
+
+    ${CX.meta.aiEnabled ? `<div class="card"><div style="display:flex;align-items:center"><h4 style="margin:0">AI 상담 분석</h4><button class="btn ghost" type="button" id="xAi" style="margin-left:auto;padding:5px 12px">분석하기</button></div>
+      <div class="hint">고객 정보와 기록으로 다음 미팅 준비 포인트를 정리합니다.</div><div class="content cx-ai" id="aiOut" hidden></div></div>` : ''}
+
+    ${o.siteCode ? `<div class="card"><h4>연결된 현장</h4><b>${esc(o.siteCode)}</b> — 포털 현장관리에서 확인할 수 있습니다.</div>`
+      : o.stage === '계약완료' && isAdmin ? `<div class="card"><h4>마스터에 현장 등록</h4>
+        <div class="f"><label>현장명</label><input type="text" id="rName" value="${esc(cxSiteNameGuess(o.location))}"></div>
+        <div class="f"><span class="lb">설계 계약연도</span>${segHtml('rYear', CX.meta.codeYears.map(y => [y, '20' + y + '년']), CX.meta.codeYears[1])}</div>
+        <div class="f"><span class="lb">설계 주체</span>${segHtml('rDesign', [['사람사는집', '자체 설계'], ['건축사사무소', '건축사사무소']], '')}</div>
+        <div class="f" id="rArchBox" hidden><label>건축사사무소 이름</label><input type="text" id="rArch"></div>
+        <div class="hint">건축주·연락처·주소·유형·대지면적이 채워진 "설계중" 현장이 만들어집니다.</div>
+        <div class="actions"><button class="btn" type="button" id="rSave">현장 등록</button></div></div>` : ''}
+
+    <div class="card"><h4>상담 기록</h4><ul class="timeline" id="xLogs"><li class="t">불러오는 중...</li></ul></div>`);
+
+  // 기록 종류별로 단계가 어떻게 바뀌는지 미리 안내
+  const hintFor = k => {
+    if (k === '통화' && ['접수', '접수(메일답장완료)'].includes(o.stage)) return '저장하면 단계가 "통화완료"로 넘어갑니다.';
+    if (k === '메일·문자' && o.stage === '접수') return '저장하면 단계가 "접수(메일답장완료)"로 넘어갑니다.';
+    if (['미팅', '방문상담'].includes(k) && ['접수', '접수(메일답장완료)', '통화완료', '통화완료 미팅고려', '미팅약속/진행중'].includes(o.stage)) return '저장하면 단계가 "미팅완료/계약고려중"으로 넘어갑니다.';
+    return '';
+  };
+  $('xLogHint').textContent = hintFor('통화');
+
+  bindSegs(body, (name, v) => {
+    if (name === 'kind') $('xLogHint').textContent = hintFor(v);
+    if (name === 'stage') {
+      $('planBox').hidden = CX.meta.closed.includes(v);
+      $('rejBox').hidden = v !== '반려';
+      if (v !== o.stage && !CX.meta.closed.includes(v)) {
+        const days = CX.meta.dueDays[v];
+        if (days != null) { const d = new Date(); d.setDate(d.getDate() + days); $('xDue').value = ymd(d); }
+        const nx = CX.meta.nextDefault[v]; if (nx) $('xNext').value = nx;
+      }
+    }
+    if (name === 'rDesign') $('rArchBox').hidden = v !== '건축사사무소';
+  });
+  body.querySelectorAll('#rejSeg button').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
+
+  const update = async fields => {
+    const d = await api({ action: 'cx_update', id: o.id, fields });
+    cxReplace(d.item); cxRenderList(); cxOpen(o.id);
+  };
+  body.querySelector('#xPlanSave').onclick = e => submitting(e.target, () => {
+    const stage = segVal(body, 'stage');
+    const f = { stage, ownerEmail: $('xOwner').value };
+    if (stage === '반려') {
+      f.rejectReasons = [...body.querySelectorAll('#rejSeg [aria-pressed="true"]')].map(b => b.dataset.r);
+      if (!f.rejectReasons.length) throw new Error('반려 사유를 선택하세요.');
+    }
+    if (!CX.meta.closed.includes(stage)) {
+      f.nextAction = $('xNext').value; f.dueDate = $('xDue').value;
+      if (!f.dueDate) throw new Error('다음 연락 기한을 정해주세요. 먼 훗날이라도 날짜를 넣어야 잊지 않습니다.');
+    }
+    return update(f);
+  });
+  body.querySelector('#xLogSave').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'cx_log', id: o.id, kind: segVal(body, 'kind'), text: $('xLog').value });
+    cxReplace(d.item); cxRenderList(); cxOpen(o.id);
+    toast(d.autoStage ? `기록 저장 · 단계가 "${d.autoStage}"(으)로 바뀌었습니다` : '기록 저장');
+  });
+  body.querySelector('#xEdit').onclick = () => {
+    const card = $('sumCard');
+    card.innerHTML = `<h4>고객 정보 수정</h4>
+      <div class="f"><span class="lb">유입 경로</span><select data-k="source">${CX.meta.sources.map(x => `<option ${x === o.source ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <div class="f"><label>성함</label><input type="text" data-k="name" value="${esc(o.name)}"></div>
+      <div class="f"><label>연락처</label><input type="text" data-k="phone" value="${esc(o.phone)}" inputmode="tel"></div>
+      <div class="f"><label>이메일</label><input type="text" data-k="email" value="${esc(o.email)}"></div>
+      ${CX_FIELDS.map(f => cxFieldInput(f, o[f[0]])).join('')}
+      <div class="actions"><button class="btn ghost" type="button" id="eCancel">취소</button><button class="btn" type="button" id="eSave">저장</button></div>`;
+    bindToggleSegs(card);
+    card.querySelector('#eCancel').onclick = () => cxOpen(o.id);
+    card.querySelector('#eSave').onclick = e => submitting(e.target, () => update(cxReadFields(card)));
+  };
+  const ai = $('xAi');
+  if (ai) ai.onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'cx_analyze', id: o.id });
+    const out = $('aiOut'); out.hidden = false; out.textContent = d.text;
+    loadLogs();
+  });
+  const reg = $('rSave');
+  if (reg) reg.onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'cx_register_site', id: o.id, siteName: $('rName').value, codeYear: segVal(body, 'rYear'), designBy: segVal(body, 'rDesign'), architect: ($('rArch') || {}).value || '' });
+    cxReplace(d.item);
+    toast(`현장 ${d.code} 등록 완료 — 새로고침하면 현장 목록에 나타납니다`);
+    cxRenderList(); cxOpen(o.id);
+  });
+
+  function loadLogs() {
+    api({ action: 'cx_logs', id: o.id }).then(d => {
+      const el = $('xLogs'); if (!el) return;
+      el.innerHTML = d.items.length ? d.items.map(l => l.kind === 'AI 분석'
+        ? `<li><div class="t">${esc(l.at)} · ${esc(l.by)}</div><details><summary><b>AI 분석</b></summary><div class="content" style="margin-top:6px">${esc(l.text)}</div></details></li>`
+        : `<li class="k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}"><div class="t">${esc(l.at)} · ${esc(l.by)}</div><b>${esc(l.kind)}</b> — <span class="content">${esc(l.text)}</span></li>`).join('') : '<li class="t">기록 없음</li>';
+    }).catch(() => {});
+  }
+  loadLogs();
 }
 
 // ---------- 시작 ----------
