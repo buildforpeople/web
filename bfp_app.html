@@ -86,6 +86,93 @@
   .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 17px; }
   .loading { padding: 80px 20px; text-align: center; color: var(--muted); }
 
+  /* ===== 변경요청 ===== */
+  .cr-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .cr-bar h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; margin-right: auto; }
+  .btn { border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 600; background: var(--green); color: #fff; }
+  .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .btn.danger { background: #fff; color: var(--red); border: 1px solid #E6B8B0; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filters .chip b { margin-left: 4px; }
+  .cr-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 14px 18px; }
+  .cr-row:last-child { border-bottom: 0; }
+  .cr-row:hover { background: #F7F8F5; }
+  .cr-id { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .cr-title { font-weight: 600; }
+  .cr-sub { font-size: 13px; color: var(--muted); }
+  .cr-right { grid-column: 2; grid-row: 1 / span 3; text-align: right; align-self: center; }
+  .cr-wait { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .st { font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); white-space: nowrap; }
+  .st.완료 { background: var(--green-soft); color: var(--green); }
+  .st.반려, .st.취소 { background: var(--gray-soft); color: var(--gray); }
+  .st.mine { box-shadow: inset 0 0 0 2px var(--amber); }
+  .tag { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 5px; background: var(--blue-soft); color: var(--blue); margin-left: 6px; vertical-align: 1px; }
+  .money { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .scrim { position: fixed; inset: 0; background: rgba(20,26,18,.42); z-index: 30; }
+  .sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); z-index: 31; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(20,26,18,.18); }
+  .sheet-head { background: var(--surface); border-bottom: 1px solid var(--line); padding: 14px 18px; display: flex; align-items: flex-start; gap: 12px; }
+  .sheet-head h3 { margin: 2px 0 0; font-size: 18px; letter-spacing: -0.02em; }
+  .sheet-head .x { margin-left: auto; background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); padding: 4px 6px; }
+  .sheet-body { overflow-y: auto; padding: 16px 18px 40px; flex: 1; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .card h4 { margin: 0 0 10px; font-size: 14px; color: var(--muted); font-weight: 700; }
+
+  .steps { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; }
+  .step { flex: 1 0 auto; min-width: 64px; text-align: center; position: relative; font-size: 12px; color: var(--muted); padding-top: 22px; }
+  .step::before { content: ""; position: absolute; top: 6px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px var(--line); z-index: 1; }
+  .step::after { content: ""; position: absolute; top: 11px; left: -50%; width: 100%; height: 2px; background: var(--line); }
+  .step:first-child::after { display: none; }
+  .step.done { color: var(--ink); }
+  .step.done::before { background: var(--green-2); box-shadow: none; }
+  .step.done::after, .step.cur::after { background: var(--green-2); }
+  .step.cur { color: var(--amber); font-weight: 700; }
+  .step.cur::before { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-soft); }
+  .step.skip { opacity: .4; text-decoration: line-through; }
+
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 6px 12px; margin: 0; font-size: 14px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; overflow-wrap: anywhere; }
+  .content { white-space: pre-wrap; font-size: 15px; }
+
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .thumb { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; background: var(--gray-soft) center/cover no-repeat; display: flex; align-items: flex-end; padding: 0; overflow: hidden; }
+  .thumb span { width: 100%; font-size: 11px; background: rgba(255,255,255,.9); padding: 3px 5px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .thumb.doc { align-items: center; justify-content: center; flex-direction: column; font-size: 12px; color: var(--muted); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .compare h5 { margin: 0 0 6px; font-size: 13px; }
+
+  .f { margin-bottom: 12px; }
+  .f > label, .f > .lb { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+  .f input[type=text], .f input[type=number], .f select, .f textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; background: #fff; }
+  .f textarea { resize: vertical; min-height: 72px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+  .seg button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 5px; }
+  .notice { background: var(--amber-soft); color: #6B4A0C; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .sum { background: var(--green-soft); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+  .sum b { font-size: 18px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; margin-top: 4px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+  .sig-wrap { border: 1px dashed #9DB38A; border-radius: 8px; background: #fff; position: relative; }
+  .sig-wrap canvas { display: block; width: 100%; height: 170px; touch-action: none; }
+  .sig-wrap .clr { position: absolute; top: 6px; right: 6px; font-size: 12px; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+  .sig-wrap .ph { position: absolute; inset: 0; display: grid; place-items: center; color: #B5BCAE; pointer-events: none; font-size: 14px; }
+  .timeline { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .timeline li { padding: 8px 0 8px 14px; border-left: 2px solid var(--line); position: relative; }
+  .timeline li::before { content: ""; position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--green-2); }
+  .timeline .t { font-size: 12px; color: var(--muted); }
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 40; display: grid; place-items: center; padding: 20px; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
+  details.more summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--green); }
+
+  @media (max-width: 760px) {
+    .sheet { width: 100%; }
+    .cr-row { padding: 12px 14px; }
+    .compare { grid-template-columns: 1fr; }
+  }
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -337,13 +424,370 @@ function renderSiteTab() {
 }
 
 // ---------- 변경요청 ----------
-function renderChangeTab() {
+const CR = { items: [], site: null, meta: null, filter: '진행중', busy: false, urls: {} };
+const CR_STEPS = [
+  ['접수', '접수'], ['설계검토', '설계 검토'], ['견적', '견적'], ['건축주확인', '건축주 확인'],
+  ['승인대기', '승인'], ['도면반영', '도면 반영'], ['현장반영', '현장 확인']
+];
+const CR_OPEN = ['설계검토', '견적', '건축주확인', '승인대기', '도면반영', '현장반영'];
+
+function crWait(o) {
+  return {
+    설계검토: '설계팀 검토 대기', 견적: '공무 견적 대기', 건축주확인: '건축주 확인 대기',
+    승인대기: o.fastTrack ? '소장 전결 승인 대기' : '대표 승인 대기', 도면반영: '설계팀 도면 반영 대기',
+    현장반영: '현장 확인 대기', 완료: '완료', 반려: '반려', 취소: '취소'
+  }[o.status] || o.status;
+}
+
+function crMyTurn(o) {
+  const r = S.me.role, admin = r === 'admin', gm = S.me.team === '공무';
+  switch (o.status) {
+    case '설계검토': return admin || r === 'design';
+    case '견적': return admin || gm;
+    case '건축주확인': return admin || r === 'site' || gm;
+    case '승인대기': return admin || (o.fastTrack && r === 'site');
+    case '도면반영': return admin || r === 'design';
+    case '현장반영': return admin || r === 'site';
+  }
+  return false;
+}
+
+function crSteps(o) {
+  const skip = k => (k === '설계검토' && o.fastTrack) || (k === '견적' && (o.fastTrack || o.costType === '없음')) || (k === '도면반영' && o.drawingImpact === 'N');
+  const cur = o.status === '완료' ? 99 : CR_STEPS.findIndex(s => s[0] === o.status);
+  return CR_STEPS.map((s, i) => {
+    let st = i === 0 || i < cur ? 'done' : i === cur ? 'cur' : '';
+    if (i > 0 && skip(s[0])) st = 'skip';
+    if ((o.status === '반려' || o.status === '취소') && i > 0) st = skip(s[0]) ? 'skip' : '';
+    return `<div class="step ${st}">${s[1]}</div>`;
+  }).join('');
+}
+
+function won(n) { return (Number(n) || 0).toLocaleString('ko-KR') + '원'; }
+function crCost(o) {
+  if (o.costType === '없음') return '추가비용 없음';
+  if (o.amount === '' || o.amount == null) return o.costType ? (o.costType === '감액' ? '감액 (견적 전)' : '추가비용 (견적 전)') : '';
+  return (o.costType === '감액' ? '감액 ' : '추가 ') + won(o.amount);
+}
+
+async function renderChangeTab() {
   const s = currentSite();
+  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
+  if (CR.site !== s.code) {
+    $('main').innerHTML = '<div class="loading">변경요청을 불러오는 중...</div>';
+    try {
+      if (!CR.meta) CR.meta = await api({ action: 'cr_meta' });
+      const d = await api({ action: 'cr_list', siteCode: s.code });
+      CR.items = d.items; CR.site = s.code;
+    } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'change' || S.siteCode !== s.code) return;
+  }
+  crRenderList();
+}
+
+function crRenderList() {
+  const s = currentSite();
+  const groups = {
+    진행중: o => CR_OPEN.includes(o.status),
+    '내 차례': o => CR_OPEN.includes(o.status) && crMyTurn(o),
+    완료: o => o.status === '완료',
+    '반려·취소': o => o.status === '반려' || o.status === '취소',
+    전체: () => true
+  };
+  const list = CR.items.filter(groups[CR.filter]);
   $('main').innerHTML = `
-    <section class="panel empty">
-      <h3>${s ? esc(s.code + ' ' + s.name) + ' 변경요청' : '변경요청'}</h3>
-      변경요청 접수·검토·승인 화면을 다음 단계에서 만듭니다.
+    <div class="cr-bar">
+      <h2>변경요청 <span class="cr-sub" style="font-size:15px;font-weight:500">${esc(s.code)} ${esc(s.name)}</span></h2>
+      <button class="btn" id="crNew" type="button">+ 변경요청 접수</button>
+    </div>
+    <div class="filters">
+      ${Object.keys(groups).map(k => `<button class="chip" data-f="${k}" aria-pressed="${CR.filter === k}">${k}<b>${CR.items.filter(groups[k]).length}</b></button>`).join('')}
+    </div>
+    <section class="panel">
+      ${list.length ? list.map(o => `
+        <button class="cr-row" data-id="${esc(o.id)}">
+          <span class="cr-id">${esc(o.id)}${o.fastTrack ? '<span class="tag">전결</span>' : ''}</span>
+          <span class="cr-title">${esc(o.title)}</span>
+          <span class="cr-sub">${esc(o.trade)} · ${esc(o.createdBy)} · ${esc(String(o.createdAt).slice(0, 10))}${crCost(o) ? ' · <span class="money">' + esc(crCost(o)) + '</span>' : ''}</span>
+          <span class="cr-right"><span class="st ${esc(o.status)} ${CR_OPEN.includes(o.status) && crMyTurn(o) ? 'mine' : ''}">${esc(o.status === '승인대기' ? '승인' : o.status)}</span><span class="cr-wait">${esc(crWait(o))}</span></span>
+        </button>`).join('') : `<div class="empty"><h3>${CR.filter === '내 차례' ? '처리할 요청이 없습니다' : '변경요청이 없습니다'}</h3>${CR.filter === '진행중' ? '건축주 요청을 받으면 [변경요청 접수]로 등록하세요.' : ''}</div>`}
     </section>`;
+  $('crNew').onclick = crNewForm;
+  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.filter = b.dataset.f; crRenderList(); });
+  $('main').querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
+}
+
+// ---- 공통: 시트·폼 도구 ----
+function openSheet(title, sub, body) {
+  closeSheet();
+  const wrap = document.createElement('div');
+  wrap.id = 'sheetWrap';
+  wrap.innerHTML = `<div class="scrim"></div><aside class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-head"><div><div class="cr-id">${sub}</div><h3>${title}</h3></div><button class="x" type="button" aria-label="닫기">×</button></div>
+    <div class="sheet-body">${body}</div></aside>`;
+  document.body.appendChild(wrap);
+  wrap.querySelector('.scrim').onclick = closeSheet;
+  wrap.querySelector('.x').onclick = closeSheet;
+  document.body.style.overflow = 'hidden';
+  return wrap.querySelector('.sheet-body');
+}
+function closeSheet() { const w = $('sheetWrap'); if (w) w.remove(); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const lb = document.querySelector('.lightbox'); if (lb) lb.remove(); else closeSheet(); } });
+
+function segHtml(name, opts, val) {
+  return `<div class="seg" data-seg="${name}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<button type="button" data-v="${esc(v)}" aria-pressed="${v === val}">${esc(l)}</button>`; }).join('')}</div>`;
+}
+function bindSegs(root, onChange) {
+  root.querySelectorAll('[data-seg] button').forEach(b => b.onclick = () => {
+    b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    if (onChange) onChange(b.parentNode.dataset.seg, b.dataset.v);
+  });
+}
+function segVal(root, name) { const b = root.querySelector(`[data-seg="${name}"] [aria-pressed="true"]`); return b ? b.dataset.v : ''; }
+
+// 이미지는 1600px JPEG로 줄여서 업로드
+async function readFiles(input) {
+  const out = [];
+  for (const f of Array.from(input.files || [])) {
+    if (f.type.startsWith('image/') && f.type !== 'image/gif') {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); });
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      out.push({ name: f.name.replace(/\.\w+$/, '') + '.jpg', type: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.82).split(',')[1] });
+    } else {
+      if (f.size > 10 * 1024 * 1024) throw new Error(f.name + ': 10MB 이하 파일만 첨부할 수 있습니다.');
+      const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+      out.push({ name: f.name, type: f.type || 'application/octet-stream', data });
+    }
+  }
+  return out;
+}
+
+async function submitting(btn, fn) {
+  if (CR.busy) return;
+  CR.busy = true; const t = btn.textContent; btn.disabled = true; btn.textContent = '저장 중...';
+  try { await fn(); } catch (e) { toast(e.message); } finally { CR.busy = false; btn.disabled = false; btn.textContent = t; }
+}
+
+// ---- 접수 ----
+function crNewForm() {
+  const s = currentSite();
+  const canFast = S.me.role === 'site' || S.me.role === 'admin';
+  const body = openSheet('변경요청 접수', esc(s.code + ' ' + s.name), `
+    <div class="notice">현장에서는 <b>접수만</b> 안내해 주세요. 변경 여부와 비용은 본사 설계팀 검토 후 확정됩니다.</div>
+    <div class="card">
+      <div class="f"><label for="nTrade">공종</label><select id="nTrade"><option value="">선택</option>${CR.meta.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="f"><label for="nTitle">제목</label><input type="text" id="nTitle" maxlength="80" placeholder="예: 거실 콘센트 2개 추가"></div>
+      <div class="f"><label for="nContent">요청 내용</label><textarea id="nContent" rows="4" placeholder="위치, 수량, 높이 등 구체적으로"></textarea></div>
+      <div class="f"><span class="lb">요청 경로</span>${segHtml('route', CR.meta.routes, '현장')}</div>
+      <div class="f"><label for="nReq">요청자</label><input type="text" id="nReq" value="건축주${s.owner ? ' ' + esc(s.owner) : ''}"></div>
+      <div class="f"><label for="nFiles">사진·도면 (변경 전)</label><input type="file" id="nFiles" multiple accept="image/*,.pdf,.dwg,.dxf">
+        <div class="hint">도면에 변경 위치를 표시한 사진을 함께 올리면 검토가 빨라집니다.</div></div>
+    </div>
+    ${canFast ? `<div class="card">
+      <label class="check"><input type="checkbox" id="nFast"> <span><b>소장 전결</b> — 10만원 이하이고 도면 변경이 없는 요청<br><span class="hint">설계 검토·견적 없이 건축주 확인 후 바로 진행합니다.</span></span></label>
+      <div class="f" id="nFastBox" hidden style="margin-top:10px"><label for="nAmount">추가 비용 (원)</label><input type="number" id="nAmount" min="0" max="${CR.meta.fastLimit}" step="1000" placeholder="0" inputmode="numeric"></div>
+    </div>` : ''}
+    <div class="actions"><button class="btn ghost" type="button" id="nCancel">닫기</button><button class="btn" type="button" id="nSave">접수</button></div>`);
+  bindSegs(body);
+  body.querySelector('#nCancel').onclick = closeSheet;
+  if (canFast) body.querySelector('#nFast').onchange = e => body.querySelector('#nFastBox').hidden = !e.target.checked;
+  body.querySelector('#nSave').onclick = e => submitting(e.target, async () => {
+    const fast = canFast && body.querySelector('#nFast').checked;
+    const d = await api({
+      action: 'cr_create', siteCode: s.code, trade: body.querySelector('#nTrade').value,
+      title: body.querySelector('#nTitle').value, content: body.querySelector('#nContent').value,
+      route: segVal(body, 'route'), requester: body.querySelector('#nReq').value,
+      fastTrack: fast, amount: fast ? body.querySelector('#nAmount').value : '',
+      files: await readFiles(body.querySelector('#nFiles'))
+    });
+    CR.items.unshift(d.item);
+    CR.filter = '진행중';
+    closeSheet(); crRenderList(); crOpen(d.item.id);
+  });
+}
+
+// ---- 상세 ----
+function crOpen(id) {
+  const o = CR.items.find(x => x.id === id);
+  if (!o) return;
+  const s = currentSite();
+  const byKind = k => o.attachments.filter(f => f.kind === k);
+  const files = (list) => list.length ? `<div class="thumbs">${list.map(f => f.type.startsWith('image/')
+      ? `<button type="button" class="thumb" data-file="${esc(f.id)}" title="${esc(f.name)}"><span>${esc(f.name)}</span></button>`
+      : `<button type="button" class="thumb doc" data-file="${esc(f.id)}" title="${esc(f.name)}"><b>${esc((f.name.split('.').pop() || 'FILE').toUpperCase())}</b><span>${esc(f.name)}</span></button>`).join('')}</div>` : '';
+  const before = byKind('요청'), after = byKind('변경 도면');
+  const others = o.attachments.filter(f => !['요청', '변경 도면'].includes(f.kind));
+
+  const info = [
+    ['공종', o.trade], ['요청', `${o.route} · ${o.requester}`], ['접수', `${o.createdBy} · ${o.createdAt}`],
+    ['비용', crCost(o) || '검토 전'], ['도면 영향', o.drawingImpact === 'Y' ? '있음' : o.drawingImpact === 'N' ? '없음' : '검토 전'],
+    o.reviewNote ? ['검토 의견', o.reviewNote] : null,
+    o.estimateNote ? ['견적 메모', o.estimateNote] : null,
+    o.ownerConfirmName ? ['건축주 확인', `${o.ownerConfirmName} · ${o.ownerConfirmAt}`] : null,
+    o.approvedBy ? ['승인', `${o.approvedBy} · ${o.approvedAt}`] : null,
+    o.drawingRev ? ['변경 도면', o.drawingRev] : null,
+    o.siteDoneBy ? ['현장 확인', `${o.siteDoneBy} · ${o.siteDoneAt}`] : null,
+    o.rejectReason ? [o.status === '취소' ? '취소 사유' : '반려 사유', o.rejectReason] : null
+  ].filter(Boolean);
+
+  const body = openSheet(esc(o.title), esc(o.id) + (o.fastTrack ? ' <span class="tag">소장 전결</span>' : ''), `
+    <div class="card"><div class="steps">${crSteps(o)}</div>
+      <div class="hint" style="text-align:center;margin-top:6px"><span class="st ${esc(o.status)}">${esc(crWait(o))}</span></div></div>
+    ${CR_OPEN.includes(o.status) && crMyTurn(o) ? `<div class="card" id="actBox"></div>` : ''}
+    <div class="card"><dl class="kv">${info.map(r => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl></div>
+    ${o.content ? `<div class="card"><h4>요청 내용</h4><div class="content">${esc(o.content)}</div></div>` : ''}
+    ${after.length ? `<div class="card"><h4>도면 변경 전 · 후</h4><div class="compare"><div><h5>변경 전</h5>${files(before) || '<div class="hint">첨부 없음</div>'}</div><div><h5>변경 후 · ${esc(o.drawingRev)}</h5>${files(after)}</div></div></div>`
+      : before.length ? `<div class="card"><h4>변경 전 사진·도면</h4>${files(before)}</div>` : ''}
+    ${others.length ? `<div class="card"><h4>기타 첨부 (견적·서명·현장 사진)</h4>${files(others)}</div>` : ''}
+    <div class="card">
+      <details class="more" id="moreBox"><summary>메모·자료 추가</summary>
+        <div style="margin-top:10px"><div class="f"><textarea id="cNote" rows="2" placeholder="진행 관련 메모"></textarea></div>
+        <div class="f"><input type="file" id="cFiles" multiple accept="image/*,.pdf,.dwg,.dxf"></div>
+        <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">메모 저장</button></div></div>
+      </details>
+    </div>
+    <div class="card"><h4>처리 이력</h4><ul class="timeline" id="histList"><li class="t">불러오는 중...</li></ul></div>`);
+
+  body.querySelectorAll('[data-file]').forEach(b => { crThumb(o, b); b.onclick = () => crViewFile(o, b.dataset.file); });
+  if (body.querySelector('#actBox')) crActionForm(o, s, body.querySelector('#actBox'));
+  body.querySelector('#cSave').onclick = e => submitting(e.target, async () => {
+    await crDo(o, { act: 'comment', note: body.querySelector('#cNote').value, files: await readFiles(body.querySelector('#cFiles')) });
+  });
+  const cc = body.querySelector('#cCancel');
+  if (cc) cc.onclick = e => { if (confirm('이 변경요청을 취소할까요?')) submitting(e.target, () => crDo(o, { act: 'cancel', note: body.querySelector('#cNote').value })); };
+
+  api({ action: 'cr_history', id: o.id }).then(d => {
+    const el = $('histList'); if (!el) return;
+    el.innerHTML = d.items.length ? d.items.map(h => `<li><div class="t">${esc(h.at)} · ${esc(h.by)}</div><b>${esc(h.step)}</b>${h.note ? ' — ' + esc(h.note) : ''}</li>`).join('') : '<li class="t">이력 없음</li>';
+  }).catch(() => {});
+}
+
+function crCanCancel(o) {
+  if (!(S.me.role === 'admin' || o.mine)) return false;
+  return o.status === '설계검토' || (o.status === '건축주확인' && (o.fastTrack || S.me.role === 'admin'));
+}
+
+async function crDo(o, payload) {
+  const d = await api(Object.assign({ action: 'cr_act', id: o.id }, payload));
+  const i = CR.items.findIndex(x => x.id === o.id);
+  CR.items[i] = d.item;
+  crRenderList();
+  crOpen(o.id);
+}
+
+async function crFileUrl(o, fileId) {
+  if (CR.urls[fileId]) return CR.urls[fileId];
+  const d = await api({ action: 'cr_file', id: o.id, fileId });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  CR.urls[fileId] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+  return CR.urls[fileId];
+}
+function crThumb(o, btn) {
+  if (btn.classList.contains('doc')) return;
+  crFileUrl(o, btn.dataset.file).then(f => { btn.style.backgroundImage = `url("${f.url}")`; }).catch(() => {});
+}
+async function crViewFile(o, fileId) {
+  try {
+    const f = await crFileUrl(o, fileId);
+    if (f.type.startsWith('image/')) {
+      const lb = document.createElement('div'); lb.className = 'lightbox';
+      lb.innerHTML = `<img src="${f.url}" alt="${esc(f.name)}">`;
+      lb.onclick = () => lb.remove();
+      document.body.appendChild(lb);
+    } else {
+      const a = document.createElement('a'); a.href = f.url; a.download = f.name; a.target = '_blank';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  } catch (e) { toast(e.message); }
+}
+
+// ---- 단계별 처리 폼 ----
+function crActionForm(o, s, box) {
+  const summary = `<div class="sum">${o.costType === '없음' ? '<b>추가비용 없음</b>' : `${o.costType === '감액' ? '감액' : '추가비용'} <b>${won(o.amount)}</b>`}</div>`;
+  const noteF = (ph) => `<div class="f"><textarea class="aNote" rows="2" placeholder="${ph || '메모 (선택)'}"></textarea></div>`;
+  const rejectBtn = S.me.role === 'admin' || S.me.role === 'design' ? '<button class="btn danger" type="button" data-a="reject">반려</button>' : '';
+  let html = '';
+
+  if (o.status === '설계검토') {
+    html = `<h4>설계 검토</h4>
+      <div class="f"><span class="lb">도면 변경</span>${segHtml('dw', [['Y', '있음'], ['N', '없음']], '')}</div>
+      <div class="f"><span class="lb">비용</span>${segHtml('cost', [['없음', '추가비용 없음'], ['추가', '추가비용 발생'], ['감액', '감액']], '')}
+        <div class="hint">비용이 발생하면 공무팀 견적 단계로 넘어갑니다.</div></div>
+      ${noteF('검토 의견 (반려 시 사유 필수)')}
+      <div class="actions">${rejectBtn}<button class="btn" type="button" data-a="review">검토 완료</button></div>`;
+  } else if (o.status === '견적') {
+    html = `<h4>견적</h4>
+      <div class="f"><label>${o.costType === '감액' ? '감액 금액' : '추가 금액'} (원, VAT 포함)</label><input type="number" class="aAmount" min="0" step="1000" inputmode="numeric"></div>
+      <div class="f"><label>견적서 첨부 (선택)</label><input type="file" class="aFiles" multiple accept="image/*,.pdf,.xlsx,.xls"></div>
+      ${noteF('산출 근거 등')}
+      <div class="actions">${S.me.role === 'admin' ? rejectBtn : ''}<button class="btn" type="button" data-a="estimate">견적 등록</button></div>`;
+  } else if (o.status === '건축주확인') {
+    html = `<h4>건축주 확인</h4>${summary}
+      <div class="notice">위 금액과 변경 내용을 건축주께 설명하고 서명을 받아주세요.</div>
+      <div class="f"><label>건축주 이름</label><input type="text" class="aOwner" value="${esc(s.owner || '')}"></div>
+      <div class="f"><span class="lb">서명</span><div class="sig-wrap"><canvas class="aSig"></canvas><span class="ph">여기에 서명</span><button type="button" class="clr">지우기</button></div></div>
+      ${noteF()}
+      <div class="actions"><button class="btn danger" type="button" data-a="owner_decline">건축주 미동의</button><button class="btn" type="button" data-a="owner_confirm">확인 완료</button></div>`;
+  } else if (o.status === '승인대기') {
+    html = `<h4>${o.fastTrack ? '소장 전결 승인' : '승인'}</h4>${summary}${noteF()}
+      <div class="actions">${S.me.role === 'admin' ? rejectBtn : ''}<button class="btn" type="button" data-a="approve">${o.fastTrack && S.me.role === 'site' ? '전결 승인' : '승인'}</button></div>`;
+  } else if (o.status === '도면반영') {
+    html = `<h4>도면 반영</h4>
+      <div class="f"><label>도면 Rev 번호</label><input type="text" class="aRev" placeholder="예: Rev.3 (전기평면도)"></div>
+      <div class="f"><label>변경된 도면 (변경 위치 구름 표시)</label><input type="file" class="aFiles" multiple accept="image/*,.pdf,.dwg,.dxf"></div>
+      ${noteF()}
+      <div class="actions"><button class="btn" type="button" data-a="drawing">도면 반영 완료</button></div>`;
+  } else if (o.status === '현장반영') {
+    html = `<h4>현장 확인</h4>
+      ${o.drawingImpact === 'Y' ? `<label class="check f"><input type="checkbox" class="aChk"> <span>최신 도면 <b>${esc(o.drawingRev)}</b>을 확인하고 시공했습니다</span></label>` : ''}
+      <div class="f"><label>완료 사진 (선택)</label><input type="file" class="aFiles" multiple accept="image/*"></div>
+      ${noteF()}
+      <div class="actions"><button class="btn" type="button" data-a="site_done">현장 확인 완료</button></div>`;
+  }
+  box.innerHTML = html;
+  bindSegs(box);
+
+  // 서명 패드
+  const cv = box.querySelector('.aSig');
+  let signed = false;
+  if (cv) {
+    const ratio = window.devicePixelRatio || 1;
+    const fit = () => { const r = cv.getBoundingClientRect(); cv.width = r.width * ratio; cv.height = r.height * ratio; const g = cv.getContext('2d'); g.scale(ratio, ratio); g.lineWidth = 2.4; g.lineCap = 'round'; g.strokeStyle = '#1E261B'; signed = false; box.querySelector('.ph').hidden = false; };
+    requestAnimationFrame(fit);
+    const g = () => cv.getContext('2d');
+    let drawing = false;
+    const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    cv.onpointerdown = e => { drawing = true; cv.setPointerCapture(e.pointerId); const [x, y] = pos(e); g().beginPath(); g().moveTo(x, y); };
+    cv.onpointermove = e => { if (!drawing) return; const [x, y] = pos(e); g().lineTo(x, y); g().stroke(); if (!signed) { signed = true; box.querySelector('.ph').hidden = true; } };
+    cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+    box.querySelector('.clr').onclick = fit;
+  }
+
+  box.querySelectorAll('[data-a]').forEach(btn => btn.onclick = () => submitting(btn, async () => {
+    const act = btn.dataset.a;
+    const note = (box.querySelector('.aNote') || {}).value || '';
+    const p = { act, note };
+    if (act === 'review') { p.drawingImpact = segVal(box, 'dw'); p.costType = segVal(box, 'cost'); }
+    if (act === 'reject' && !note.trim()) throw new Error('반려 사유를 메모란에 입력하세요.');
+    if (act === 'reject' && !confirm('반려할까요?')) return;
+    if (act === 'estimate') p.amount = box.querySelector('.aAmount').value;
+    if (act === 'owner_confirm') {
+      if (!signed) throw new Error('건축주 서명을 받아주세요.');
+      p.ownerName = box.querySelector('.aOwner').value;
+      const c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = cv.height;
+      const x = c2.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c2.width, c2.height); x.drawImage(cv, 0, 0);
+      p.signature = c2.toDataURL('image/png').split(',')[1];
+    }
+    if (act === 'owner_decline' && !confirm('건축주 미동의로 종료할까요?')) return;
+    if (act === 'drawing') p.rev = box.querySelector('.aRev').value;
+    if (act === 'site_done') p.drawingChecked = !!(box.querySelector('.aChk') || {}).checked;
+    const fi = box.querySelector('.aFiles');
+    if (fi) p.files = await readFiles(fi);
+    await crDo(o, p);
+  }));
 }
 
 // ---------- 고객관리 ----------
