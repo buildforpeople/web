@@ -2,7 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2D5016">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="사람사는집">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADfElEQVR4nO3dUW7TQBSG0RaxBlgFrAVWyl7YBbvgIVJVCf+hdmLPvTPnPCEegjP+emfSCvf1248vL7Dl0+gLoC5xEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIPo8+gIK+f3rz+0P339+HXslRbz6lRov77J4TyK2le0y7vz9OlaP434Bi/ex7ray68avucUsOjn2joQ1R8iKcRy70wv2sVwcj9zj1fpYK47H7+5SfaxyIH36TV3hiLrE5Djjy32FETJ/HOd9ZJ2+j8njOFCGPt7MHMfhmaGPm2njeHA30cfLlJ9W9t6qOx088aU6mi2OM46fy/4UZqpt5aS7uOwWM08cp359r9nHJHFcMPkX7KP9mePiM+NSR9Tek+P6W7X3FVqPkMaTY+yHiBU+wnSdHMPvzQpHkJZxDC/jwCt37KPZtlLwPFjwkp6l0+SoeRsmPqK2mRxFtpI76l/hXj0mR4t1n+8I0iCOFmUc+Nfr91F6W6l5yPivppf9r7qTo+8ST3NELTo5Gm0ld3R/FxUnR/c1fdP9CFIujmnKuGndR604Jivjpm8fVc4cfY+fH9TxDZaIY8qBsanXOx2/rfRarwf12mIGxzH8/Rc3dn1GxqGMjxi4SmMeUiuLXW7Ldf2WOmByKOOY69ft6jiU8YiLV+/qOLp/3Bjr4tUbsK3o45glzhwv+thvyIqN/yYYZQ2LY/NhOibK5iKMWpaRk+PwY7imV2RlBm8rBx7gt4gKKzP+zKGMZPjKjI+DssRBJA4icRCJg0gcRAv9Ruon/rx7+IfMa5gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRM3+x1uRZ9wWuYyzmRxE4iASB5E4iMRBVC6ORR59sanaey8XB3WU+NWhmxb5XsJNtZlxU3dy1FyvM5R9p3UnB8PVnRwMJw4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIH0V8dbhKgtCxblgAAAABJRU5ErkJggg==">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADfElEQVR4nO3dUW7TQBSG0RaxBlgFrAVWyl7YBbvgIVJVCf+hdmLPvTPnPCEegjP+emfSCvf1248vL7Dl0+gLoC5xEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIPo8+gIK+f3rz+0P339+HXslRbz6lRov77J4TyK2le0y7vz9OlaP434Bi/ex7ray68avucUsOjn2joQ1R8iKcRy70wv2sVwcj9zj1fpYK47H7+5SfaxyIH36TV3hiLrE5Djjy32FETJ/HOd9ZJ2+j8njOFCGPt7MHMfhmaGPm2njeHA30cfLlJ9W9t6qOx088aU6mi2OM46fy/4UZqpt5aS7uOwWM08cp359r9nHJHFcMPkX7KP9mePiM+NSR9Tek+P6W7X3FVqPkMaTY+yHiBU+wnSdHMPvzQpHkJZxDC/jwCt37KPZtlLwPFjwkp6l0+SoeRsmPqK2mRxFtpI76l/hXj0mR4t1n+8I0iCOFmUc+Nfr91F6W6l5yPivppf9r7qTo+8ST3NELTo5Gm0ld3R/FxUnR/c1fdP9CFIujmnKuGndR604Jivjpm8fVc4cfY+fH9TxDZaIY8qBsanXOx2/rfRarwf12mIGxzH8/Rc3dn1GxqGMjxi4SmMeUiuLXW7Ldf2WOmByKOOY69ft6jiU8YiLV+/qOLp/3Bjr4tUbsK3o45glzhwv+thvyIqN/yYYZQ2LY/NhOibK5iKMWpaRk+PwY7imV2RlBm8rBx7gt4gKKzP+zKGMZPjKjI+DssRBJA4icRCJg0gcRAv9Ruon/rx7+IfMa5gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcRM3+x1uRZ9wWuYyzmRxE4iASB5E4iMRBVC6ORR59sanaey8XB3WU+NWhmxb5XsJNtZlxU3dy1FyvM5R9p3UnB8PVnRwMJw4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIH0V8dbhKgtCxblgAAAABJRU5ErkJggg==">
 <title>사람사는집</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -15,7 +22,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body { -webkit-tap-highlight-color: transparent; background: var(--bg); color: var(--ink); font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
   button, select, input { font: inherit; color: inherit; }
   button { cursor: pointer; }
   :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -31,7 +38,7 @@
   .login-msg { margin-top: 16px; font-size: 13px; color: var(--red); min-height: 18px; }
 
   /* 상단 */
-  .top { background: var(--green); color: #fff; position: sticky; top: 0; z-index: 10; }
+  .top { background: var(--green); color: #fff; position: sticky; top: 0; z-index: 10; padding-top: env(safe-area-inset-top); }
   .top-row { max-width: 1080px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
   .brand { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
   .site-pick { margin-left: auto; position: relative; min-width: 0; }
@@ -173,7 +180,10 @@
     .cr-row { padding: 12px 14px; }
     .compare { grid-template-columns: 1fr; }
   }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
+  input[type=file] { width: 100%; font-size: 14px; color: var(--muted); }
+  input[type=file]::file-selector-button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 8px; padding: 8px 14px; font-weight: 600; margin-right: 10px; font-family: inherit; cursor: pointer; }
+  .fab { display: none; }
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
     .top-row { flex-wrap: wrap; padding: 10px 14px; }
@@ -187,6 +197,52 @@
     .site-head, .progress { padding-left: 16px; padding-right: 16px; }
     .fact { padding: 12px 16px; }
     .fact.blank { display: none; }
+  }
+
+  /* ===== 모바일 최적화 ===== */
+  @media (max-width: 760px) {
+    body { font-size: 15px; }
+    /* iOS 입력 시 화면 확대 방지 */
+    input, select, textarea { font-size: 16px !important; }
+    .tab { padding: 10px 12px 11px; }
+    .me { gap: 6px; }
+    .me #meName { max-width: 5em; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 변경요청 목록 */
+    .cr-bar { margin-bottom: 10px; }
+    .cr-bar h2 .cr-sub { display: none; }
+    .cr-bar #crNew { display: none; }
+    .filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px 10px; padding: 0 12px; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filters .chip { flex: none; }
+    .cr-row { grid-template-columns: 1fr auto; padding: 13px 14px; gap: 3px 10px; }
+    .cr-right { grid-row: 1; grid-column: 2; align-self: start; }
+    .cr-wait { display: none; }
+    .cr-title, .cr-sub { grid-column: 1 / -1; }
+    main { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .fab { display: flex; align-items: center; gap: 6px; position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 20;
+      background: var(--green); color: #fff; border: 0; border-radius: 999px; padding: 14px 20px; font-weight: 700; font-size: 16px; box-shadow: 0 6px 18px rgba(45,80,22,.35); }
+
+    /* 상세·접수 시트: 전체 화면 */
+    .sheet { width: 100%; box-shadow: none; }
+    .sheet-head { padding: calc(12px + env(safe-area-inset-top)) 14px 12px; position: sticky; top: 0; }
+    .sheet-head .x { font-size: 28px; padding: 2px 8px; margin-right: -6px; }
+    .sheet-body { padding: 12px 12px calc(40px + env(safe-area-inset-bottom)); }
+    .card { padding: 14px; border-radius: 12px; }
+    .kv { grid-template-columns: 80px 1fr; }
+
+    /* 단계 표시: 7단계가 한 화면에 */
+    .steps { overflow: visible; }
+    .step { flex: 1 1 0; min-width: 0; font-size: 11px; line-height: 1.25; word-break: keep-all; padding: 22px 1px 0; }
+
+    /* 버튼·입력 터치 크기 */
+    .actions.sticky { position: sticky; bottom: calc(-40px - env(safe-area-inset-bottom)); background: var(--bg); margin: 0 -12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); z-index: 2; }
+    .actions .btn { flex: 1 1 0; min-height: 48px; font-size: 16px; }
+    .seg button { padding: 9px 14px; }
+    .chip { padding: 8px 14px; }
+    .sig-wrap canvas { height: 200px; }
+    .thumbs { grid-template-columns: repeat(3, 1fr); }
+    .check input { width: 20px; height: 20px; flex: none; margin-top: 1px; }
   }
 </style>
 </head>
@@ -340,6 +396,7 @@ function selectTab(t) {
 function currentSite() { return S.sites.find(s => s.code === S.siteCode); }
 
 function renderTab() {
+  const fab = $('crFab'); if (fab) fab.hidden = S.tab !== 'change';
   if (S.tab === 'site') return renderSiteTab();
   if (S.tab === 'change') return renderChangeTab();
   if (S.tab === 'cx') return renderCxTab();
@@ -513,6 +570,10 @@ function crRenderList() {
         </button>`).join('') : `<div class="empty"><h3>${CR.filter === '내 차례' ? '처리할 요청이 없습니다' : '변경요청이 없습니다'}</h3>${CR.filter === '진행중' ? '건축주 요청을 받으면 [변경요청 접수]로 등록하세요.' : ''}</div>`}
     </section>`;
   $('crNew').onclick = crNewForm;
+  let fab = $('crFab');
+  if (!fab) { fab = document.createElement('button'); fab.id = 'crFab'; fab.className = 'fab'; fab.type = 'button'; fab.innerHTML = '<span aria-hidden="true" style="font-size:20px;line-height:1">+</span> 변경요청 접수'; document.body.appendChild(fab); }
+  fab.onclick = crNewForm;
+  fab.hidden = false;
   $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.filter = b.dataset.f; crRenderList(); });
   $('main').querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
 }
@@ -589,7 +650,7 @@ function crNewForm() {
       <label class="check"><input type="checkbox" id="nFast"> <span><b>소장 전결</b> — 10만원 이하이고 도면 변경이 없는 요청<br><span class="hint">설계 검토·견적 없이 건축주 확인 후 바로 진행합니다.</span></span></label>
       <div class="f" id="nFastBox" hidden style="margin-top:10px"><label for="nAmount">추가 비용 (원)</label><input type="number" id="nAmount" min="0" max="${CR.meta.fastLimit}" step="1000" placeholder="0" inputmode="numeric"></div>
     </div>` : ''}
-    <div class="actions"><button class="btn ghost" type="button" id="nCancel">닫기</button><button class="btn" type="button" id="nSave">접수</button></div>`);
+    <div class="actions sticky"><button class="btn ghost" type="button" id="nCancel">닫기</button><button class="btn" type="button" id="nSave">접수</button></div>`);
   bindSegs(body);
   body.querySelector('#nCancel').onclick = closeSheet;
   if (canFast) body.querySelector('#nFast').onchange = e => body.querySelector('#nFastBox').hidden = !e.target.checked;
