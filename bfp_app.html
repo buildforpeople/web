@@ -158,6 +158,7 @@
   .seg button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
   .seg button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
   .hint { font-size: 13px; color: var(--muted); margin-top: 5px; }
+  .won-read { margin-top: 6px; font-size: 15px; color: var(--green); min-height: 1.4em; }
   .notice { background: var(--amber-soft); color: #6B4A0C; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
   .sum { background: var(--green-soft); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
   .sum b { font-size: 18px; }
@@ -520,6 +521,33 @@ function crSteps(o) {
   }).join('');
 }
 
+// 금액 한글 표기: 180000 → 금 일십팔만원정
+function wonKorean(n) {
+  n = Math.floor(Number(n));
+  if (!n || n < 0) return '';
+  const digit = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+  const small = ['', '십', '백', '천'];
+  const big = ['', '만', '억', '조'];
+  let out = '', g = 0;
+  while (n > 0 && g < big.length) {
+    const part = n % 10000;
+    if (part) {
+      let t = '';
+      String(part).padStart(4, '0').split('').forEach((d, i) => { if (d !== '0') t += digit[d] + small[3 - i]; });
+      out = t + big[g] + out;
+    }
+    n = Math.floor(n / 10000); g++;
+  }
+  return '금 ' + out + '원정';
+}
+function bindWonReader(input, target) {
+  const upd = () => {
+    const v = Number(input.value);
+    target.innerHTML = input.value && v > 0 ? `<b class="money">${v.toLocaleString('ko-KR')}원</b> · ${wonKorean(v)}` : '';
+  };
+  input.addEventListener('input', upd); upd();
+}
+
 function won(n) { return (Number(n) || 0).toLocaleString('ko-KR') + '원'; }
 function crCost(o) {
   if (o.costType === '없음') return '추가비용 없음';
@@ -648,12 +676,15 @@ function crNewForm() {
     </div>
     ${canFast ? `<div class="card">
       <label class="check"><input type="checkbox" id="nFast"> <span><b>소장 전결</b> — 10만원 이하이고 도면 변경이 없는 요청<br><span class="hint">설계 검토·견적 없이 건축주 확인 후 바로 진행합니다.</span></span></label>
-      <div class="f" id="nFastBox" hidden style="margin-top:10px"><label for="nAmount">추가 비용 (원)</label><input type="number" id="nAmount" min="0" max="${CR.meta.fastLimit}" step="1000" placeholder="0" inputmode="numeric"></div>
+      <div class="f" id="nFastBox" hidden style="margin-top:10px"><label for="nAmount">추가 비용 (원)</label><input type="number" id="nAmount" min="0" max="${CR.meta.fastLimit}" step="1000" placeholder="0" inputmode="numeric"><div class="won-read" id="nAmountRead"></div></div>
     </div>` : ''}
     <div class="actions sticky"><button class="btn ghost" type="button" id="nCancel">닫기</button><button class="btn" type="button" id="nSave">접수</button></div>`);
   bindSegs(body);
   body.querySelector('#nCancel').onclick = closeSheet;
-  if (canFast) body.querySelector('#nFast').onchange = e => body.querySelector('#nFastBox').hidden = !e.target.checked;
+  if (canFast) {
+    body.querySelector('#nFast').onchange = e => body.querySelector('#nFastBox').hidden = !e.target.checked;
+    bindWonReader(body.querySelector('#nAmount'), body.querySelector('#nAmountRead'));
+  }
   body.querySelector('#nSave').onclick = e => submitting(e.target, async () => {
     const fast = canFast && body.querySelector('#nFast').checked;
     const d = await api({
@@ -703,18 +734,29 @@ function crOpen(id) {
       : before.length ? `<div class="card"><h4>변경 전 사진·도면</h4>${files(before)}</div>` : ''}
     ${others.length ? `<div class="card"><h4>기타 첨부 (견적·서명·현장 사진)</h4>${files(others)}</div>` : ''}
     <div class="card">
-      <details class="more" id="moreBox"><summary>메모·자료 추가</summary>
-        <div style="margin-top:10px"><div class="f"><textarea id="cNote" rows="2" placeholder="진행 관련 메모"></textarea></div>
-        <div class="f"><input type="file" id="cFiles" multiple accept="image/*,.pdf,.dwg,.dxf"></div>
-        <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">메모 저장</button></div></div>
-      </details>
+      <h4>메모</h4>
+      <div class="f"><textarea id="cNote" rows="2" placeholder="진행 관련 메모 (처리 이력에 남습니다)"></textarea></div>
+      <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">메모 저장</button></div>
+    </div>
+    <div class="card">
+      <h4>사진·자료 업로드</h4>
+      <div class="f"><input type="file" id="cFiles" multiple accept="image/*,.pdf,.dwg,.dxf,.xlsx,.xls">
+        <div class="hint">현장 사진, 참고 도면 등. 기타 첨부에 추가됩니다.</div></div>
+      <div class="actions"><button class="btn ghost" type="button" id="cUpload">올리기</button></div>
     </div>
     <div class="card"><h4>처리 이력</h4><ul class="timeline" id="histList"><li class="t">불러오는 중...</li></ul></div>`);
 
   body.querySelectorAll('[data-file]').forEach(b => { crThumb(o, b); b.onclick = () => crViewFile(o, b.dataset.file); });
   if (body.querySelector('#actBox')) crActionForm(o, s, body.querySelector('#actBox'));
   body.querySelector('#cSave').onclick = e => submitting(e.target, async () => {
-    await crDo(o, { act: 'comment', note: body.querySelector('#cNote').value, files: await readFiles(body.querySelector('#cFiles')) });
+    const note = body.querySelector('#cNote').value.trim();
+    if (!note) throw new Error('메모를 입력하세요.');
+    await crDo(o, { act: 'comment', note });
+  });
+  body.querySelector('#cUpload').onclick = e => submitting(e.target, async () => {
+    const input = body.querySelector('#cFiles');
+    if (!input.files.length) throw new Error('올릴 파일을 선택하세요.');
+    await crDo(o, { act: 'comment', note: '사진·자료 ' + input.files.length + '개 업로드', files: await readFiles(input) });
   });
   const cc = body.querySelector('#cCancel');
   if (cc) cc.onclick = e => { if (confirm('이 변경요청을 취소할까요?')) submitting(e.target, () => crDo(o, { act: 'cancel', note: body.querySelector('#cNote').value })); };
@@ -767,7 +809,7 @@ async function crViewFile(o, fileId) {
 
 // ---- 단계별 처리 폼 ----
 function crActionForm(o, s, box) {
-  const summary = `<div class="sum">${o.costType === '없음' ? '<b>추가비용 없음</b>' : `${o.costType === '감액' ? '감액' : '추가비용'} <b>${won(o.amount)}</b>`}</div>`;
+  const summary = `<div class="sum">${o.costType === '없음' ? '<b>추가비용 없음</b>' : `${o.costType === '감액' ? '감액' : '추가비용'} <b>${won(o.amount)}</b><div class="hint" style="color:var(--green)">${wonKorean(o.amount)}</div>`}</div>`;
   const noteF = (ph) => `<div class="f"><textarea class="aNote" rows="2" placeholder="${ph || '메모 (선택)'}"></textarea></div>`;
   const rejectBtn = S.me.role === 'admin' || S.me.role === 'design' ? '<button class="btn danger" type="button" data-a="reject">반려</button>' : '';
   let html = '';
@@ -781,7 +823,8 @@ function crActionForm(o, s, box) {
       <div class="actions">${rejectBtn}<button class="btn" type="button" data-a="review">검토 완료</button></div>`;
   } else if (o.status === '견적') {
     html = `<h4>견적</h4>
-      <div class="f"><label>${o.costType === '감액' ? '감액 금액' : '추가 금액'} (원, VAT 포함)</label><input type="number" class="aAmount" min="0" step="1000" inputmode="numeric"></div>
+      <div class="f"><label>${o.costType === '감액' ? '감액 금액' : '추가 금액'} (원, VAT 포함)</label><input type="number" class="aAmount" min="0" step="1000" inputmode="numeric">
+        <div class="won-read" aria-live="polite"></div></div>
       <div class="f"><label>견적서 첨부 (선택)</label><input type="file" class="aFiles" multiple accept="image/*,.pdf,.xlsx,.xls"></div>
       ${noteF('산출 근거 등')}
       <div class="actions">${S.me.role === 'admin' ? rejectBtn : ''}<button class="btn" type="button" data-a="estimate">견적 등록</button></div>`;
@@ -810,6 +853,7 @@ function crActionForm(o, s, box) {
   }
   box.innerHTML = html;
   bindSegs(box);
+  if (box.querySelector('.aAmount')) bindWonReader(box.querySelector('.aAmount'), box.querySelector('.won-read'));
 
   // 서명 패드
   const cv = box.querySelector('.aSig');
