@@ -206,6 +206,8 @@
   .cx-plan { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 0 10px; margin-top: 12px; }
   .cx-plan .f input[type=date] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
   .cx-contact { display: flex; gap: 8px; }
+  .cx-when { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 12px; }
+  .cx-when input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
   .cx-contact:empty { display: none; }
   .cx-contact .btn { flex: 1; text-align: center; text-decoration: none; white-space: nowrap; }
   .cx-ai { margin-top: 10px; background: var(--green-soft); border-radius: 8px; padding: 12px; font-size: 14px; }
@@ -1107,7 +1109,11 @@ function cxOpen(id) {
     <div class="card">
       <h4>연락·상담 기록</h4>
       ${segHtml('kind', CX.meta.logKinds, '통화')}
-      <div class="f" style="margin-top:10px"><textarea id="xLog" rows="3" placeholder="통화·상담 내용, 희망 사항, 다음에 연락하기로 한 시점 등"></textarea></div>
+      <div class="cx-when">
+        <div class="f"><label for="xLogDate">날짜</label><input type="date" id="xLogDate" value="${today()}" max="${today()}"></div>
+        <div class="f"><label for="xLogTime">시간</label><input type="time" id="xLogTime" value="${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}"></div>
+      </div>
+      <div class="f"><textarea id="xLog" rows="3" placeholder="통화·상담 내용, 희망 사항, 다음에 연락하기로 한 시점 등"></textarea></div>
       <div class="hint" id="xLogHint"></div>
       <div class="actions"><button class="btn" type="button" id="xLogSave">기록 저장</button></div>
     </div>
@@ -1191,7 +1197,9 @@ function cxOpen(id) {
     return update(f);
   });
   body.querySelector('#xLogSave').onclick = e => submitting(e.target, async () => {
-    const d = await api({ action: 'cx_log', id: o.id, kind: segVal(body, 'kind'), text: $('xLog').value });
+    const date = $('xLogDate').value;
+    if (!date) throw new Error('날짜를 선택하세요.');
+    const d = await api({ action: 'cx_log', id: o.id, kind: segVal(body, 'kind'), text: $('xLog').value, at: date + ' ' + ($('xLogTime').value || '09:00') });
     cxReplace(d.item); cxRenderList(); cxOpen(o.id);
     toast(d.autoStage ? `기록 저장 · 단계가 "${d.autoStage}"(으)로 바뀌었습니다` : '기록 저장');
   });
