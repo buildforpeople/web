@@ -206,6 +206,8 @@
   .cx-plan { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 0 10px; margin-top: 12px; }
   .cx-plan .f input[type=date] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
   .cx-contact { display: flex; gap: 8px; }
+  .cx-clean-list { max-height: 320px; overflow-y: auto; font-size: 14px; display: grid; gap: 6px; }
+  .check + .check { margin-top: 6px; }
   .cx-when { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 12px; }
   .cx-when input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
   .cx-contact:empty { display: none; }
@@ -998,7 +1000,7 @@ function cxRenderList() {
   $('main').innerHTML = `
     <div class="cr-bar">
       <h2>고객관리</h2>
-      ${S.me.role === 'admin' ? '<button class="btn ghost" id="cxImport" type="button">메일 확인</button>' : ''}
+      ${S.me.role === 'admin' ? '<button class="btn ghost" id="cxClean" type="button">자료 정리</button><button class="btn ghost" id="cxImport" type="button">메일 확인</button>' : ''}
       <button class="btn" id="cxNew" type="button">+ 고객 등록</button>
     </div>
     ${nNo || nOver || nStale ? `<div class="cx-alert">
@@ -1022,6 +1024,7 @@ function cxRenderList() {
         </button>`; }).join('') : `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`}
     </section>`;
   $('cxNew').onclick = cxNewForm;
+  if ($('cxClean')) $('cxClean').onclick = cxCleanForm;
   const imp = $('cxImport');
   if (imp) imp.onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'cx_import' });
@@ -1052,6 +1055,52 @@ function bindToggleSegs(root) {
     const on = b.getAttribute('aria-pressed') === 'true';
     b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', !on && x === b));
   });
+}
+
+// ---- 오래된 자료 정리 (관리자) ----
+function cxCleanForm() {
+  const body = openSheet('오래된 자료 정리', '관리자 전용', `
+    <div class="card">
+      <div class="f"><span class="lb">마지막 기록 후 경과 기간</span>${segHtml('months', [['6', '6개월 이상'], ['12', '1년 이상'], ['24', '2년 이상']], '12')}</div>
+      <div class="f"><span class="lb">대상</span>
+        <label class="check"><input type="checkbox" class="cTarget" value="반려" checked> 반려 고객</label>
+        <label class="check"><input type="checkbox" class="cTarget" value="계약완료"> 계약완료 고객 (현장과 연결된 고객은 제외)</label>
+        <label class="check"><input type="checkbox" class="cTarget" value="진행"> 진행 중이지만 오래 기록이 없는 고객</label>
+      </div>
+    </div>
+    <div class="card"><h4 id="cCount"></h4><div id="cList" class="cx-clean-list"></div></div>
+    <div class="notice">삭제한 자료는 고객관리_DB 시트의 "삭제보관" 탭으로 옮겨져, 필요하면 되살릴 수 있습니다.</div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="cClose">닫기</button><button class="btn danger" type="button" id="cDel" disabled>삭제</button></div>`);
+  let targets = [];
+  const refresh = () => {
+    const months = Number(segVal(body, 'months'));
+    const cut = new Date(); cut.setMonth(cut.getMonth() - months);
+    const cutStr = ymd(cut);
+    const kinds = [...body.querySelectorAll('.cTarget:checked')].map(c => c.value);
+    targets = CX.items.filter(o => {
+      const last = String(o.lastActivityAt || o.createdAt).slice(0, 10);
+      if (!last || last >= cutStr) return false;
+      if (o.stage === '반려') return kinds.includes('반려');
+      if (o.stage === '계약완료') return kinds.includes('계약완료') && !o.siteCode;
+      return kinds.includes('진행');
+    });
+    $('cCount').textContent = `삭제 대상 ${targets.length}명`;
+    $('cList').innerHTML = targets.length ? targets.map(o => `<div><b>${esc(o.name)}</b> <span class="cr-sub">${esc(o.stage)} · 마지막 기록 ${esc(String(o.lastActivityAt || o.createdAt).slice(0, 10))} · ${esc(o.location || '')}</span></div>`).join('') : '<div class="hint">조건에 맞는 고객이 없습니다.</div>';
+    const b = $('cDel'); b.disabled = !targets.length; b.textContent = targets.length ? `${targets.length}명 삭제` : '삭제';
+  };
+  bindSegs(body, refresh);
+  body.querySelectorAll('.cTarget').forEach(c => c.onchange = refresh);
+  body.querySelector('#cClose').onclick = closeSheet;
+  body.querySelector('#cDel').onclick = e => {
+    if (!targets.length || !confirm(`${targets.length}명의 고객과 상담 기록을 삭제할까요?`)) return;
+    submitting(e.target, async () => {
+      const ids = targets.map(o => o.id);
+      const d = await api({ action: 'cx_delete', ids });
+      CX.items = CX.items.filter(x => !ids.includes(x.id)); cxBadge();
+      closeSheet(); cxRenderList(); toast(`${d.deleted}명 삭제`);
+    });
+  };
+  refresh();
 }
 
 // ---- 고객 등록 (전화·인스타·소개 등) ----
@@ -1153,7 +1202,19 @@ function cxOpen(id) {
         <div class="hint">건축주·연락처·주소·유형·대지면적이 채워진 "설계중" 현장이 만들어집니다.</div>
         <div class="actions"><button class="btn" type="button" id="rSave">현장 등록</button></div></div>` : ''}
 
-    <div class="card"><h4>상담 기록</h4><ul class="timeline" id="xLogs"><li class="t">불러오는 중...</li></ul></div>`);
+    <div class="card"><h4>상담 기록</h4><ul class="timeline" id="xLogs"><li class="t">불러오는 중...</li></ul></div>
+    ${isAdmin ? `<div class="actions" style="margin-top:4px"><button class="btn danger" type="button" id="xDel">고객 삭제</button></div>` : ''}`);
+
+  const del = $('xDel');
+  if (del) del.onclick = e => {
+    const msg = `${o.name} 고객과 상담 기록을 삭제할까요?` + (o.siteCode ? `\n\n※ 현장 ${o.siteCode}와 연결된 고객입니다. 현장 정보는 그대로 남습니다.` : '') + '\n\n삭제한 자료는 고객관리_DB 시트의 "삭제보관" 탭에 보관됩니다.';
+    if (!confirm(msg)) return;
+    submitting(e.target, async () => {
+      await api({ action: 'cx_delete', ids: [o.id] });
+      CX.items = CX.items.filter(x => x.id !== o.id); cxBadge();
+      closeSheet(); cxRenderList(); toast(`${o.name} 고객 삭제`);
+    });
+  };
 
   // 기록 종류별로 단계가 어떻게 바뀌는지 미리 안내
   const hintFor = k => {
