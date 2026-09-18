@@ -206,6 +206,19 @@
   .cx-plan { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 0 10px; margin-top: 12px; }
   .cx-plan .f input[type=date] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #fff; }
   .cx-contact { display: flex; gap: 8px; }
+  .pc-note { display: none; }
+  @media (pointer: fine) { .pc-note { display: block; margin-top: 10px; } }
+  .thumb-wrap { position: relative; aspect-ratio: 1; }
+  .thumb-wrap .thumb { width: 100%; height: 100%; aspect-ratio: auto; }
+  .thumb-x { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(30,38,27,.72); color: #fff; font-size: 16px; line-height: 1; }
+  .log-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .log-date { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .log-kind { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--gray-soft); color: var(--muted); }
+  .log-kind.k-통화, .log-kind.k-미팅, .log-kind.k-방문상담 { background: var(--amber-soft); color: var(--amber); }
+  .log-kind.k-단계 { background: var(--blue-soft); color: var(--blue); }
+  .timeline .content { white-space: pre-wrap; font-size: 14px; }
+  .cx-meet { background: var(--green-soft); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+  .cx-meet b { font-size: 17px; }
   .cx-clean-list { max-height: 320px; overflow-y: auto; font-size: 14px; display: grid; gap: 6px; }
   .check + .check { margin-top: 6px; }
   .cx-when { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-top: 12px; }
@@ -218,6 +231,17 @@
     .cx-plan { grid-template-columns: 1fr 1fr; }
     .cx-plan .f:first-child { grid-column: 1 / -1; }
   }
+  /* ===== 설계 일정 ===== */
+  .ds-time { padding: 14px 18px; margin-bottom: 14px; }
+  .ds-time-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .ds-now { font-weight: 700; font-size: 17px; }
+  .ds-counts { margin-left: auto; text-align: right; display: flex; align-items: center; gap: 10px; }
+  .ds-late { border: 0; background: var(--red-soft); color: var(--red); border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 13px; }
+  .ds-next { margin-top: 8px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .linkish { border: 0; background: none; color: var(--green); font-weight: 700; font-size: 14px; margin-left: auto; padding: 2px 0; }
+  .ds-phase { padding: 10px 18px 6px; font-size: 12px; font-weight: 700; color: var(--muted); background: #F7F8F5; border-bottom: 1px solid var(--line); }
+  .ds-row .cr-title.done { color: var(--muted); text-decoration: line-through; }
+  .ds-prev-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; margin-top: 6px; }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -322,7 +346,7 @@ const SITE_KEY = 'bfp_app_site';
 const TAB_LABEL = { change: '변경요청', site: '현장관리', cx: '고객관리' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
-const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '현장보고' };
+const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '' };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -411,7 +435,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; renderTab(); };
 
   const tabsHtml = S.tabs.map(t => `<button class="tab" role="tab" data-tab="${t}">${TAB_LABEL[t]}</button>`).join('');
   const linksHtml = S.links.map(l => `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>`).join('');
@@ -486,7 +510,7 @@ function renderSiteTab() {
   // 4칸 단위로 채우기
   while (facts.length % 4) facts.push(['', '', '']);
 
-  const subs = S.me.role === 'client' ? ['현장보고', '공지', '스펙북', '360 VIEW'] : ['현장보고', '공정표', '공지', '스펙북', '서류함', '360 VIEW'];
+  const subs = S.me.role === 'client' ? ['현장보고', '공지', '스펙북', '360 VIEW'] : ['설계 일정', '현장보고', '공정표', '공지', '스펙북', '서류함', '360 VIEW'];
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
   $('main').innerHTML = `
@@ -506,14 +530,196 @@ function renderSiteTab() {
         ${facts.map(f => `<div class="fact${f[0] ? '' : ' blank'}"><dt>${esc(f[0])}</dt><dd>${f[0] ? esc(f[1]) : ''}${f[2] ? `<small>${esc(f[2])}</small>` : ''}</dd></div>`).join('')}
       </dl>
     </section>
+    ${S.me.role !== 'client' ? dsTimelineHtml() : ''}
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <section class="panel empty">
-      <h3>${esc(S.siteSub)}</h3>
-      다음 단계에서 이 화면을 채웁니다.
-    </section>`;
+    <div id="subBody">${S.siteSub === '설계 일정' ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
+  $('main').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { S.siteSub = '설계 일정'; renderSiteTab(); });
+  if (S.me.role !== 'client') {
+    dsLoad(s.code).then(() => {
+      if (S.tab !== 'site' || S.siteCode !== s.code) return;
+      if (S.siteSub === '설계 일정' && $('subBody')) dsRender($('subBody'));
+      else if (DS.plan && !document.querySelector('.ds-time')) renderSiteTab();
+    }).catch(e => { if ($('subBody') && S.siteSub === '설계 일정') $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+    if (DS.site === s.code && S.siteSub === '설계 일정') dsRender($('subBody'));
+  }
+}
+
+// ---------- 설계 일정 ----------
+const DS = { site: null, plan: null, items: [], canEdit: false, loading: false };
+const DS_WEEKS = 28;
+const DS_TPL = [
+  ['설계', 1, 1, '킥오프 미팅', 'meeting'], ['설계', 1, 3, '현장답사 · 법규 확인 · 배치/평면 설계', 'work'],
+  ['설계', 4, 4, '배치·평면 초안 송부 (온라인)', 'deadline'], ['설계', 5, 7, '서면 피드백 수정 2회', 'work'],
+  ['설계', 7, 7, '배치·평면 확정 미팅', 'meeting'], ['설계', 8, 10, '3D 모델링 작업', 'work'],
+  ['설계', 11, 11, '3D 투시도 초안 미팅', 'meeting'], ['설계', 12, 14, '서면 피드백 수정 2회', 'work'],
+  ['설계', 14, 14, '건축 설계 완료 · 자금조달계획 점검', 'deadline'], ['견적', 15, 16, '허가도면 기준 견적 작업', 'work'],
+  ['견적', 17, 17, '견적 제출 미팅', 'meeting'], ['견적', 18, 20, '견적 조정', 'work'],
+  ['계약·착공준비', 21, 21, '공사 계약 미팅', 'meeting'], ['계약·착공준비', 21, 21, '인테리어 셀렉 미팅', 'meeting'],
+  ['계약·착공준비', 22, 22, '인허가(건축/개발행위/착공) 신청', 'deadline'], ['계약·착공준비', 22, 22, '실시설계 시작', 'work'],
+  ['계약·착공준비', 23, 24, '조명·전열·인테리어 디자인 초안', 'work'], ['계약·착공준비', 25, 25, '인테리어 디자인 초안 송부', 'deadline'],
+  ['계약·착공준비', 26, 26, '서면 피드백 1회 → 인테리어 확정', 'deadline'], ['계약·착공준비', 27, 28, '인테리어 변동 견적 조정', 'work'],
+  ['계약·착공준비', 28, 28, '공사 착공', 'deadline']
+];
+const DS_KIND = { meeting: '미팅', deadline: '마감', work: '작업' };
+
+function dsMonday(str) { const d = new Date(str + 'T00:00:00'); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return d; }
+function dsAdd(d, n) { const x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+function dsPreview(mode, baseDate) {
+  const start = mode === '계약일' ? dsMonday(baseDate) : dsAdd(dsMonday(baseDate), -(DS_WEEKS - 1) * 7);
+  return DS_TPL.map(t => {
+    const ws = dsAdd(start, (t[1] - 1) * 7);
+    const date = t[4] === 'meeting' ? dsAdd(ws, 2) : t[4] === 'deadline' ? dsAdd(dsAdd(start, (t[2] - 1) * 7), 4) : ws;
+    return { phase: t[0], week: t[1], title: t[3], kind: t[4], date: ymd(date) };
+  });
+}
+function dsDday(date) {
+  if (!date) return { text: '', cls: '' };
+  const d = dayDiff(today(), date);
+  if (d < 0) return { text: `${-d}일 지남`, cls: 'over' };
+  if (d === 0) return { text: '오늘', cls: 'today' };
+  return { text: `D-${d}`, cls: '' };
+}
+function dsCurrent() {
+  const open = DS.items.filter(i => i.status !== '완료');
+  const late = open.filter(i => i.date && i.date < today());
+  const next = open.filter(i => i.date && i.date >= today()).sort((a, b) => a.date.localeCompare(b.date));
+  const doneCount = DS.items.filter(i => i.status === '완료').length;
+  return { late, next, doneCount, total: DS.items.length };
+}
+
+async function dsLoad(code) {
+  if (DS.site === code || DS.loading) return;
+  DS.loading = true;
+  try {
+    const [meta, d] = await Promise.all([api({ action: 'ds_meta' }), api({ action: 'ds_get', siteCode: code })]);
+    DS.canEdit = meta.canEdit; DS.plan = d.plan; DS.items = d.items; DS.site = code;
+  } finally { DS.loading = false; }
+}
+
+function dsTimelineHtml() {
+  if (!DS.plan) return '';
+  const c = dsCurrent();
+  const week = Math.min(DS_WEEKS, Math.max(1, Math.floor(dayDiff(DS.plan.startDate, today()) / 7) + 1));
+  const pct = Math.max(0, Math.min(100, Math.round((week - 1) / (DS_WEEKS - 1) * 100)));
+  const nx = c.next[0];
+  const nd = nx ? dsDday(nx.date) : null;
+  return `<section class="panel ds-time">
+    <div class="ds-time-top">
+      <div><span class="cr-id">설계 진행</span><div class="ds-now">${week}주차 / ${DS_WEEKS}주 · ${esc(DS.plan.baseMode === '착공역산' ? '착공 역산' : '계약일 기준')}</div></div>
+      <div class="ds-counts">
+        ${c.late.length ? `<button type="button" class="ds-late" data-go="late"><b>${c.late.length}</b> 지연</button>` : ''}
+        <span class="cr-sub">완료 ${c.doneCount}/${c.total}</span>
+      </div>
+    </div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="ds-next">
+      ${nx ? `다음 · <b>${esc(nx.title)}</b> ${esc(nx.date.slice(5).replace('-', '/'))}${nx.time ? ' ' + esc(nx.time) : ''} <span class="cx-next ${nd.cls}">${esc(nd.text)}</span>`
+        : '남은 일정이 없습니다'}
+      <button type="button" class="linkish" data-go="plan">설계 일정 보기</button>
+    </div>
+  </section>`;
+}
+
+function dsRender(el) {
+  if (!DS.plan) { dsCreateForm(el); return; }
+  const c = dsCurrent();
+  let phase = '';
+  el.innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">설계 일정 <span class="cr-sub" style="font-weight:500">${esc(DS.plan.startDate)} ~ ${esc(DS.plan.endDate)}</span></h2>
+      ${DS.canEdit ? '<button class="btn ghost" type="button" id="dsShift">이후 일정 순연</button>' : ''}</div>
+    <section class="panel">${DS.items.map(i => {
+      const dd = dsDday(i.date);
+      const head = i.phase !== phase ? (phase = i.phase, `<div class="ds-phase">${esc(i.phase)}</div>`) : '';
+      const late = i.status !== '완료' && i.date < today();
+      return head + `<button class="cr-row ds-row ${late ? 'urgent' : ''}" data-id="${esc(i.id)}">
+        <span class="cr-id">${i.week}주차 · ${esc(DS_KIND[i.kind])}${i.hasEvent ? ' · 캘린더 등록됨' : ''}</span>
+        <span class="cr-title ${i.status === '완료' ? 'done' : ''}">${esc(i.title)}</span>
+        <span class="cr-sub">${esc(i.date.slice(5).replace('-', '/'))}${i.time ? ' ' + esc(i.time) : ''}${i.place ? ' · ' + esc(i.place) : ''}${i.owner ? ' · ' + esc(i.owner) : ''}</span>
+        <span class="cr-right">${i.status === '완료' ? '<span class="st 완료">완료</span>' : `<span class="st ${dd.cls === 'over' ? '반려' : ''}">${esc(dd.text)}</span>`}</span>
+      </button>`;
+    }).join('')}</section>`;
+  if ($('dsShift')) $('dsShift').onclick = dsShiftForm;
+  el.querySelectorAll('.ds-row').forEach(b => b.onclick = () => dsItemForm(b.dataset.id));
+}
+
+function dsCreateForm(el) {
+  const s = currentSite();
+  if (!DS.canEdit) { el.innerHTML = '<div class="panel empty"><h3>설계 일정이 아직 없습니다</h3>설계팀이 일정을 만들면 여기에 표시됩니다.</div>'; return; }
+  el.innerHTML = `<section class="panel" style="padding:18px">
+    <h4 style="margin:0 0 4px">설계 일정 만들기</h4>
+    <div class="hint">설계계약서 제4조의 28주 일정표를 날짜로 바꿔 만듭니다. 만든 뒤 개별 일정은 바꿀 수 있습니다.</div>
+    <div class="f" style="margin-top:14px"><span class="lb">기준</span>${segHtml('dsMode', [['계약일', '설계 계약일부터'], ['착공역산', '착공 희망일에서 역산']], '착공역산')}</div>
+    <div class="f"><label for="dsBase">기준 날짜</label><input type="date" id="dsBase" value="${esc(s.plannedStart || s.contractDate || '')}"></div>
+    <div id="dsPrev"></div>
+    <div class="actions"><button class="btn" type="button" id="dsMake">일정 만들기</button></div>
+  </section>`;
+  const prev = () => {
+    const mode = segVal(el, 'dsMode'), base = $('dsBase').value;
+    if (!base) { $('dsPrev').innerHTML = '<div class="hint">기준 날짜를 선택하세요.</div>'; return; }
+    const list = dsPreview(mode, base);
+    const key = ['킥오프 미팅', '배치·평면 확정 미팅', '견적 제출 미팅', '인허가(건축/개발행위/착공) 신청', '공사 착공'];
+    $('dsPrev').innerHTML = `<div class="sum"><b>주요 일정 미리보기</b>${list.filter(i => key.includes(i.title)).map(i =>
+      `<div class="ds-prev-row"><span>${esc(i.title)}</span><b>${esc(i.date)}</b></div>`).join('')}</div>`;
+  };
+  bindSegs(el, () => { const m = segVal(el, 'dsMode'); $('dsBase').value = m === '계약일' ? (s.contractDate || '') : (s.plannedStart || ''); prev(); });
+  $('dsBase').onchange = prev; prev();
+  $('dsMake').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'ds_create', siteCode: s.code, baseMode: segVal(el, 'dsMode'), baseDate: $('dsBase').value });
+    DS.plan = d.plan; DS.items = d.items;
+    renderSiteTab(); toast('설계 일정을 만들었습니다');
+  });
+}
+
+function dsItemForm(id) {
+  const i = DS.items.find(x => x.id === id);
+  if (!i) return;
+  const s = currentSite();
+  const isMeeting = i.kind === 'meeting';
+  const body = openSheet(esc(i.title), `${esc(s.code)} · ${i.week}주차 · ${esc(DS_KIND[i.kind])}`, `
+    <div class="card">
+      <div class="cx-when"><div class="f"><label>예정일</label><input type="date" id="iDate" value="${esc(i.date)}" ${DS.canEdit ? '' : 'disabled'}></div>
+        ${isMeeting ? `<div class="f"><label>시간</label><input type="time" id="iTime" value="${esc(i.time || '14:00')}" step="600" ${DS.canEdit ? '' : 'disabled'}></div>` : ''}</div>
+      ${isMeeting ? `<div class="f"><span class="lb">소요 시간</span>${segHtml('iLen', [['60', '1시간'], ['90', '1시간 30분'], ['120', '2시간']], String(i.minutes || 90))}</div>
+        <div class="f"><span class="lb">장소</span>${segHtml('iPlace', ['본사 사무실', '현장', '건축주 지정 장소', '온라인', '기타'], i.place || '본사 사무실')}</div>` : ''}
+      <div class="f"><label>담당</label><input type="text" id="iOwner" value="${esc(i.owner)}" placeholder="예: 천민기" ${DS.canEdit ? '' : 'disabled'}></div>
+      <div class="f"><label>메모</label><textarea id="iNote" rows="2" ${DS.canEdit ? '' : 'disabled'}>${esc(i.note)}</textarea></div>
+      <div class="f"><span class="lb">상태</span>${segHtml('iStatus', ['예정', '완료', '보류'], i.status)}</div>
+    </div>
+    ${DS.canEdit ? `<div class="actions sticky">
+      ${isMeeting ? (i.hasEvent ? '<button class="btn danger" type="button" id="iCalOff">캘린더에서 빼기</button>' : '<button class="btn ghost" type="button" id="iCalOn">캘린더 등록</button>') : ''}
+      <button class="btn" type="button" id="iSave">저장</button></div>` : ''}`);
+  bindSegs(body);
+  const payload = (extra) => Object.assign({
+    action: 'ds_item', id: i.id, date: $('iDate').value, time: isMeeting ? $('iTime').value : '',
+    minutes: isMeeting ? segVal(body, 'iLen') : '', place: isMeeting ? segVal(body, 'iPlace') : '',
+    owner: $('iOwner').value, note: $('iNote').value, status: segVal(body, 'iStatus')
+  }, extra || {});
+  const save = async extra => {
+    const d = await api(payload(extra));
+    DS.items = d.items; closeSheet(); renderSiteTab();
+  };
+  if ($('iSave')) $('iSave').onclick = e => submitting(e.target, () => save().then(() => toast('저장했습니다')));
+  if ($('iCalOn')) $('iCalOn').onclick = e => submitting(e.target, () => save({ calendar: true }).then(() => toast('캘린더에 등록했습니다')));
+  if ($('iCalOff')) $('iCalOff').onclick = e => submitting(e.target, () => save({ calendar: false }).then(() => toast('캘린더에서 뺐습니다')));
+}
+
+function dsShiftForm() {
+  const s = currentSite();
+  const body = openSheet('이후 일정 순연', esc(s.code + ' ' + s.name), `
+    <div class="card">
+      <div class="hint">완료되지 않은 오늘 이후 일정을 한꺼번에 미루거나 당깁니다. 캘린더 일정도 같이 옮겨집니다.</div>
+      <div class="f" style="margin-top:12px"><label>며칠 옮길까요? (앞당기려면 -7 처럼 입력)</label><input type="number" id="shDays" value="7" step="1"></div>
+      <div class="f"><label>이 날짜 이후 일정만</label><input type="date" id="shFrom" value="${today()}"></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="shClose">닫기</button><button class="btn" type="button" id="shGo">순연</button></div>`);
+  body.querySelector('#shClose').onclick = closeSheet;
+  body.querySelector('#shGo').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'ds_shift', siteCode: s.code, days: $('shDays').value, fromDate: $('shFrom').value });
+    DS.plan = d.plan; DS.items = d.items; closeSheet(); renderSiteTab(); toast(`${d.moved}개 일정을 옮겼습니다`);
+  });
 }
 
 // ---------- 변경요청 ----------
@@ -968,7 +1174,7 @@ function cxBadge() {
 }
 async function cxLoad() {
   const [meta, list] = await Promise.all([api({ action: 'cx_meta' }), api({ action: 'cx_list' })]);
-  CX.meta = meta; CX.items = list.items; CX.loaded = true;
+  CX.meta = meta; CX.items = list.items || []; CX.loaded = true;
   cxBadge();
 }
 function cxReplace(item) { const i = CX.items.findIndex(x => x.id === item.id); if (i >= 0) CX.items[i] = item; else CX.items.unshift(item); cxBadge(); }
@@ -1055,6 +1261,47 @@ function bindToggleSegs(root) {
     const on = b.getAttribute('aria-pressed') === 'true';
     b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', !on && x === b));
   });
+}
+
+// ---- 첨부 자료 ----
+function cxFilesHtml(o) {
+  const list = o.attachments || [];
+  if (!list.length) return '<div class="hint">올린 자료가 없습니다. 상담 중 받은 도면·스케치·사진을 올려두면 미팅 때 함께 볼 수 있습니다.</div>';
+  const canDel = f => S.me.role === 'admin' || f.by === S.me.name;
+  return `<div class="thumbs">${list.map(f => `
+    <div class="thumb-wrap">
+      <button type="button" class="thumb ${f.type && f.type.startsWith('image/') ? '' : 'doc'}" data-file="${esc(f.id)}" title="${esc(f.name)}${f.note ? ' · ' + esc(f.note) : ''}">
+        ${f.type && f.type.startsWith('image/') ? '' : `<b>${esc((f.name.split('.').pop() || 'FILE').toUpperCase())}</b>`}<span>${esc(f.name)}</span>
+      </button>
+      ${canDel(f) ? `<button type="button" class="thumb-x" data-del="${esc(f.id)}" aria-label="삭제">×</button>` : ''}
+    </div>`).join('')}</div>
+    <div class="hint">${list.length}건 · 누르면 크게 볼 수 있습니다</div>`;
+}
+async function cxFileUrl(o, fileId) {
+  if (CR.urls[fileId]) return CR.urls[fileId];
+  const d = await api({ action: 'cx_file', id: o.id, fileId });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  CR.urls[fileId] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+  return CR.urls[fileId];
+}
+function cxThumb(o, btn) {
+  if (btn.classList.contains('doc')) return;
+  cxFileUrl(o, btn.dataset.file).then(f => { btn.style.backgroundImage = `url("${f.url}")`; }).catch(() => {});
+}
+async function cxViewFile(o, fileId) {
+  try {
+    const f = await cxFileUrl(o, fileId);
+    if (f.type.startsWith('image/')) {
+      const lb = document.createElement('div'); lb.className = 'lightbox';
+      lb.innerHTML = `<img src="${f.url}" alt="${esc(f.name)}">`;
+      lb.onclick = () => lb.remove();
+      document.body.appendChild(lb);
+    } else {
+      const a = document.createElement('a'); a.href = f.url; a.download = f.name; a.target = '_blank';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+  } catch (e) { toast(e.message); }
 }
 
 // ---- 오래된 자료 정리 (관리자) ----
@@ -1149,10 +1396,13 @@ function cxOpen(id) {
 
   const body = openSheet(esc(o.name), `${esc(o.id)} · ${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(0, 10))} (D+${cxDays(o)})`, `
     ${warn ? `<div class="cx-warn">${esc(warn)}</div>` : ''}
-    <div class="card cx-contact">
-      ${o.phone ? `<a class="btn" href="tel:${esc(o.phone.replace(/[^\d+]/g, ''))}">전화 걸기</a>` : ''}
-      ${o.phone ? `<a class="btn ghost" href="sms:${esc(o.phone.replace(/[^\d+]/g, ''))}">문자</a>` : ''}
-      ${o.email ? `<a class="btn ghost" href="mailto:${esc(o.email)}">메일</a>` : ''}
+    <div class="card">
+      <div class="cx-contact">
+        ${o.phone ? `<a class="btn" href="tel:${esc(o.phone.replace(/[^\d+]/g, ''))}">전화 걸기</a>` : ''}
+        ${o.phone ? `<a class="btn ghost" href="sms:${esc(o.phone.replace(/[^\d+]/g, ''))}">문자</a>` : ''}
+        ${o.email ? `<a class="btn ghost" href="mailto:${esc(o.email)}">메일</a>` : ''}
+      </div>
+      ${o.phone ? `<div class="hint pc-note">전화·문자 버튼은 휴대폰에서만 연결됩니다. PC에서는 번호를 복사해 쓰세요 — <button type="button" class="linkish" id="cxCopy" style="margin:0">${esc(o.phone)} 복사</button></div>` : ''}
     </div>
 
     <div class="card">
@@ -1165,6 +1415,21 @@ function cxOpen(id) {
       <div class="f"><textarea id="xLog" rows="3" placeholder="통화·상담 내용, 희망 사항, 다음에 연락하기로 한 시점 등"></textarea></div>
       <div class="hint" id="xLogHint"></div>
       <div class="actions"><button class="btn" type="button" id="xLogSave">기록 저장</button></div>
+    </div>
+
+    <div class="card" id="meetCard">
+      <h4>상담 미팅 일정</h4>
+      ${o.meetingAt ? `<div class="cx-meet"><b>${esc(o.meetingAt.replace('-', '.').replace('-', '.'))}</b>${o.meetingPlace ? ' · ' + esc(o.meetingPlace) : ''}<div class="hint">구글 캘린더에 등록되어 있습니다.</div></div>
+        <div class="actions"><button class="btn danger" type="button" id="mCancel">미팅 취소</button><button class="btn ghost" type="button" id="mEdit">일정 변경</button></div>` : `
+        <div class="cx-when">
+          <div class="f"><label for="mDate">날짜</label><input type="date" id="mDate" min="${today()}"></div>
+          <div class="f"><label for="mTime">시간</label><input type="time" id="mTime" value="14:00" step="600"></div>
+        </div>
+        <div class="f"><span class="lb">소요 시간</span>${segHtml('mLen', [['60', '1시간'], ['90', '1시간 30분'], ['120', '2시간']], '90')}</div>
+        <div class="f"><span class="lb">장소</span>${segHtml('mPlace', CX.meta.meetingPlaces, '본사 사무실')}</div>
+        <div class="f" id="mDetailBox" hidden><input type="text" id="mDetail" placeholder="장소 상세 (주소, 층, 링크 등)"></div>
+        <div class="f"><input type="text" id="mNote" placeholder="미팅 메모 (선택)"></div>
+        <div class="actions"><button class="btn" type="button" id="mSave">미팅 확정 · 캘린더 등록</button></div>`}
     </div>
 
     <div class="card">
@@ -1188,6 +1453,14 @@ function cxOpen(id) {
         <dt>연락처</dt><dd>${esc(o.phone || '—')}</dd><dt>이메일</dt><dd>${esc(o.email || '—')}</dd>
         ${CX_FIELDS.map(f => `<dt>${f[1]}</dt><dd>${esc(cxUnit(o[f[0]], f[3]) || '—')}</dd>`).join('')}
       </dl>
+    </div>
+
+    <div class="card">
+      <h4>사진·자료</h4>
+      <div id="cxFiles">${cxFilesHtml(o)}</div>
+      <div class="f" style="margin-top:10px"><input type="file" id="cxUp" multiple accept="image/*,.pdf,.dwg,.dxf,.hwp,.docx,.xlsx"></div>
+      <div class="f"><input type="text" id="cxUpNote" placeholder="자료 설명 (선택)"></div>
+      <div class="actions"><button class="btn ghost" type="button" id="cxUpSave">올리기</button></div>
     </div>
 
     ${CX.meta.aiEnabled ? `<div class="card"><div style="display:flex;align-items:center"><h4 style="margin:0">AI 상담 분석</h4><button class="btn ghost" type="button" id="xAi" style="margin-left:auto;padding:5px 12px">분석하기</button></div>
@@ -1237,8 +1510,63 @@ function cxOpen(id) {
       }
     }
     if (name === 'rDesign') $('rArchBox').hidden = v !== '건축사사무소';
+    if (name === 'mPlace') $('mDetailBox').hidden = ['본사 사무실'].includes(v);
   });
   body.querySelectorAll('#rejSeg button').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
+
+  const saveMeeting = async payload => {
+    const d = await api(Object.assign({ action: 'cx_meeting', id: o.id }, payload));
+    cxReplace(d.item); cxRenderList(); cxOpen(o.id);
+  };
+  if ($('mSave')) $('mSave').onclick = e => submitting(e.target, () => {
+    if (!$('mDate').value || !$('mTime').value) throw new Error('미팅 날짜와 시간을 선택하세요.');
+    return saveMeeting({ date: $('mDate').value, time: $('mTime').value, minutes: segVal(body, 'mLen'), place: segVal(body, 'mPlace'), placeDetail: $('mDetail').value, note: $('mNote').value })
+      .then(() => toast('미팅 확정 · 캘린더에 등록했습니다'));
+  });
+  if ($('mEdit')) $('mEdit').onclick = () => {
+    const card = $('meetCard');
+    const [dt, tm] = o.meetingAt.split(' ');
+    card.innerHTML = `<h4>상담 미팅 일정 변경</h4>
+      <div class="cx-when"><div class="f"><label>날짜</label><input type="date" id="mDate" value="${esc(dt)}"></div>
+      <div class="f"><label>시간</label><input type="time" id="mTime" value="${esc(tm)}" step="600"></div></div>
+      <div class="f"><span class="lb">소요 시간</span>${segHtml('mLen2', [['60', '1시간'], ['90', '1시간 30분'], ['120', '2시간']], '90')}</div>
+      <div class="f"><input type="text" id="mDetail" value="${esc(o.meetingPlace)}" placeholder="장소"></div>
+      <div class="actions"><button class="btn ghost" type="button" id="mBack">취소</button><button class="btn" type="button" id="mUpdate">변경 저장</button></div>`;
+    bindSegs(card);
+    card.querySelector('#mBack').onclick = () => cxOpen(o.id);
+    card.querySelector('#mUpdate').onclick = e => submitting(e.target, () =>
+      saveMeeting({ date: $('mDate').value, time: $('mTime').value, minutes: segVal(card, 'mLen2'), place: '기타', placeDetail: $('mDetail').value })
+        .then(() => toast('미팅 일정을 변경했습니다')));
+  };
+  if ($('mCancel')) $('mCancel').onclick = e => {
+    if (!confirm('상담 미팅을 취소하고 캘린더에서 지울까요?')) return;
+    submitting(e.target, () => saveMeeting({ cancel: true }).then(() => toast('미팅을 취소했습니다')));
+  };
+
+  const copyBtn = $('cxCopy');
+  if (copyBtn) copyBtn.onclick = async () => {
+    try { await navigator.clipboard.writeText(o.phone); toast('연락처를 복사했습니다'); }
+    catch (e) { toast('복사가 안 되면 번호를 길게 눌러 선택하세요'); }
+  };
+
+  const bindFiles = () => {
+    body.querySelectorAll('#cxFiles [data-file]').forEach(b => { cxThumb(o, b); b.onclick = () => cxViewFile(o, b.dataset.file); });
+    body.querySelectorAll('#cxFiles [data-del]').forEach(b => b.onclick = ev => {
+      ev.stopPropagation();
+      if (!confirm('이 자료를 지울까요?')) return;
+      submitting(b, async () => {
+        const d = await api({ action: 'cx_file_delete', id: o.id, fileId: b.dataset.del });
+        cxReplace(d.item); cxOpen(o.id);
+      });
+    });
+  };
+  bindFiles();
+  body.querySelector('#cxUpSave').onclick = e => submitting(e.target, async () => {
+    const input = $('cxUp');
+    if (!input.files.length) throw new Error('올릴 파일을 선택하세요.');
+    const d = await api({ action: 'cx_upload', id: o.id, files: await readFiles(input), note: $('cxUpNote').value });
+    cxReplace(d.item); cxOpen(o.id); toast('자료를 올렸습니다');
+  });
 
   const update = async fields => {
     const d = await api({ action: 'cx_update', id: o.id, fields });
@@ -1294,9 +1622,12 @@ function cxOpen(id) {
   function loadLogs() {
     api({ action: 'cx_logs', id: o.id }).then(d => {
       const el = $('xLogs'); if (!el) return;
-      el.innerHTML = d.items.length ? d.items.map(l => l.kind === 'AI 분석'
-        ? `<li><div class="t">${esc(l.at)} · ${esc(l.by)}</div><details><summary><b>AI 분석</b></summary><div class="content" style="margin-top:6px">${esc(l.text)}</div></details></li>`
-        : `<li class="k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}"><div class="t">${esc(l.at)} · ${esc(l.by)}</div><b>${esc(l.kind)}</b> — <span class="content">${esc(l.text)}</span></li>`).join('') : '<li class="t">기록 없음</li>';
+      el.innerHTML = d.items.length ? d.items.map(l => {
+        const head = `<div class="log-head"><b class="log-date">${esc(l.at.slice(0, 16).replace(/-/g, '.'))}</b><span class="log-kind k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}">${esc(l.kind)}</span><span class="t">${esc(l.by)}</span></div>`;
+        return l.kind === 'AI 분석'
+          ? `<li>${head}<details><summary>AI 분석 결과 보기</summary><div class="content" style="margin-top:6px">${esc(l.text)}</div></details></li>`
+          : `<li class="k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}">${head}<div class="content">${esc(l.text)}</div></li>`;
+      }).join('') : '<li class="t">기록 없음</li>';
     }).catch(() => {});
   }
   loadLogs();
