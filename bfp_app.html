@@ -242,6 +242,55 @@
   .ds-phase { padding: 10px 18px 6px; font-size: 12px; font-weight: 700; color: var(--muted); background: #F7F8F5; border-bottom: 1px solid var(--line); }
   .ds-row .cr-title.done { color: var(--muted); text-decoration: line-through; }
   .ds-prev-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; margin-top: 6px; }
+  /* ===== 현장보고 ===== */
+  .rp-stat { display: flex; gap: 20px; padding: 14px 18px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .rp-stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .rp-spark { margin-left: auto; }
+  .rp-bars { display: flex; gap: 3px; align-items: flex-end; height: 34px; margin-top: 4px; }
+  .rp-bars i { width: 8px; background: var(--green-2); border-radius: 2px 2px 0 0; }
+  .rp-cal { padding: 12px 14px; margin-bottom: 12px; }
+  .rp-cal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .rp-cal-top b { font-size: 16px; }
+  .rp-cal-top .linkish { margin: 0; }
+  .rp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .rp-grid.head { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 4px; }
+  .rp-cell { min-height: 58px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 4px 5px; text-align: left; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); }
+  .rp-cell.empty { border: 0; background: none; }
+  .rp-cell.has { background: var(--green-soft); border-color: #C3D3B2; }
+  .rp-cell.today { box-shadow: inset 0 0 0 2px var(--amber); }
+  .rp-d { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .rp-mark { line-height: 1.2; overflow: hidden; }
+  .rp-p { margin-top: auto; font-weight: 700; color: var(--green); }
+  .cm-item { border-top: 1px solid var(--line); padding: 10px 0; }
+  .cm-item:first-child { border-top: 0; padding-top: 0; }
+  .cm-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 3px; }
+  .cm-head .t { color: var(--muted); }
+  .cm-del { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 12px; padding: 2px 4px; }
+  .cm-write { display: flex; gap: 8px; margin-top: 12px; align-items: flex-end; }
+  .cm-write textarea { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; resize: vertical; }
+  .cm-write .btn { white-space: nowrap; }
+  .rp-work { border-top: 1px solid var(--line); padding: 10px 0; }
+  .rp-work:first-of-type { border-top: 0; padding-top: 0; }
+  .rp-work-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .rp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .rp-table th, .rp-table td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
+  .rp-table th { background: #F7F8F5; color: var(--muted); font-size: 13px; }
+  .rp-wrow { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+  .rp-wgrid { display: grid; grid-template-columns: 1.3fr 1.2fr 1fr 70px 88px 34px; gap: 6px; margin-bottom: 6px; }
+  .rp-wgrid select, .rp-wgrid input { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px; background: #fff; }
+  .rp-wrow textarea { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px; }
+  .rp-line { display: grid; gap: 6px; margin-bottom: 8px; }
+  .rp-line input, .rp-line select { border: 1px solid var(--line); border-radius: 7px; padding: 8px; width: 100%; background: #fff; }
+  .rp-mat { grid-template-columns: 1.4fr 1fr 80px 1fr 34px; }
+  .rp-eq { grid-template-columns: 1.2fr 1.2fr 80px 1fr 34px; }
+  details.card summary { cursor: pointer; font-size: 14px; }
+  @media (max-width: 760px) {
+    .rp-wgrid { grid-template-columns: 1fr 1fr 34px; }
+    .rp-wgrid .wDetail { grid-column: 1 / 3; }
+    .rp-mat, .rp-eq { grid-template-columns: 1fr 1fr 34px; }
+    .rp-cell { min-height: 52px; }
+    .rp-stat { gap: 14px; }
+  }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -435,7 +484,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; renderTab(); };
 
   const tabsHtml = S.tabs.map(t => `<button class="tab" role="tab" data-tab="${t}">${TAB_LABEL[t]}</button>`).join('');
   const linksHtml = S.links.map(l => `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>`).join('');
@@ -534,9 +583,15 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${S.siteSub === '설계 일정' ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['설계 일정', '현장보고'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   $('main').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { S.siteSub = '설계 일정'; renderSiteTab(); });
+  if (S.siteSub === '현장보고') {
+    rpLoad(s.code).then(() => {
+      if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '현장보고' && $('subBody')) rpRender($('subBody'));
+    }).catch(e => { if ($('subBody')) $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+    if (RP.site === s.code && $('subBody')) rpRender($('subBody'));
+  }
   if (S.me.role !== 'client') {
     dsLoad(s.code).then(() => {
       if (S.tab !== 'site' || S.siteCode !== s.code) return;
@@ -545,6 +600,370 @@ function renderSiteTab() {
     }).catch(e => { if ($('subBody') && S.siteSub === '설계 일정') $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
     if (DS.site === s.code && S.siteSub === '설계 일정') dsRender($('subBody'));
   }
+}
+
+// ---------- 현장보고 ----------
+const RP = { site: null, items: [], stat: null, meta: null, month: null, loading: false };
+
+function rpWeatherIcon(w) { return { '맑음': '☀️', '구름': '⛅', '흐림': '☁️', '비': '🌧️', '눈': '❄️', '바람': '💨' }[w] || ''; }
+function rpDow(d) { return ['일', '월', '화', '수', '목', '금', '토'][new Date(d + 'T00:00:00').getDay()]; }
+
+async function rpLoad(code) {
+  if (RP.site === code || RP.loading) return;
+  RP.loading = true;
+  try {
+    if (!RP.meta) RP.meta = await api({ action: 'rp_meta' });
+    const d = await api({ action: 'rp_list', siteCode: code });
+    RP.items = d.items; RP.stat = d.stat; RP.site = code;
+    if (!RP.month) RP.month = today().slice(0, 7);
+  } finally { RP.loading = false; }
+}
+
+function rpRender(el) {
+  const isClient = S.me.role === 'client';
+  const canWrite = RP.meta.canWrite;
+  const month = RP.month || today().slice(0, 7);
+  const byDate = {}; RP.items.forEach(r => byDate[r.date] = r);
+
+  // 달력
+  const first = new Date(month + '-01T00:00:00');
+  const startPad = first.getDay();
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  let cells = '';
+  for (let i = 0; i < startPad; i++) cells += '<div class="rp-cell empty"></div>';
+  for (let d = 1; d <= days; d++) {
+    const ds = month + '-' + String(d).padStart(2, '0');
+    const r = byDate[ds];
+    cells += `<button type="button" class="rp-cell ${r ? 'has' : ''} ${ds === today() ? 'today' : ''}" data-date="${ds}">
+      <span class="rp-d">${d}</span>
+      ${r ? `<span class="rp-mark">${r.trades.slice(0, 2).map(t => esc(t.split('/')[0])).join(', ')}${r.trades.length > 2 ? ' 외' : ''}</span>
+        ${!isClient && r.people ? `<span class="rp-p">${r.people}명</span>` : ''}` : ''}
+    </button>`;
+  }
+
+  const stat = RP.stat;
+  const dailyKeys = stat ? Object.keys(stat.daily).sort().slice(-14) : [];
+  const maxDaily = dailyKeys.length ? Math.max(...dailyKeys.map(k => stat.daily[k])) : 0;
+
+  el.innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">현장보고</h2>
+      <button class="btn ghost" type="button" id="rpPrint">주간 인쇄</button>
+      ${canWrite ? '<button class="btn" type="button" id="rpNew">+ 보고 작성</button>' : ''}</div>
+
+    ${stat ? `<section class="panel rp-stat">
+      <div><span class="cr-id">누적 투입 인원</span><b>${stat.total.toLocaleString('ko-KR')}명</b></div>
+      <div><span class="cr-id">작성된 보고</span><b>${stat.reportCount}건</b></div>
+      <div class="rp-spark">
+        <span class="cr-id">최근 투입 인원</span>
+        <div class="rp-bars">${dailyKeys.map(k => `<i style="height:${maxDaily ? Math.max(8, stat.daily[k] / maxDaily * 100) : 0}%" title="${k} ${stat.daily[k]}명"></i>`).join('')}</div>
+      </div>
+    </section>` : ''}
+
+    <section class="panel rp-cal">
+      <div class="rp-cal-top">
+        <button type="button" class="linkish" id="rpPrev">‹ 이전달</button>
+        <b>${month.replace('-', '년 ')}월</b>
+        <button type="button" class="linkish" id="rpNext">다음달 ›</button>
+      </div>
+      <div class="rp-grid head">${['일', '월', '화', '수', '목', '금', '토'].map(d => `<div>${d}</div>`).join('')}</div>
+      <div class="rp-grid">${cells}</div>
+    </section>
+
+    <section class="panel">
+      ${RP.items.length ? RP.items.slice(0, 40).map(r => `
+        <button class="cr-row rp-row" data-id="${esc(r.id)}">
+          <span class="cr-id">${esc(r.date.slice(5).replace('-', '/'))} (${rpDow(r.date)}) ${rpWeatherIcon(r.weather)}${r.tempMin !== '' && r.tempMax !== '' ? ` ${esc(r.tempMin)}/${esc(r.tempMax)}℃` : ''}${!isClient && r.people ? ` · 인원 ${r.people}명` : ''}</span>
+          <span class="cr-title">${esc(r.trades.join(' · ') || '작업 보고')}</span>
+          <span class="cr-sub">${esc(r.work.map(w => (w.team ? w.team + ' ' : '') + (w.count ? w.count + '명 ' : '') + w.work.split('\\n')[0]).join(' / ').slice(0, 80))}</span>
+          <span class="cr-right">${(r.photos || []).length ? `<span class="cr-sub">사진 ${r.photos.length}</span>` : ''}</span>
+        </button>`).join('') : '<div class="empty"><h3>작성된 현장보고가 없습니다</h3>매일 작업 내용을 남기면 건축주와 본사가 같은 화면으로 확인합니다.</div>'}
+    </section>`;
+
+  $('rpPrev').onclick = () => { RP.month = rpShiftMonth(month, -1); rpRender(el); };
+  $('rpNext').onclick = () => { RP.month = rpShiftMonth(month, 1); rpRender(el); };
+  $('rpPrint').onclick = rpPrintForm;
+  if ($('rpNew')) $('rpNew').onclick = () => rpForm(null, today());
+  el.querySelectorAll('.rp-cell[data-date]').forEach(b => b.onclick = () => {
+    const r = byDate[b.dataset.date];
+    if (r) rpOpen(r.id); else if (canWrite && b.dataset.date <= today()) rpForm(null, b.dataset.date);
+  });
+  el.querySelectorAll('.rp-row').forEach(b => b.onclick = () => rpOpen(b.dataset.id));
+}
+
+function rpShiftMonth(m, n) {
+  const d = new Date(m + '-01T00:00:00'); d.setMonth(d.getMonth() + n);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+// ---- 상세 ----
+async function rpOpen(id) {
+  let item;
+  try { item = (await api({ action: 'rp_get', id })).item; } catch (e) { toast(e.message); return; }
+  const isClient = S.me.role === 'client';
+  const canEdit = RP.meta.canWrite && (S.me.role === 'admin' || item.mine);
+  const cum = item.cumulative || {};
+  const body = openSheet(`${esc(item.date)} (${rpDow(item.date)}) 현장보고`,
+    `${esc(currentSite().code)} · ${esc(item.createdBy)} 작성${item.weather ? ' · ' + rpWeatherIcon(item.weather) + ' ' + esc(item.weather) : ''}${item.tempMin !== '' && item.tempMax !== '' ? ` ${esc(item.tempMin)}/${esc(item.tempMax)}℃` : ''}`, `
+    <div class="card">
+      <h4>금일 작업내용</h4>
+      ${(item.labor || []).map(w => `<div class="rp-work">
+        <div class="rp-work-head"><b>${esc(w.team || w.trade)}</b>${w.count ? ` · ${w.count}명${w.shift === '야간' ? ' (야간)' : ''}` : ''}${!isClient && w.team && cum[w.team] ? ` <span class="cr-sub">누계 ${cum[w.team]}품</span>` : ''}
+          <span class="tag">${esc(w.trade)}${w.detail ? ' · ' + esc(w.detail) : ''}</span></div>
+        <div class="content">${esc(w.work)}</div>
+      </div>`).join('')}
+      ${!isClient && item.labor && item.labor.length ? `<div class="sum" style="margin-top:10px">금일 투입 <b>${item.labor.reduce((s, w) => s + (Number(w.count) || 0), 0)}명</b></div>` : ''}
+    </div>
+    <div class="card"><h4>명일 작업내용</h4><div class="content">${esc(item.tomorrow)}</div></div>
+    ${item.note ? `<div class="card"><h4>특이사항</h4><div class="content">${esc(item.note)}</div></div>` : ''}
+    ${(item.materials || []).length ? `<div class="card"><h4>자재 투입</h4><table class="rp-table"><tr><th>자재명</th><th>규격</th><th>수량</th><th>비고</th></tr>
+      ${item.materials.map(m => `<tr><td>${esc(m.name)}</td><td>${esc(m.spec)}</td><td>${esc(m.qty)}</td><td>${esc(m.note)}</td></tr>`).join('')}</table></div>` : ''}
+    ${(item.equipment || []).length ? `<div class="card"><h4>장비 투입</h4><table class="rp-table"><tr><th>장비명</th><th>수량</th><th>비고</th></tr>
+      ${item.equipment.map(m => `<tr><td>${esc(m.name)}</td><td>${esc(m.qty)}</td><td>${esc(m.note)}</td></tr>`).join('')}</table></div>` : ''}
+    <div class="card"><h4>현장 사진 ${(item.photos || []).length}장</h4>
+      <div class="thumbs">${(item.photos || []).map(p => `<button type="button" class="thumb" data-photo="${esc(p.id)}" title="${esc(p.name)}"></button>`).join('')}</div>
+    </div>
+    ${canEdit ? `<div class="actions"><button class="btn danger" type="button" id="rpDel">삭제</button><button class="btn" type="button" id="rpEdit">수정</button></div>` : ''}
+    <div class="card" id="cmCard">${cmHtml()}</div>`);
+
+  cmMount('report', item.id);
+
+  body.querySelectorAll('[data-photo]').forEach(b => {
+    rpPhotoUrl(item, b.dataset.photo).then(f => b.style.backgroundImage = `url("${f.url}")`).catch(() => {});
+    b.onclick = async () => {
+      const f = await rpPhotoUrl(item, b.dataset.photo);
+      const lb = document.createElement('div'); lb.className = 'lightbox';
+      lb.innerHTML = `<img src="${f.url}" alt="">`; lb.onclick = () => lb.remove();
+      document.body.appendChild(lb);
+    };
+  });
+  if ($('rpEdit')) $('rpEdit').onclick = () => rpForm(item, item.date);
+  if ($('rpDel')) $('rpDel').onclick = e => {
+    if (!confirm(`${item.date} 보고를 삭제할까요? 사진도 함께 지워집니다.`)) return;
+    submitting(e.target, async () => {
+      await api({ action: 'rp_delete', id: item.id });
+      RP.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast('삭제했습니다');
+    });
+  };
+}
+
+async function rpPhotoUrl(item, fileId) {
+  if (CR.urls[fileId]) return CR.urls[fileId];
+  const d = await api({ action: 'rp_photo', id: item.id, fileId });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  CR.urls[fileId] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type };
+  return CR.urls[fileId];
+}
+
+// ---- 작성·수정 ----
+function rpForm(item, date) {
+  const s = currentSite();
+  const editing = !!item;
+  const teams = RP.meta.teams;
+  const workRow = (w = {}) => `<div class="rp-wrow">
+    <div class="rp-wgrid">
+      <select class="wTrade"><option value="">공종 선택</option>${RP.meta.trades.map(t => `<option ${t === w.trade ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      <input type="text" class="wDetail" placeholder="세부 (예: 지층 구조)" value="${esc(w.detail || '')}">
+      <input type="text" class="wTeam" list="rpTeams" placeholder="팀·직종" value="${esc(w.team || '')}">
+      <input type="number" class="wCount" min="0" step="1" inputmode="numeric" placeholder="인원" value="${w.count != null ? esc(w.count) : ''}">
+      <select class="wShift">${RP.meta.shifts.map(x => `<option ${x === w.shift ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+      <button type="button" class="xbtn wDel" aria-label="삭제">×</button>
+    </div>
+    <textarea class="wWork" rows="2" placeholder="작업 내용">${esc(w.work || '')}</textarea>
+  </div>`;
+
+  const body = openSheet(editing ? '현장보고 수정' : '현장보고 작성', `${esc(s.code)} ${esc(s.name)}`, `
+    <datalist id="rpTeams">${teams.map(t => `<option value="${esc(t)}">`).join('')}</datalist>
+    <div class="card">
+      <div class="cx-when">
+        <div class="f"><label>날짜</label><input type="date" id="rDate" value="${esc(date)}" max="${today()}" ${editing ? 'disabled' : ''}></div>
+        <div class="f"><label>기온 (최저/최고)</label><div style="display:flex;gap:6px"><input type="number" id="rTmin" placeholder="최저" value="${esc(item ? item.tempMin : '')}"><input type="number" id="rTmax" placeholder="최고" value="${esc(item ? item.tempMax : '')}"></div></div>
+      </div>
+      <div class="f"><span class="lb">날씨</span>${segHtml('rW', RP.meta.weather, item ? item.weather : '맑음')}</div>
+    </div>
+
+    <div class="card">
+      <h4>금일 작업내용 <span class="hint" style="font-weight:400">공종·인원·내용 필수</span></h4>
+      <div id="rWork">${(item && item.labor && item.labor.length ? item.labor : [{}]).map(workRow).join('')}</div>
+      <button type="button" class="linkish" id="rAddWork">+ 작업 추가</button>
+      <div class="sum" id="rSum" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="f"><label for="rTomorrow">명일 작업내용</label><textarea id="rTomorrow" rows="3" placeholder="예: 도장 작업 마무리 / 타일자재 현장반입">${esc(item ? item.tomorrow : '')}</textarea></div>
+      <div class="f"><label for="rNote">특이사항 (선택)</label><textarea id="rNote" rows="2">${esc(item ? item.note : '')}</textarea></div>
+    </div>
+
+    <details class="card"><summary><b>자재 투입 (선택)</b></summary>
+      <div id="rMat" style="margin-top:10px">${((item && item.materials) || []).map(rpMatRow).join('')}</div>
+      <button type="button" class="linkish" id="rAddMat">+ 자재 추가</button>
+    </details>
+
+    <details class="card"><summary><b>장비 투입 (선택)</b></summary>
+      <div id="rEq" style="margin-top:10px">${((item && item.equipment) || []).map(rpEqRow).join('')}</div>
+      <button type="button" class="linkish" id="rAddEq">+ 장비 추가</button>
+    </details>
+
+    <div class="card">
+      <h4>현장 사진 <span class="hint" style="font-weight:400">1장 이상</span></h4>
+      ${editing && item.photos.length ? `<div class="thumbs" id="rOld">${item.photos.map(p => `<div class="thumb-wrap"><button type="button" class="thumb" data-photo="${esc(p.id)}"></button><button type="button" class="thumb-x" data-rm="${esc(p.id)}">×</button></div>`).join('')}</div>` : ''}
+      <div class="f" style="margin-top:10px"><input type="file" id="rPhotos" multiple accept="image/*" capture="environment"></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="rClose">닫기</button><button class="btn" type="button" id="rSave">${editing ? '수정 저장' : '보고 등록'}</button></div>`);
+
+  bindSegs(body);
+  const removed = [];
+  const bindWork = () => {
+    body.querySelectorAll('#rWork .wDel').forEach(b => b.onclick = () => {
+      if (body.querySelectorAll('#rWork .rp-wrow').length <= 1) return;
+      b.closest('.rp-wrow').remove(); updSum();
+    });
+    body.querySelectorAll('#rWork .wCount').forEach(i => i.oninput = updSum);
+  };
+  const updSum = () => {
+    const n = [...body.querySelectorAll('#rWork .wCount')].reduce((s, i) => s + (Number(i.value) || 0), 0);
+    $('rSum').innerHTML = `금일 투입 인원 <b>${n}명</b>`;
+  };
+  bindWork(); updSum();
+  $('rAddWork').onclick = () => { $('rWork').insertAdjacentHTML('beforeend', workRow()); bindWork(); };
+  $('rAddMat').onclick = () => { $('rMat').insertAdjacentHTML('beforeend', rpMatRow()); bindRm('#rMat'); };
+  $('rAddEq').onclick = () => { $('rEq').insertAdjacentHTML('beforeend', rpEqRow()); bindRm('#rEq'); bindEqOther(); };
+  const bindRm = sel => body.querySelectorAll(`${sel} .xbtn`).forEach(b => b.onclick = () => b.closest('.rp-line').remove());
+  const bindEqOther = () => body.querySelectorAll('#rEq .eName').forEach(sl => sl.onchange = () => {
+    const other = sl.parentNode.querySelector('.eOther');
+    other.hidden = sl.value !== '기타';
+  });
+  bindRm('#rMat'); bindRm('#rEq'); bindEqOther();
+  if (editing && item.photos.length) {
+    body.querySelectorAll('#rOld [data-photo]').forEach(b => rpPhotoUrl(item, b.dataset.photo).then(f => b.style.backgroundImage = `url("${f.url}")`).catch(() => {}));
+    body.querySelectorAll('#rOld [data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
+  }
+  $('rClose').onclick = closeSheet;
+  $('rSave').onclick = e => submitting(e.target, async () => {
+    const work = [...body.querySelectorAll('#rWork .rp-wrow')].map(r => ({
+      trade: r.querySelector('.wTrade').value, detail: r.querySelector('.wDetail').value, team: r.querySelector('.wTeam').value,
+      count: r.querySelector('.wCount').value, shift: r.querySelector('.wShift').value, work: r.querySelector('.wWork').value
+    }));
+    const materials = [...body.querySelectorAll('#rMat .rp-line')].map(r => ({
+      name: r.querySelector('.mName').value, spec: r.querySelector('.mSpec').value, qty: r.querySelector('.mQty').value, note: r.querySelector('.mNote').value }));
+    const equipment = [...body.querySelectorAll('#rEq .rp-line')].map(r => ({
+      name: r.querySelector('.eName').value === '기타' ? r.querySelector('.eOther').value : r.querySelector('.eName').value,
+      qty: r.querySelector('.eQty').value, note: r.querySelector('.eNote').value }));
+    await api({
+      action: 'rp_save', id: editing ? item.id : '', siteCode: s.code, date: editing ? item.date : $('rDate').value,
+      weather: segVal(body, 'rW'), tempMin: $('rTmin').value, tempMax: $('rTmax').value,
+      tomorrow: $('rTomorrow').value, note: $('rNote').value, work, materials, equipment,
+      photos: await readFiles($('rPhotos')), removePhotos: removed
+    });
+    RP.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast(editing ? '수정했습니다' : '현장보고를 등록했습니다');
+  });
+}
+
+function rpMatRow(m = {}) {
+  return `<div class="rp-line rp-mat"><input type="text" class="mName" placeholder="자재명" value="${esc(m.name || '')}">
+    <input type="text" class="mSpec" placeholder="규격" value="${esc(m.spec || '')}">
+    <input type="text" class="mQty" placeholder="수량" value="${esc(m.qty || '')}">
+    <input type="text" class="mNote" placeholder="비고" value="${esc(m.note || '')}">
+    <button type="button" class="xbtn" aria-label="삭제">×</button></div>`;
+}
+function rpEqRow(m = {}) {
+  const known = RP.meta.equipment.includes(m.name);
+  return `<div class="rp-line rp-eq"><select class="eName">${RP.meta.equipment.map(x => `<option ${known && x === m.name ? 'selected' : (!known && m.name && x === '기타' ? 'selected' : '')}>${esc(x)}</option>`).join('')}</select>
+    <input type="text" class="eOther" placeholder="장비명 직접 입력" value="${esc(!known ? (m.name || '') : '')}" ${known || !m.name ? 'hidden' : ''}>
+    <input type="text" class="eQty" placeholder="수량" value="${esc(m.qty || '')}">
+    <input type="text" class="eNote" placeholder="비고" value="${esc(m.note || '')}">
+    <button type="button" class="xbtn" aria-label="삭제">×</button></div>`;
+}
+
+// ---- 주간 인쇄 ----
+function rpPrintForm() {
+  const monday = d => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return ymd(x); };
+  const thisWeek = monday(today());
+  const prevWeek = ymd(new Date(new Date(thisWeek + 'T00:00:00').getTime() - 7 * 86400000));
+  const body = openSheet('주간 현장보고 인쇄', esc(currentSite().code + ' ' + currentSite().name), `
+    <div class="card">
+      <div class="f"><span class="lb">주 선택</span>${segHtml('pw', [[thisWeek, '이번 주'], [prevWeek, '지난 주'], ['custom', '직접 선택']], thisWeek)}</div>
+      <div class="f" id="pwBox" hidden><label>시작일 (월요일)</label><input type="date" id="pwDate" value="${thisWeek}"></div>
+      <div class="hint">선택한 주의 월~일 보고를 한 장으로 인쇄합니다. 인원·자재·장비는 내부용으로만 표시됩니다.</div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="pClose">닫기</button><button class="btn" type="button" id="pGo">인쇄 미리보기</button></div>`);
+  bindSegs(body, (n, v) => { if (n === 'pw') $('pwBox').hidden = v !== 'custom'; });
+  body.querySelector('#pClose').onclick = closeSheet;
+  body.querySelector('#pGo').onclick = () => {
+    const v = segVal(body, 'pw');
+    rpPrintWeek(v === 'custom' ? monday($('pwDate').value) : v);
+  };
+}
+
+function rpPrintWeek(startMon) {
+  const s = currentSite();
+  const isClient = S.me.role === 'client';
+  const days = [...Array(7)].map((_, i) => ymd(new Date(new Date(startMon + 'T00:00:00').getTime() + i * 86400000)));
+  const byDate = {}; RP.items.forEach(r => byDate[r.date] = r);
+  const rows = days.map(d => {
+    const r = byDate[d];
+    const work = r ? r.work.map(w => `<div><b>${esc(w.team || w.trade)}</b>${!isClient && w.count ? ` ${w.count}명` : ''} — ${esc(w.work).replace(/\n/g, '<br>')}</div>`).join('') : '<span class="none">보고 없음</span>';
+    return `<tr><td class="d">${d.slice(5).replace('-', '/')}<br><span>${rpDow(d)}</span></td>
+      <td class="w">${r ? (rpWeatherIcon(r.weather) + ' ' + (r.tempMin !== '' ? `${r.tempMin}/${r.tempMax}℃` : '')) : ''}</td>
+      <td>${work}</td>
+      ${!isClient ? `<td class="p">${r && r.people ? r.people + '명' : ''}</td>` : ''}
+      <td class="t">${r ? esc(r.tomorrow).replace(/\n/g, '<br>') : ''}</td></tr>`;
+  }).join('');
+  const total = isClient ? 0 : days.reduce((sum, d) => sum + ((byDate[d] || {}).people || 0), 0);
+  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>주간 현장보고 ${startMon}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#1E261B;padding:24px}
+    h1{font-size:18px;margin:0 0 4px;color:#2D5016}.sub{color:#697164;margin-bottom:14px;font-size:12px}
+    table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:7px 9px;vertical-align:top}
+    th{background:#EEF0EA;color:#2D5016;font-size:12px}td.d{width:52px;text-align:center;font-weight:700}td.d span{font-weight:400;color:#697164}
+    td.w{width:74px;text-align:center}td.p{width:56px;text-align:center;font-weight:700}td.t{width:22%}
+    .none{color:#aaa}.foot{margin-top:12px;font-size:12px;display:flex;justify-content:space-between}
+    @media print{.no-print{display:none}}
+    button{margin-bottom:14px;padding:10px 22px;background:#2D5016;color:#fff;border:0;border-radius:6px;font-size:14px}
+  </style></head><body>
+    <button class="no-print" onclick="window.print()">인쇄</button>
+    <h1>주간 현장보고</h1>
+    <div class="sub">${esc(s.code)} ${esc(s.name)} · ${days[0]} ~ ${days[6]}</div>
+    <table><tr><th>날짜</th><th>날씨</th><th>작업 내용</th>${!isClient ? '<th>인원</th>' : ''}<th>명일 작업</th></tr>${rows}</table>
+    <div class="foot"><span>(주)사람사는집종합건설</span>${!isClient ? `<span>주간 투입 인원 <b>${total}명</b>${RP.stat ? ` · 누적 ${RP.stat.total}명` : ''}</span>` : '<span></span>'}</div>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  w.document.write(html); w.document.close();
+  closeSheet();
+}
+
+// ---------- 댓글 ----------
+function cmHtml() {
+  return `<h4>댓글</h4><div id="cmList"><div class="hint">불러오는 중...</div></div>
+    <div class="cm-write"><textarea id="cmText" rows="2" placeholder="댓글을 남겨주세요"></textarea>
+    <button class="btn" type="button" id="cmSend">등록</button></div>`;
+}
+function cmRender(items) {
+  const el = $('cmList'); if (!el) return;
+  el.innerHTML = items.length ? items.map(c => `<div class="cm-item">
+      <div class="cm-head"><b>${esc(c.by)}</b><span class="t">${esc(c.at.slice(5).replace('-', '/'))}</span>
+        ${c.mine ? `<button type="button" class="cm-del" data-id="${esc(c.id)}">삭제</button>` : ''}</div>
+      <div class="content">${esc(c.text)}</div></div>`).join('')
+    : '<div class="hint">첫 댓글을 남겨보세요.</div>';
+  el.querySelectorAll('.cm-del').forEach(b => b.onclick = e => {
+    if (!confirm('댓글을 지울까요?')) return;
+    submitting(b, async () => {
+      const d = await api({ action: 'cm_delete', targetType: CMX.type, targetId: CMX.id, commentId: b.dataset.id });
+      cmRender(d.items);
+    });
+  });
+}
+const CMX = { type: '', id: '' };
+function cmMount(type, id) {
+  CMX.type = type; CMX.id = id;
+  api({ action: 'cm_list', targetType: type, targetId: id }).then(d => cmRender(d.items)).catch(() => { const el = $('cmList'); if (el) el.innerHTML = '<div class="hint">댓글을 불러오지 못했습니다.</div>'; });
+  const send = $('cmSend');
+  if (send) send.onclick = e => submitting(e.target, async () => {
+    const t = $('cmText');
+    if (!t.value.trim()) throw new Error('내용을 입력하세요.');
+    const d = await api({ action: 'cm_add', targetType: type, targetId: id, text: t.value });
+    t.value = ''; cmRender(d.items);
+  });
 }
 
 // ---------- 설계 일정 ----------
