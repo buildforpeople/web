@@ -624,9 +624,9 @@ async function rpLoad(code) {
   if (RP.site === code || RP.loading) return;
   RP.loading = true;
   try {
-    if (!RP.meta) RP.meta = await api({ action: 'rp_meta' });
     const d = await api({ action: 'rp_list', siteCode: code });
     RP.items = d.items; RP.stat = d.stat; RP.site = code;
+    if (d.meta) RP.meta = d.meta;
     if (!RP.month) RP.month = today().slice(0, 7);
   } finally { RP.loading = false; }
 }
