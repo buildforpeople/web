@@ -305,6 +305,28 @@
     .rp-cell { min-height: 52px; }
     .rp-stat { gap: 14px; }
   }
+  /* ===== 대시보드 ===== */
+  .ov-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .ov-card { padding: 14px 16px; }
+  .ov-card b { display: block; font-size: 24px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .ov-card b.warn { color: var(--red); }
+  .ov-block { padding: 14px 18px; margin-bottom: 12px; }
+  .ov-block h4 { margin: 0 0 10px; font-size: 14px; color: var(--muted); font-weight: 700; }
+  .ov-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .rp-bars.tall { height: 76px; gap: 2px; }
+  .rp-bars.tall i { flex: 1; width: auto; min-width: 4px; }
+  .ov-trade { display: grid; grid-template-columns: 110px 1fr 60px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 14px; }
+  .ov-trade b { text-align: right; font-variant-numeric: tabular-nums; }
+  .ov-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .ov-line:first-of-type { border-top: 0; }
+  .ov-report { margin-bottom: 12px; }
+  .ov-report .thumbs { margin-top: 6px; grid-template-columns: repeat(3, 1fr); max-width: 320px; }
+  .ov-prog { grid-column: 1 / -1; }
+  .ov-prog .bar { height: 6px; margin-top: 4px; }
+  @media (max-width: 760px) {
+    .ov-cards { grid-template-columns: 1fr 1fr; }
+    .ov-trade { grid-template-columns: 84px 1fr 50px; font-size: 13px; }
+  }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -406,8 +428,8 @@
 const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { cx: '고객관리', design: '설계', site: '현장관리', change: '변경요청' };
-const TAB_ORDER = ['cx', 'design', 'site', 'payreq', 'change', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', site: '현장관리', change: '변경요청' };
+const TAB_ORDER = ['all', 'cx', 'design', 'site', 'payreq', 'change', 'sikgu', 'master'];
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
 const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '' };
@@ -499,7 +521,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; renderTab(); };
 
   // 설계 → 현장관리 → 입금요청 → 변경요청 → 식구 순 (고객관리는 계약 전 단계라 맨 앞)
   $('tabs').innerHTML = TAB_ORDER.map(key => {
@@ -516,7 +538,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = t === 'cx';
+  $('sitePickWrap').hidden = t === 'cx' || t === 'all';
   renderTab();
 }
 
@@ -524,6 +546,7 @@ function currentSite() { return S.sites.find(s => s.code === S.siteCode); }
 
 function renderTab() {
   const fab = $('crFab'); if (fab) fab.hidden = S.tab !== 'change';
+  if (S.tab === 'all') return renderAllTab();
   if (S.tab === 'design') return renderDesignTab();
   if (S.tab === 'site') return renderSiteTab();
   if (S.tab === 'change') return renderChangeTab();
@@ -578,8 +601,8 @@ function renderSiteTab() {
   // 4칸 단위로 채우기
   while (facts.length % 4) facts.push(['', '', '']);
 
-  const subs = S.me.role === 'client' ? ['현장보고', '공지', '스펙북', '360 VIEW']
-    : ['현장보고', '공정표', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
+  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공지', '스펙북', '360 VIEW']
+    : ['대시보드', '현장보고', '공정표', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
   $('main').innerHTML = `
@@ -602,8 +625,9 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['현장보고', '건축주 계정'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '건축주 계정'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
+  if (S.siteSub === '대시보드') { ovRenderSite($('subBody')); return; }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
   if (S.siteSub === '현장보고') {
     rpLoad(s.code).then(() => {
@@ -612,6 +636,150 @@ function renderSiteTab() {
     if (RP.site === s.code && $('subBody')) rpRender($('subBody'));
   }
 
+}
+
+// ---------- 대시보드 ----------
+const OV = { site: null, data: null, all: null, allAt: 0 };
+
+function ovBar(pct, cls) { return `<div class="bar"><i class="${cls || ''}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>`; }
+
+async function ovRenderSite(el) {
+  const s = currentSite();
+  if (OV.site !== s.code) {
+    el.innerHTML = '<div class="loading">불러오는 중...</div>';
+    try { OV.data = await api({ action: 'ov_site', siteCode: s.code }); OV.site = s.code; }
+    catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (S.tab !== 'site' || S.siteCode !== s.code || S.siteSub !== '대시보드') return;
+  }
+  const d = OV.data;
+  const isClient = S.me.role === 'client';
+  const lastGap = d.lastReportDate ? dayDiff(d.lastReportDate, today()) : null;
+  const labor = d.labor;
+  const dailyKeys = labor ? Object.keys(labor.daily).sort() : [];
+  const maxDaily = dailyKeys.length ? Math.max(...dailyKeys.map(k => labor.daily[k])) : 0;
+  const trades = labor ? Object.entries(labor.byTrade).sort((a, b) => b[1] - a[1]).slice(0, 6) : [];
+  const maxTrade = trades.length ? trades[0][1] : 0;
+
+  el.innerHTML = `
+    <div class="ov-cards">
+      <section class="panel ov-card">
+        <span class="cr-id">최근 현장보고</span>
+        <b class="${lastGap !== null && lastGap >= 3 ? 'warn' : ''}">${d.lastReportDate ? esc(d.lastReportDate.slice(5).replace('-', '/')) : '없음'}</b>
+        <span class="cr-sub">${d.lastReportDate ? (lastGap === 0 ? '오늘 작성' : `${lastGap}일 전 · 누적 ${d.reportCount}건`) : '작성된 보고가 없습니다'}</span>
+      </section>
+      ${labor ? `<section class="panel ov-card"><span class="cr-id">이번 주 투입 인원</span><b>${labor.week}명</b>
+        <span class="cr-sub">누적 ${labor.total.toLocaleString('ko-KR')}명</span></section>` : ''}
+      ${d.cr ? `<section class="panel ov-card"><span class="cr-id">진행 중 변경요청</span>
+        <b class="${d.cr.open.length ? 'warn' : ''}">${d.cr.open.length}건</b>
+        <span class="cr-sub">완료 ${d.cr.done}건${d.cr.addAmount ? ` · 추가 ${won(d.cr.addAmount)}` : ''}</span></section>` : ''}
+      ${d.design ? `<section class="panel ov-card"><span class="cr-id">설계 일정</span>
+        <b class="${d.design.late ? 'warn' : ''}">${d.design.done}/${d.design.total} 완료</b>
+        <span class="cr-sub">${d.design.late ? `${d.design.late}건 지연` : '지연 없음'}</span></section>` : ''}
+    </div>
+
+    ${labor && dailyKeys.length ? `<section class="panel ov-block">
+      <h4>최근 30일 투입 인원</h4>
+      <div class="rp-bars tall">${dailyKeys.map(k => `<i style="height:${maxDaily ? Math.max(6, labor.daily[k] / maxDaily * 100) : 0}%" title="${k} ${labor.daily[k]}명"></i>`).join('')}</div>
+      <div class="ov-axis"><span>${esc(dailyKeys[0].slice(5).replace('-', '/'))}</span><span>${esc(dailyKeys[dailyKeys.length - 1].slice(5).replace('-', '/'))}</span></div>
+    </section>` : ''}
+
+    ${trades.length ? `<section class="panel ov-block"><h4>공종별 누적 인원</h4>
+      ${trades.map(([t, n]) => `<div class="ov-trade"><span>${esc(t)}</span>${ovBar(n / maxTrade * 100)}<b>${n}명</b></div>`).join('')}
+    </section>` : ''}
+
+    ${d.cr && d.cr.open.length ? `<section class="panel ov-block"><h4>처리 대기 중인 변경요청</h4>
+      ${d.cr.open.map(c => `<div class="ov-line"><span class="st ${esc(c.status)}">${esc(c.status === '승인대기' ? '승인' : c.status)}</span>
+        <b>${esc(c.title)}</b><span class="cr-sub">${esc(c.id)}${c.costType === '추가' && c.amount ? ' · ' + won(c.amount) : ''}</span></div>`).join('')}
+      <button class="btn ghost" type="button" id="ovGoCr" style="margin-top:10px">변경요청 탭으로</button>
+    </section>` : ''}
+
+    ${d.design && d.design.next.length ? `<section class="panel ov-block"><h4>다가오는 설계 일정</h4>
+      ${d.design.next.map(i => `<div class="ov-line"><span class="tag">${esc(DS_KIND[i.kind] || '')}</span><b>${esc(i.title)}</b>
+        <span class="cr-sub">${esc(i.date.slice(5).replace('-', '/'))}${i.time ? ' ' + esc(i.time) : ''} · ${esc(dsDday(i.date).text)}</span></div>`).join('')}
+    </section>` : ''}
+
+    ${d.recent.length ? `<section class="panel ov-block"><h4>최근 보고 사진</h4>
+      ${d.recent.map(r => `<div class="ov-report"><div class="cr-sub">${esc(r.date.slice(5).replace('-', '/'))} (${rpDow(r.date)}) ${rpWeatherIcon(r.weather)}</div>
+        <div class="thumbs">${r.photos.map(p => `<button type="button" class="thumb" data-rid="${esc(r.id)}" data-pid="${esc(p.id)}"></button>`).join('')}</div></div>`).join('')}
+      <button class="btn ghost" type="button" id="ovGoRp" style="margin-top:10px">현장보고 전체 보기</button>
+    </section>` : ''}`;
+
+  if ($('ovGoCr')) $('ovGoCr').onclick = () => selectTab('change');
+  if ($('ovGoRp')) $('ovGoRp').onclick = () => { S.siteSub = '현장보고'; renderSiteTab(); };
+  el.querySelectorAll('[data-pid]').forEach(b => {
+    const item = { id: b.dataset.rid };
+    rpPhotoUrl(item, b.dataset.pid).then(f => b.style.backgroundImage = `url("${f.url}")`).catch(() => {});
+    b.onclick = () => lightbox([b.dataset.pid], 0, id => rpPhotoUrl(item, id));
+  });
+}
+
+// ---- 전체 현황 (관리자·공무) ----
+async function renderAllTab() {
+  const fresh = OV.all && Date.now() - OV.allAt < 60000;
+  if (!fresh) {
+    $('main').innerHTML = '<div class="loading">전체 현장을 불러오는 중...</div>';
+    try { OV.all = await api({ action: 'ov_all' }); OV.allAt = Date.now(); }
+    catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'all') return;
+  }
+  const rows = OV.all.rows;
+  const noReport = rows.filter(r => r.status === '시공중' && (r.daysSinceReport === '' || r.daysSinceReport >= 3));
+  const crTotal = rows.reduce((s, r) => s + r.crOpen, 0);
+  const weekTotal = rows.reduce((s, r) => s + r.weekPeople, 0);
+  const problem = rows.filter(r => r.problem);
+
+  const prog = r => {
+    if (!r.startDate || !r.endDate) return null;
+    const total = dayDiff(r.startDate, r.endDate), done = dayDiff(r.startDate, today());
+    return total > 0 ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : null;
+  };
+
+  $('main').innerHTML = `
+    <div class="cr-bar"><h2>전체 현황 <span class="cr-sub" style="font-size:14px;font-weight:500">${esc(OV.all.today)}</span></h2>
+      <button class="btn ghost" type="button" id="ovRefresh">새로고침</button></div>
+
+    <div class="ov-cards">
+      <section class="panel ov-card"><span class="cr-id">진행 현장</span><b>${rows.length}곳</b>
+        <span class="cr-sub">시공중 ${rows.filter(r => r.status === '시공중').length} · 설계·허가 ${rows.filter(r => ['설계중', '허가중', '견적조정중'].includes(r.status)).length}</span></section>
+      <section class="panel ov-card"><span class="cr-id">이번 주 투입 인원</span><b>${weekTotal}명</b><span class="cr-sub">전 현장 합계</span></section>
+      <section class="panel ov-card"><span class="cr-id">보고 끊긴 현장</span><b class="${noReport.length ? 'warn' : ''}">${noReport.length}곳</b>
+        <span class="cr-sub">시공중인데 3일 이상 보고 없음</span></section>
+      <section class="panel ov-card"><span class="cr-id">진행 중 변경요청</span><b class="${crTotal ? 'warn' : ''}">${crTotal}건</b>
+        <span class="cr-sub">전 현장 합계</span></section>
+    </div>
+
+    ${problem.length ? `<section class="panel ov-block"><h4>문제 현장</h4>
+      ${problem.map(r => `<div class="ov-line"><span class="st 반려">${esc(r.code)}</span><b>${esc(r.name)}</b><span class="cr-sub">${esc(r.problemReason)}</span></div>`).join('')}
+    </section>` : ''}
+
+    <section class="panel">
+      <div class="ds-phase">현장별 진행 상황 · 누르면 그 현장으로 이동</div>
+      ${rows.map(r => {
+        const p = prog(r);
+        const gap = r.daysSinceReport;
+        const late = r.status === '시공중' && (gap === '' || gap >= 3);
+        return `<button class="cr-row ov-row ${late ? 'urgent' : ''}" data-code="${esc(r.code)}">
+          <span class="cr-id">${esc(r.code)} · ${esc(r.status)}${r.manager ? ' · ' + esc(r.manager) : ''}</span>
+          <span class="cr-title">${esc(r.name)}${r.problem ? '<span class="flag">문제</span>' : ''}</span>
+          <span class="cr-sub">
+            ${p !== null ? `공정 ${p}% · ` : r.designWeek ? `설계 ${r.designWeek}주차 · ` : ''}
+            보고 ${gap === '' ? '없음' : gap === 0 ? '오늘' : gap + '일 전'}
+            ${r.weekPeople ? ` · 주간 ${r.weekPeople}명` : ''}${r.totalPeople ? ` (누적 ${r.totalPeople})` : ''}
+            ${r.crOpen ? ` · 변경요청 ${r.crOpen}건` : ''}${r.designLate ? ` · 설계 지연 ${r.designLate}` : ''}
+          </span>
+          ${p !== null ? `<span class="cr-sub ov-prog">${ovBar(p)}</span>` : ''}
+          <span class="cr-right">${late ? '<span class="st 반려">보고 확인</span>' : r.crOpen ? `<span class="st">변경 ${r.crOpen}</span>` : '<span class="st 완료">정상</span>'}</span>
+        </button>`;
+      }).join('')}
+    </section>`;
+
+  $('ovRefresh').onclick = () => { OV.allAt = 0; renderAllTab(); };
+  $('main').querySelectorAll('.ov-row').forEach(b => b.onclick = () => {
+    S.siteCode = b.dataset.code; localStorage.setItem(SITE_KEY, S.siteCode);
+    $('sitePick').value = S.siteCode;
+    DS.site = null; DS.plan = null; DS.items = []; RP.site = null; OV.site = null;
+    S.siteSub = '대시보드'; selectTab('site');
+  });
 }
 
 // ---------- 현장보고 ----------
@@ -749,7 +917,7 @@ async function rpOpen(id) {
     if (!confirm(`${item.date} 보고를 삭제할까요? 사진도 함께 지워집니다.`)) return;
     submitting(e.target, async () => {
       await api({ action: 'rp_delete', id: item.id });
-      RP.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast('삭제했습니다');
+      RP.site = null; OV.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast('삭제했습니다');
     });
   };
 }
@@ -863,7 +1031,7 @@ function rpForm(item, date) {
       tomorrow: $('rTomorrow').value, note: $('rNote').value, work, materials, equipment,
       photos: await readFiles($('rPhotos')), removePhotos: removed
     });
-    RP.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast(editing ? '수정했습니다' : '현장보고를 등록했습니다');
+    RP.site = null; OV.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast(editing ? '수정했습니다' : '현장보고를 등록했습니다');
   });
 }
 
