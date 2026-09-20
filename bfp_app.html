@@ -739,8 +739,10 @@ async function renderAllTab() {
       <button class="btn ghost" type="button" id="ovRefresh">새로고침</button></div>
 
     <div class="ov-cards">
-      <section class="panel ov-card"><span class="cr-id">진행 현장</span><b>${rows.length}곳</b>
-        <span class="cr-sub">시공중 ${rows.filter(r => r.status === '시공중').length} · 설계·허가 ${rows.filter(r => ['설계중', '허가중', '견적조정중'].includes(r.status)).length}</span></section>
+      <section class="panel ov-card"><span class="cr-id">시공 중</span><b>${rows.filter(r => r.status === '시공중').length}곳</b>
+        <span class="cr-sub">${rows.filter(r => r.status === '보류').length ? `보류 ${rows.filter(r => r.status === '보류').length}곳` : '진행 중인 공사'}</span></section>
+      <section class="panel ov-card"><span class="cr-id">설계·허가 중</span><b>${rows.filter(r => ['설계중', '견적조정중', '허가중'].includes(r.status)).length}곳</b>
+        <span class="cr-sub">설계 ${rows.filter(r => r.status === '설계중').length} · 견적 ${rows.filter(r => r.status === '견적조정중').length} · 허가 ${rows.filter(r => r.status === '허가중').length}</span></section>
       <section class="panel ov-card"><span class="cr-id">이번 주 투입 인원</span><b>${weekTotal}명</b><span class="cr-sub">전 현장 합계</span></section>
       <section class="panel ov-card"><span class="cr-id">보고 끊긴 현장</span><b class="${noReport.length ? 'warn' : ''}">${noReport.length}곳</b>
         <span class="cr-sub">시공중인데 3일 이상 보고 없음</span></section>
