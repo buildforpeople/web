@@ -782,7 +782,7 @@
   .tab-panel.active { display: block; }
 
   /* ── 조회탭 ── */
-  .lookup-wrap { max-width: 900px; margin: 0 auto; padding: 24px 24px 60px; }
+  .lookup-wrap { max-width: 1160px; margin: 0 auto; padding: 24px 24px 60px; }
   /* 조회 상단 — 베이지(#FEFAE0) 바탕 + 딥그린 글자 */
   .lookup-hero { background: #FEFAE0; border: 1px solid #E5DFC0; padding: 22px 24px; border-radius: 2px; margin-bottom: 24px; }
   .lookup-hero .who {
@@ -813,17 +813,18 @@
   .sb-label { font-size: 11px; color: var(--text-muted); }
   .sb-value { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; color: var(--label); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 2px; }
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; table-layout: fixed; }
-  /* 좁아서 두 줄로 접히던 열 넓히기 */
-  .data-table col.c-date { width: 104px; }
-  .data-table col.c-req { width: 76px; }
-  .data-table col.c-cat { width: 104px; }
-  .data-table col.c-exp { width: 84px; }
-  .data-table col.c-vendor { width: 170px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 860px; table-layout: fixed; }
+  /* 열 너비 — 화면(최대 1160px) 안에 세금계산서·상태까지 들어오도록 */
+  .data-table col.c-date { width: 92px; }
+  .data-table col.c-req { width: 64px; }
+  .data-table col.c-cat { width: 116px; }
+  .data-table col.c-exp { width: 68px; }
+  .data-table col.c-vendor { width: 150px; }
   .data-table col.c-item { width: auto; }
-  .data-table col.c-amt { width: 120px; }
-  .data-table col.c-tax { width: 76px; }
-  .data-table col.c-st { width: 72px; }
+  .data-table col.c-amt { width: 112px; }
+  .data-table col.c-tax { width: 80px; }
+  .data-table col.c-st { width: 66px; }
+  .data-table th, .data-table td { padding-left: 8px !important; padding-right: 8px !important; }
   .data-table td.nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .data-table td.wrapcell { word-break: keep-all; overflow-wrap: anywhere; }
   .data-table thead th {
