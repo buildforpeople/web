@@ -742,7 +742,7 @@
     overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   }
   .login-card-top {
-    background: var(--accent); padding: 28px 28px 22px; position: relative; overflow: hidden;
+    background: #606C38; padding: 28px 28px 22px; position: relative; overflow: hidden;
   }
   .login-card-top::before {
     content: 'BFP'; position: absolute; right: -8px; top: -12px;
@@ -782,6 +782,48 @@
   .tab-panel.active { display: block; }
 
   /* ── 조회탭 ── */
+  /* ── 상세 창 ── */
+  .pr-row { cursor: pointer; }
+  .pr-row:hover td { background: #FBF7E4; }
+  .clip { font-size: 12px; }
+  .pill-cancel { background: #EEE; color: #888; }
+  .pill-hold { background: #F6ECD4; color: #9A6A12; }
+  .pill-doing { background: #E4EEF8; color: #00509D; }
+  .pr-scrim { position: fixed; inset: 0; background: rgba(20,26,18,.42); z-index: 400; }
+  .pr-sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: #FAF7E6; z-index: 401; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,.18); }
+  .pr-head { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 18px; display: flex; gap: 12px; align-items: flex-start; }
+  .pr-head h3 { margin: 2px 0 0; font-size: 18px; color: #283618; }
+  .pr-x { margin-left: auto; border: 0; background: none; font-size: 26px; line-height: 1; color: #857F66; cursor: pointer; }
+  .pr-body { overflow-y: auto; padding: 16px 18px 40px; flex: 1; }
+  .pr-sub { font-size: 12px; color: #857F66; }
+  .pr-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+  .pr-amt { font-size: 22px; color: #BC6C25; }
+  .pr-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .pr-card h4 { margin: 0 0 10px; font-size: 13px; color: #857F66; }
+  .pr-grid { display: grid; grid-template-columns: 96px 1fr; gap: 8px 12px; align-items: center; font-size: 14px; }
+  .pr-grid > label { color: #857F66; font-size: 13px; }
+  .pr-in { width: 100%; border: 1px solid var(--border) !important; border-radius: 6px !important; padding: 8px 10px !important; background: #FDFBF2 !important; font: inherit; font-size: 14px !important; height: auto !important; box-shadow: none !important; }
+  .pr-val { padding: 4px 0; }
+  .pr-check { display: flex; gap: 6px; align-items: center; color: #283618 !important; font-size: 14px !important; }
+  .pr-hint { font-size: 12px; color: #857F66; font-weight: 400; }
+  .pr-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .pr-thumb { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 8px; background: #F0EEE0 center/cover no-repeat; display: flex; align-items: flex-end; padding: 0; overflow: hidden; cursor: pointer; }
+  .pr-thumb span { width: 100%; font-size: 11px; background: rgba(255,255,255,.9); padding: 3px 5px; text-align: left; }
+  .pr-thumb.doc { flex-direction: column; justify-content: center; align-items: center; color: #857F66; }
+  .pr-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .pr-btn { border: 0; border-radius: 8px; padding: 10px 20px; font-weight: 700; background: #283618; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
+  .pr-btn.ghost { background: #fff; color: #283618; border: 1px solid var(--border); }
+  .pr-btn:disabled { opacity: .5; }
+  .pr-lb { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 500; display: flex; align-items: center; gap: 8px; padding: 20px; }
+  .lb-s { flex: 1; height: 100%; display: grid; place-items: center; min-width: 0; }
+  .lb-s img { max-width: 100%; max-height: 100%; border-radius: 6px; }
+  .lb-l { position: absolute; color: #fff; }
+  .lb-n { width: 48px; height: 72px; border: 0; border-radius: 10px; background: rgba(255,255,255,.15); color: #fff; font-size: 34px; cursor: pointer; }
+  .lb-x { position: absolute; top: 14px; right: 16px; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255,255,255,.18); color: #fff; font-size: 24px; cursor: pointer; }
+  .lb-c { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,.85); font-size: 14px; }
+  .pr-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #283618; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 600; }
+  .pr-toast.show { opacity: 1; }
+  @media (max-width: 760px) { .lb-n { display: none; } .pr-grid { grid-template-columns: 80px 1fr; } }
   .lookup-wrap { max-width: 1160px; margin: 0 auto; padding: 24px 24px 60px; }
   /* 조회 상단 — 베이지(#FEFAE0) 바탕 + 딥그린 글자 */
   .lookup-hero { background: #FEFAE0; border: 1px solid #E5DFC0; padding: 22px 24px; border-radius: 2px; margin-bottom: 24px; }
@@ -1451,8 +1493,10 @@
   }
 
   // ── 폼 제출
+  let submitInFlight = false;
   document.getElementById('mainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    if (submitInFlight) return; // 전송 중 두 번 누름 방지
 
     // 기존 에러 스타일 초기화
     this.querySelectorAll('.field-error').forEach(el => el.remove());
@@ -1545,6 +1589,7 @@
     }
 
     // 버튼 로딩
+    submitInFlight = true;
     const btn = document.querySelector('.submit-btn');
     const btnOriginal = btn.textContent;
     btn.textContent = '파일 업로드 중...';
@@ -1599,8 +1644,11 @@
     } finally {
       btn.textContent = btnOriginal;
       btn.disabled = false;
+      submitInFlight = false;
     }
 
+    // 접수 확인 후에만 새 문서번호 발급 (실패 후 재시도는 같은 번호 → 서버가 중복 기록 안 함)
+    currentDocId = 'REQ-' + Date.now().toString(36).toUpperCase().slice(-6);
     document.getElementById('successSite').textContent = siteEl.value;
     document.getElementById('successOverlay').classList.add('show');
   });
@@ -1772,6 +1820,7 @@
 
   // ── 조회 탭 데이터 로드 (서버가 담당 현장 기준으로만 내려줌)
   let lookupLoaded = false;
+  const LOOK = { rows: [], sites: [], urls: {} };
 
   async function loadLookup() {
     if (lookupLoaded) return;
@@ -1786,6 +1835,7 @@
         return;
       }
       lookupLoaded = true;
+      LOOK.rows = data.rows; LOOK.sites = data.sites;
       document.getElementById('lookupName').textContent = data.name + (currentUser && currentUser.isAdmin ? ' (전체 현장)' : ' 님 담당 현장');
       document.getElementById('lookupBadges').innerHTML = data.sites.map((s, i) =>
         `<span class="lbadge" data-site-idx="${i}">${escapeHtml(s)}</span>`).join('');
@@ -1864,16 +1914,16 @@
               const isDup = sRows.some(other =>
                 other !== r && dupKey(other) === dupKey(r) && dayDiff(r.date, other.date) <= 14
               );
-              return `<tr class="${isDup ? 'dup-warning' : ''}">
+              return `<tr class="pr-row ${isDup ? 'dup-warning' : ''}" data-sheet="${escapeHtml(r.sheet||'')}" data-row="${r.row||''}" data-doc="${escapeHtml(r.docId||'')}" tabindex="0">
                 <td class="td-mono">${r.date||''}${isDup ? '<span class="dup-badge">⚠️ 중복의심</span>' : ''}</td>
                 <td class="nowrap">${escapeHtml(r.requester||'')}</td>
                 <td class="nowrap">${escapeHtml(r.category||'')}</td>
                 <td class="nowrap">${escapeHtml(r.expType||'')}</td>
                 <td class="wrapcell"><strong>${escapeHtml(r.vendor||'')}</strong></td>
-                <td class="wrapcell">${escapeHtml(r.item||'')}</td>
+                <td class="wrapcell">${escapeHtml(r.item||'')}${r.hasFiles ? ' <span class="clip" title="첨부 있음">📎</span>' : ''}</td>
                 <td class="td-amount">${Number(r.amount||0).toLocaleString('ko-KR')}원</td>
                 <td class="nowrap">${escapeHtml(r.taxYn||'')}</td>
-                <td class="nowrap"><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
+                <td class="nowrap"><span class="pill ${prPill(r.status)}">${escapeHtml(r.status||'요청')}</span></td>
               </tr>`;
             }).join('');
           })()}
@@ -1882,6 +1932,229 @@
       html += '</div>';
     });
     content.innerHTML = html;
+    content.querySelectorAll('.pr-row').forEach(tr => {
+      tr.onclick = () => prOpen(tr.dataset.sheet, tr.dataset.row, tr.dataset.doc);
+      tr.onkeydown = e => { if (e.key === 'Enter') tr.onclick(); };
+    });
+    // 필터가 걸려 있었다면 유지
+    const act = document.querySelector('#lookupBadges .lbadge.active-filter');
+    if (act) { act.classList.remove('active-filter'); act.click(); }
+  }
+
+  function prPill(st) {
+    return st === '완료' ? 'pill-done' : st === '취소' ? 'pill-cancel' : st === '보류' ? 'pill-hold' : st === '처리중' ? 'pill-doing' : 'pill-req';
+  }
+
+  // ── 상세 창
+  async function prOpen(sheet, row, docId) {
+    if (!sheet || !row) return;
+    prSheet('<div class="lookup-loading"><div class="lookup-spinner"></div>불러오는 중...</div>', '입금요청 상세', '');
+    const d = await api({ action: 'detail', sheet, row, docId });
+    if (d.authError) { prClose(); showLogin(d.message); return; }
+    if (d.status !== 'ok') { prBody().innerHTML = `<div class="no-access"><strong>오류</strong>${escapeHtml(d.message)}</div>`; return; }
+    prRender(d);
+  }
+
+  function prSheet(html, title, sub) {
+    let w = document.getElementById('prWrap');
+    if (!w) {
+      w = document.createElement('div'); w.id = 'prWrap';
+      w.innerHTML = `<div class="pr-scrim"></div><aside class="pr-sheet" role="dialog" aria-modal="true">
+        <div class="pr-head"><div><div class="pr-sub" id="prSub"></div><h3 id="prTitle"></h3></div><button type="button" class="pr-x" aria-label="닫기">×</button></div>
+        <div class="pr-body" id="prBody"></div></aside>`;
+      document.body.appendChild(w);
+      w.querySelector('.pr-scrim').onclick = prClose;
+      w.querySelector('.pr-x').onclick = prClose;
+    }
+    document.getElementById('prTitle').textContent = title;
+    document.getElementById('prSub').textContent = sub;
+    prBody().innerHTML = html;
+    document.body.style.overflow = 'hidden';
+  }
+  function prBody() { return document.getElementById('prBody'); }
+  function prClose() { const w = document.getElementById('prWrap'); if (w) w.remove(); document.body.style.overflow = ''; }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.pr-lb')) prClose(); });
+
+  function prRender(d) {
+    const it = d.item, can = d.canEdit;
+    const won = n => Number(n || 0).toLocaleString('ko-KR') + '원';
+    const inp = (id, v, type) => can ? `<input class="pr-in" id="${id}" type="${type || 'text'}" value="${escapeHtml(v)}">` : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
+    const sel = (id, opts, v) => can ? `<select class="pr-in" id="${id}">${opts.map(o => `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>` : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
+    const cats = [...document.querySelectorAll('select[name="category"] option')].map(o => o.value).filter(Boolean);
+    const statuses = (currentUser && currentUser.statuses) || ['요청', '처리중', '완료', '보류', '취소'];
+    const imgs = it.files.filter(f => f.type.startsWith('image/'));
+    prSheet(`
+      <div class="pr-top">
+        <span class="pill ${prPill(it.status)}">${escapeHtml(it.status)}</span>
+        <b class="pr-amt">${won(it.amount)}</b>
+        <span class="pr-sub">${escapeHtml(it.site)} · ${escapeHtml(it.date)} · ${escapeHtml(it.requester || '요청자 미기록')}</span>
+      </div>
+
+      <div class="pr-card">
+        <h4>첨부 (견적서·명세서)</h4>
+        ${it.files.length ? `<div class="pr-thumbs">${it.files.map(f => `
+          <button type="button" class="pr-thumb ${f.type.startsWith('image/') ? '' : 'doc'}" data-fid="${escapeHtml(f.id)}" title="${escapeHtml(f.name)}">
+            ${f.type.startsWith('image/') ? '' : `<b>${escapeHtml((f.name.split('.').pop() || 'FILE').toUpperCase())}</b>`}
+            <span>${escapeHtml(f.kind)}</span></button>`).join('')}</div>` : '<div class="pr-hint">첨부된 파일이 없습니다.</div>'}
+      </div>
+
+      <div class="pr-card">
+        <h4>요청 내용 ${can ? '<span class="pr-hint">· 수정 가능</span>' : ''}</h4>
+        <div class="pr-grid">
+          <label>현장</label>${can ? sel('fSite', d.sites, it.site) : `<div class="pr-val">${escapeHtml(it.site)}</div>`}
+          <label>공종</label>${sel('fCat', cats.includes(it.category) ? cats : [it.category, ...cats], it.category)}
+          <label>지출구분</label>${sel('fExp', ['재료비', '노무비', '경비'], it.expType)}
+          <label>거래처명</label>${inp('fVendor', it.vendor)}
+          <label>품목 및 수량</label>${inp('fItem', it.item)}
+          <label>청구 총액</label>${can ? `<div><input class="pr-in" id="fAmount" inputmode="numeric" value="${escapeHtml(it.amount)}"><div class="pr-hint" id="fAmountRead">${won(it.amount)}</div></div>` : `<div class="pr-val">${won(it.amount)}</div>`}
+          <label>세금계산서</label>${sel('fTax', ['O', 'X'], it.taxYn || 'X')}
+          <label>은행</label>${inp('fBank', it.bank)}
+          <label>계좌번호</label>${inp('fAccount', it.account)}
+        </div>
+      </div>
+
+      <div class="pr-card">
+        <h4>처리</h4>
+        <div class="pr-grid">
+          <label>상태</label>${sel('fStatus', statuses, it.status)}
+          <label>처리일</label>${inp('fDone', it.doneDate, 'date')}
+          <label>공무 확인</label>${can ? `<label class="pr-check"><input type="checkbox" id="fConfirm" ${it.confirmed ? 'checked' : ''}> 확인함</label>` : `<div class="pr-val">${it.confirmed ? '확인함' : '—'}</div>`}
+          <label>메모</label>${can ? `<textarea class="pr-in" id="fMemo" rows="2">${escapeHtml(it.memo)}</textarea>` : `<div class="pr-val">${escapeHtml(it.memo) || '—'}</div>`}
+        </div>
+      </div>
+
+      <div class="pr-actions">
+        <button type="button" class="pr-btn ghost" id="prPrint">🖨 인쇄</button>
+        ${can ? '<button type="button" class="pr-btn" id="prSave">저장</button>' : ''}
+      </div>
+      <div class="pr-hint" style="margin-top:8px">문서번호 ${escapeHtml(it.docId || '—')} · ${escapeHtml(it.sheet)} ${escapeHtml(it.no)}번</div>`,
+      it.vendor || '입금요청 상세', `${it.site} · ${it.date}`);
+
+    // 썸네일·확대
+    const all = it.files;
+    prBody().querySelectorAll('[data-fid]').forEach(b => {
+      const f = all.find(x => x.id === b.dataset.fid);
+      if (f.type.startsWith('image/')) prFileUrl(it, f.id).then(u => b.style.backgroundImage = `url("${u.url}")`).catch(() => {});
+      b.onclick = async () => {
+        if (f.type.startsWith('image/')) return prLightbox(it, imgs.map(x => x.id), imgs.findIndex(x => x.id === f.id));
+        try { const u = await prFileUrl(it, f.id); const a = document.createElement('a'); a.href = u.url; a.target = '_blank'; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
+        catch (e) { alert(e.message); }
+      };
+    });
+    if (can) {
+      const a = document.getElementById('fAmount');
+      a.oninput = () => { document.getElementById('fAmountRead').textContent = won(String(a.value).replace(/[^\d.-]/g, '')); };
+      document.getElementById('fStatus').onchange = e => {
+        if (e.target.value === '완료' && !document.getElementById('fDone').value) document.getElementById('fDone').value = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+      };
+      document.getElementById('prSave').onclick = async e => {
+        const btn = e.target; btn.disabled = true; btn.textContent = '저장 중...';
+        try {
+          const r = await api({ action: 'update', sheet: it.sheet, row: it.row, docId: it.docId, fields: {
+            site: document.getElementById('fSite').value, category: document.getElementById('fCat').value,
+            expType: document.getElementById('fExp').value, vendor: document.getElementById('fVendor').value,
+            item: document.getElementById('fItem').value, amount: document.getElementById('fAmount').value,
+            taxYn: document.getElementById('fTax').value, bank: document.getElementById('fBank').value,
+            account: document.getElementById('fAccount').value, status: document.getElementById('fStatus').value,
+            doneDate: document.getElementById('fDone').value, memo: document.getElementById('fMemo').value,
+            confirmed: document.getElementById('fConfirm').checked } });
+          if (r.authError) { prClose(); showLogin(r.message); return; }
+          if (r.status !== 'ok') throw new Error(r.message);
+          // 목록 갱신
+          const n = r.item, row = LOOK.rows.find(x => x.sheet === n.sheet && String(x.row) === String(n.row));
+          if (row) Object.assign(row, { site: n.site, category: n.category, expType: n.expType, vendor: n.vendor, item: n.item,
+            amount: n.amount, taxYn: n.taxYn, status: n.status, doneDate: n.doneDate ? n.doneDate.slice(5).replace('-', '/') : '' });
+          renderLookup(LOOK.rows, LOOK.sites);
+          prRender(r);
+          prToast('저장했습니다');
+        } catch (err) { alert('저장 실패: ' + err.message); btn.disabled = false; btn.textContent = '저장'; }
+      };
+    }
+    document.getElementById('prPrint').onclick = () => prPrint(it);
+  }
+
+  async function prFileUrl(it, fid) {
+    if (LOOK.urls[fid]) return LOOK.urls[fid];
+    const d = await api({ action: 'file', sheet: it.sheet, row: it.row, docId: it.docId, fileId: fid });
+    if (d.status !== 'ok') throw new Error(d.message || '파일을 열 수 없습니다');
+    const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return LOOK.urls[fid] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+  }
+
+  // 사진 크게 보기 (PC 좌우 버튼 · 모바일 스와이프)
+  function prLightbox(it, ids, start) {
+    if (!ids.length) return;
+    let i = Math.max(0, start);
+    const box = document.createElement('div'); box.className = 'pr-lb';
+    box.innerHTML = `<button class="lb-x" aria-label="닫기">×</button><button class="lb-n prev" aria-label="이전">‹</button>
+      <div class="lb-s"><img alt=""><span class="lb-l">불러오는 중...</span></div><button class="lb-n next" aria-label="다음">›</button><div class="lb-c"></div>`;
+    document.body.appendChild(box);
+    const img = box.querySelector('img'), l = box.querySelector('.lb-l');
+    const show = async () => {
+      box.querySelector('.lb-c').textContent = `${i + 1} / ${ids.length}`;
+      box.querySelectorAll('.lb-n').forEach(b => b.hidden = ids.length < 2);
+      img.style.visibility = 'hidden'; l.hidden = false;
+      try { img.src = (await prFileUrl(it, ids[i])).url; img.style.visibility = 'visible'; l.hidden = true; } catch (e) { l.textContent = '불러오지 못했습니다'; }
+    };
+    const move = n => { i = (i + n + ids.length) % ids.length; show(); };
+    const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+    const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') move(-1); if (e.key === 'ArrowRight') move(1); };
+    document.addEventListener('keydown', key);
+    box.querySelector('.lb-x').onclick = close;
+    box.querySelector('.prev').onclick = e => { e.stopPropagation(); move(-1); };
+    box.querySelector('.next').onclick = e => { e.stopPropagation(); move(1); };
+    box.onclick = e => { if (e.target === box || e.target.classList.contains('lb-s')) close(); };
+    let x0 = null;
+    box.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    box.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 45) move(dx < 0 ? 1 : -1); x0 = null; }, { passive: true });
+    show();
+  }
+
+  // 입금요청서 인쇄 (앱에서 바로)
+  async function prPrint(it) {
+    const w = window.open('', '_blank');
+    if (!w) { alert('팝업이 차단되었습니다. 팝업을 허용해 주세요.'); return; }
+    const imgs = it.files.filter(f => f.type.startsWith('image/'));
+    let imgHtml = '';
+    for (const f of imgs) { try { const u = await prFileUrl(it, f.id); imgHtml += `<div class="att"><div class="cap">${escapeHtml(f.kind)} · ${escapeHtml(f.name)}</div><img src="${u.url}"></div>`; } catch (e) {} }
+    const tr = (k, v, cls) => `<tr><th>${k}</th><td colspan="3" class="${cls || ''}">${v}</td></tr>`;
+    w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>입금요청서 ${escapeHtml(it.docId)}</title><style>
+      body{font-family:"Malgun Gothic",sans-serif;font-size:14px;color:#1E261B;padding:30px}
+      .head{text-align:center;border-bottom:3px solid #283618;padding-bottom:14px;margin-bottom:20px}
+      .head h1{margin:0;font-size:24px;letter-spacing:6px;color:#283618}.head .co{font-size:13px;color:#697164;margin-top:5px}
+      .info{text-align:right;font-size:12px;color:#888;margin-bottom:14px}
+      table{width:100%;border-collapse:collapse}th{background:#FEFAE0;border:1px solid #ccc;padding:9px 12px;text-align:left;width:130px;color:#283618}
+      td{border:1px solid #ccc;padding:9px 12px}.amt{font-size:19px;font-weight:700;color:#BC6C25}
+      .sign{margin-top:36px;display:flex;justify-content:flex-end;gap:14px}.sign div{border:1px solid #ccc;width:100px;height:90px;text-align:center;font-size:12px;color:#888;padding-top:6px}
+      .att{page-break-before:always;text-align:center}.att img{max-width:100%;max-height:92vh}.cap{font-size:12px;color:#697164;margin-bottom:8px}
+      button{margin-bottom:16px;padding:10px 24px;background:#283618;color:#fff;border:0;border-radius:6px;font-size:14px}
+      @media print{button{display:none}}
+    </style></head><body>
+      <button onclick="window.print()">인쇄</button>
+      <div class="head"><h1>입 금 요 청 서</h1><div class="co">(주)사람사는집종합건설</div></div>
+      <div class="info">문서번호 ${escapeHtml(it.docId || '-')} · 신청일 ${escapeHtml(it.date)} · 요청자 ${escapeHtml(it.requester || '-')}</div>
+      <table>
+        ${tr('현장명', escapeHtml(it.site))}
+        <tr><th>공종</th><td>${escapeHtml(it.category)}</td><th>지출구분</th><td>${escapeHtml(it.expType)}</td></tr>
+        ${tr('거래처명', escapeHtml(it.vendor))}
+        ${tr('품목 및 수량', escapeHtml(it.item))}
+        ${tr('청구 총액', '₩ ' + Number(it.amount || 0).toLocaleString('ko-KR') + ' 원', 'amt')}
+        <tr><th>세금계산서</th><td>${escapeHtml(it.taxYn)}</td><th>은행</th><td>${escapeHtml(it.bank)}</td></tr>
+        ${tr('입금 계좌번호', escapeHtml(it.account))}
+        <tr><th>상태</th><td>${escapeHtml(it.status)}</td><th>처리일</th><td>${escapeHtml(it.doneDate || '')}</td></tr>
+        ${tr('비고', escapeHtml(it.memo))}
+      </table>
+      <div class="sign"><div>담당</div><div>공무</div><div>대표이사</div></div>
+      ${imgHtml}
+    </body></html>`);
+    w.document.close();
+  }
+
+  function prToast(msg) {
+    let t = document.getElementById('prToast');
+    if (!t) { t = document.createElement('div'); t.id = 'prToast'; t.className = 'pr-toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
 </script>
