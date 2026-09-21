@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>(주)사람사는집 | 현장관리시스템</title>
+<title>(주)사람사는집종합건설 | 지출결의시스템</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f2ed;
+    /* 사람사는집 팔레트 — 크림 · 올리브 · 딥그린 · 앰버 */
+    --bg: #FAF7E6;
     --surface: #ffffff;
-    --border: #d4cfc7;
-    --border-strong: #2c2c2c;
-    --accent: #c8521a;
-    --accent-light: #f0e8e0;
-    --text: #1a1a1a;
-    --text-muted: #7a746c;
-    --label: #3d3730;
-    --input-bg: #faf9f7;
-    --success: #2d6a4f;
+    --border: #E3DEC0;
+    --border-strong: #283618;
+    --accent: #BC6C25;
+    --accent-light: #F7EFDF;
+    --text: #283618;
+    --text-muted: #857F66;
+    --label: #283618;
+    --input-bg: #FDFBF2;
+    --success: #606C38;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -60,7 +61,7 @@
 
   /* ── Hero ── */
   .hero {
-    background: var(--accent);
+    background: #606C38;
     padding: 48px 40px 40px;
     position: relative;
     overflow: hidden;
@@ -782,22 +783,22 @@
 
   /* ── 조회탭 ── */
   .lookup-wrap { max-width: 900px; margin: 0 auto; padding: 24px 24px 60px; }
-  .lookup-hero { background: var(--label); padding: 22px 24px; border-radius: 2px; margin-bottom: 24px; }
+  /* 조회 상단 — 베이지(#FEFAE0) 바탕 + 딥그린 글자 */
+  .lookup-hero { background: #FEFAE0; border: 1px solid #E5DFC0; padding: 22px 24px; border-radius: 2px; margin-bottom: 24px; }
   .lookup-hero .who {
     font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-    color: rgba(255,255,255,0.5); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px;
+    color: #8C8F72; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px;
   }
-  .lookup-hero h2 { font-size: 18px; font-weight: 700; color: white; }
+  .lookup-hero h2 { font-size: 18px; font-weight: 700; color: #283618; }
   .lookup-hero .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .lookup-hero .lbadge {
-    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85);
-    font-size: 12px; padding: 4px 10px; border-radius: 2px; cursor: pointer;
-    transition: all 0.15s; border: 1px solid transparent;
+    background: #FFFFFF; color: #4E5A38; border: 1px solid #E0D9B8;
+    font-size: 12px; padding: 4px 10px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
   }
   .lookup-hero .lbadge.active-filter {
-    background: white; color: var(--accent); border-color: white; font-weight: 700;
+    background: #283618; color: #FEFAE0; border-color: #283618; font-weight: 700;
   }
-  .lookup-hero .lbadge:hover { background: rgba(255,255,255,0.25); }
+  .lookup-hero .lbadge:hover:not(.active-filter) { background: #F4EFD4; border-color: #C9C097; }
   .site-block { margin-bottom: 32px; }
   .site-block-title {
     font-size: 14px; font-weight: 700; color: var(--label);
@@ -812,7 +813,19 @@
   .sb-label { font-size: 11px; color: var(--text-muted); }
   .sb-value { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; color: var(--label); }
   .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 2px; }
-  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 580px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; table-layout: fixed; }
+  /* 좁아서 두 줄로 접히던 열 넓히기 */
+  .data-table col.c-date { width: 104px; }
+  .data-table col.c-req { width: 76px; }
+  .data-table col.c-cat { width: 104px; }
+  .data-table col.c-exp { width: 84px; }
+  .data-table col.c-vendor { width: 170px; }
+  .data-table col.c-item { width: auto; }
+  .data-table col.c-amt { width: 120px; }
+  .data-table col.c-tax { width: 76px; }
+  .data-table col.c-st { width: 72px; }
+  .data-table td.nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .data-table td.wrapcell { word-break: keep-all; overflow-wrap: anywhere; }
   .data-table thead th {
     background: var(--label); color: white; padding: 9px 12px;
     text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap;
@@ -853,8 +866,8 @@
   <div class="login-card">
     <div class="login-card-top">
       <div class="lc-label">SITE MANAGEMENT</div>
-      <h1>현장관리시스템</h1>
-      <p>(주)사람사는집 · Build for People</p>
+      <h1>지출결의시스템</h1>
+      <p>(주)사람사는집종합건설 · Build for People</p>
     </div>
     <div class="login-card-body">
       <p class="desc">구글 계정으로 로그인하세요.<br>등록된 계정만 접근 가능합니다.</p>
@@ -876,7 +889,7 @@
 
 <!-- Header -->
 <header class="site-header">
-  <div class="brand"><strong>(주)사람사는집</strong> · 현장관리시스템</div>
+  <div class="brand"><strong>(주)사람사는집종합건설</strong> · 지출결의시스템</div>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="userNameBadge" style="font-size:12px;color:#aaa;font-family:'IBM Plex Mono',monospace;display:none"></span>
     <button id="logoutBtn" onclick="logout()" style="display:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;padding:5px 12px;border-radius:2px;font-family:'Noto Sans KR',sans-serif;font-size:12px;cursor:pointer">로그아웃</button>
@@ -1837,6 +1850,8 @@
         html += '<div class="lookup-empty" style="padding:20px">내역 없음</div>';
       } else {
         html += `<div class="table-wrap"><table class="data-table">
+          <colgroup><col class="c-date"><col class="c-req"><col class="c-cat"><col class="c-exp"><col class="c-vendor">
+            <col class="c-item"><col class="c-amt"><col class="c-tax"><col class="c-st"></colgroup>
           <thead><tr>
             <th>신청일</th><th>요청자</th><th>공종</th><th>지출구분</th><th>거래처명</th>
             <th>품목 및 수량</th><th style="text-align:right">청구 총액</th><th>세금계산서</th><th>상태</th>
@@ -1850,14 +1865,14 @@
               );
               return `<tr class="${isDup ? 'dup-warning' : ''}">
                 <td class="td-mono">${r.date||''}${isDup ? '<span class="dup-badge">⚠️ 중복의심</span>' : ''}</td>
-                <td>${escapeHtml(r.requester||'')}</td>
-                <td>${escapeHtml(r.category||'')}</td>
-                <td>${escapeHtml(r.expType||'')}</td>
-                <td><strong>${escapeHtml(r.vendor||'')}</strong></td>
-                <td>${escapeHtml(r.item||'')}</td>
+                <td class="nowrap">${escapeHtml(r.requester||'')}</td>
+                <td class="nowrap">${escapeHtml(r.category||'')}</td>
+                <td class="nowrap">${escapeHtml(r.expType||'')}</td>
+                <td class="wrapcell"><strong>${escapeHtml(r.vendor||'')}</strong></td>
+                <td class="wrapcell">${escapeHtml(r.item||'')}</td>
                 <td class="td-amount">${Number(r.amount||0).toLocaleString('ko-KR')}원</td>
-                <td>${escapeHtml(r.taxYn||'')}</td>
-                <td><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
+                <td class="nowrap">${escapeHtml(r.taxYn||'')}</td>
+                <td class="nowrap"><span class="pill ${r.status==='완료'?'pill-done':'pill-req'}">${r.status||'요청'}</span></td>
               </tr>`;
             }).join('');
           })()}
