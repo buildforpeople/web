@@ -1946,10 +1946,21 @@
   }
 
   // ── 상세 창
+  const PR_CACHE = {};
   async function prOpen(sheet, row, docId) {
     if (!sheet || !row) return;
-    prSheet('<div class="lookup-loading"><div class="lookup-spinner"></div>불러오는 중...</div>', '입금요청 상세', '');
+    const key = sheet + ':' + row;
+    const r0 = LOOK.rows.find(x => x.sheet === sheet && String(x.row) === String(row));
+    if (PR_CACHE[key]) { prRender(PR_CACHE[key]); return; }
+    prSheet(r0 ? `<div class="pr-top"><span class="pill ${prPill(r0.status)}">${escapeHtml(r0.status || '요청')}</span>
+        <b class="pr-amt">${Number(r0.amount || 0).toLocaleString('ko-KR')}원</b><span class="pr-sub">${escapeHtml(r0.site)} · ${escapeHtml(r0.date)}</span></div>
+        <div class="pr-card"><div class="pr-grid"><label>거래처명</label><div class="pr-val">${escapeHtml(r0.vendor)}</div>
+        <label>품목</label><div class="pr-val">${escapeHtml(r0.item)}</div><label>공종</label><div class="pr-val">${escapeHtml(r0.category)}</div></div></div>
+        <div class="lookup-loading" style="padding:20px"><div class="lookup-spinner"></div>첨부와 상세 정보를 불러오는 중...</div>`
+      : '<div class="lookup-loading"><div class="lookup-spinner"></div>불러오는 중...</div>',
+      r0 ? (r0.vendor || '입금요청 상세') : '입금요청 상세', r0 ? `${r0.site} · ${r0.date}` : '');
     const d = await api({ action: 'detail', sheet, row, docId });
+    if (d.status === 'ok') PR_CACHE[key] = d;
     if (d.authError) { prClose(); showLogin(d.message); return; }
     if (d.status !== 'ok') { prBody().innerHTML = `<div class="no-access"><strong>오류</strong>${escapeHtml(d.message)}</div>`; return; }
     prRender(d);
@@ -1993,8 +2004,7 @@
       <div class="pr-card">
         <h4>첨부 (견적서·명세서)</h4>
         ${it.files.length ? `<div class="pr-thumbs">${it.files.map(f => `
-          <button type="button" class="pr-thumb ${f.type.startsWith('image/') ? '' : 'doc'}" data-fid="${escapeHtml(f.id)}" title="${escapeHtml(f.name)}">
-            ${f.type.startsWith('image/') ? '' : `<b>${escapeHtml((f.name.split('.').pop() || 'FILE').toUpperCase())}</b>`}
+          <button type="button" class="pr-thumb" data-fid="${escapeHtml(f.id)}" title="${escapeHtml(f.kind)}">
             <span>${escapeHtml(f.kind)}</span></button>`).join('')}</div>` : '<div class="pr-hint">첨부된 파일이 없습니다.</div>'}
       </div>
 
@@ -2034,9 +2044,16 @@
     const all = it.files;
     prBody().querySelectorAll('[data-fid]').forEach(b => {
       const f = all.find(x => x.id === b.dataset.fid);
-      if (f.type.startsWith('image/')) prFileUrl(it, f.id).then(u => b.style.backgroundImage = `url("${u.url}")`).catch(() => {});
+      prThumbUrl(it, f.id).then(t => {
+        f.type = t.type; f.name = t.name;
+        if (t.url) b.style.backgroundImage = `url("${t.url}")`;
+        if (!t.type.startsWith('image/')) { b.classList.add('doc'); b.insertAdjacentHTML('afterbegin', t.url ? '' : `<b>${escapeHtml((t.name.split('.').pop() || 'FILE').toUpperCase())}</b>`); }
+      }).catch(() => {});
       b.onclick = async () => {
-        if (f.type.startsWith('image/')) return prLightbox(it, imgs.map(x => x.id), imgs.findIndex(x => x.id === f.id));
+        if (f.type.startsWith('image/')) {
+          const ids = all.filter(x => x.type.startsWith('image/')).map(x => x.id);
+          return prLightbox(it, ids, ids.indexOf(f.id));
+        }
         try { const u = await prFileUrl(it, f.id); const a = document.createElement('a'); a.href = u.url; a.target = '_blank'; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
         catch (e) { alert(e.message); }
       };
@@ -2064,6 +2081,7 @@
           const n = r.item, row = LOOK.rows.find(x => x.sheet === n.sheet && String(x.row) === String(n.row));
           if (row) Object.assign(row, { site: n.site, category: n.category, expType: n.expType, vendor: n.vendor, item: n.item,
             amount: n.amount, taxYn: n.taxYn, status: n.status, doneDate: n.doneDate ? n.doneDate.slice(5).replace('-', '/') : '' });
+          PR_CACHE[n.sheet + ':' + n.row] = r;
           renderLookup(LOOK.rows, LOOK.sites);
           prRender(r);
           prToast('저장했습니다');
@@ -2071,6 +2089,20 @@
       };
     }
     document.getElementById('prPrint').onclick = () => prPrint(it);
+  }
+
+  async function prThumbUrl(it, fid) {
+    const k = 't_' + fid;
+    if (LOOK.urls[k]) return LOOK.urls[k];
+    const d = await api({ action: 'thumb', sheet: it.sheet, row: it.row, docId: it.docId, fileId: fid });
+    if (d.status !== 'ok') throw new Error(d.message);
+    let url = '';
+    if (d.thumb) {
+      const bin = atob(d.thumb); const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      url = URL.createObjectURL(new Blob([arr], { type: d.thumbType || 'image/png' }));
+    }
+    return LOOK.urls[k] = { url, type: d.type || '', name: d.name || '' };
   }
 
   async function prFileUrl(it, fid) {
@@ -2115,6 +2147,7 @@
   async function prPrint(it) {
     const w = window.open('', '_blank');
     if (!w) { alert('팝업이 차단되었습니다. 팝업을 허용해 주세요.'); return; }
+    for (const f of it.files) { if (!f.type) { try { const t = await prThumbUrl(it, f.id); f.type = t.type; f.name = t.name; } catch (e) {} } }
     const imgs = it.files.filter(f => f.type.startsWith('image/'));
     let imgHtml = '';
     for (const f of imgs) { try { const u = await prFileUrl(it, f.id); imgHtml += `<div class="att"><div class="cap">${escapeHtml(f.kind)} · ${escapeHtml(f.name)}</div><img src="${u.url}"></div>`; } catch (e) {} }
