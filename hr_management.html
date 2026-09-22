@@ -194,6 +194,8 @@
   .badge-rejected { background: #fee2e2; color: #991b1b; }
 
   /* MODAL */
+  .btn-link-count { background: none; border: 0; padding: 2px 6px; margin: -2px -6px; border-radius: 6px; font: inherit; color: var(--primary); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .btn-link-count:hover { background: #eff6ff; }
   .btn-link-emp { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
   .btn-link-emp:hover { color: var(--primary); }
   .btn-link-emp .emp-more { font-size: 11px; color: var(--primary); font-weight: 600; margin-left: 4px; }
@@ -495,7 +497,6 @@ function defaultData() {
     { id: 'ko',      pw: '0317', name: '고성윤',  role: 'employee',  position: '현장관리',   joinDate: '2025-03-17', dept: '시공',   birthday: null, leaveRatio: 1 },
     { id: 'jeon',    pw: '0126', name: '전종건',  role: 'employee',  position: '현장관리',   joinDate: '2026-01-26', dept: '시공',   birthday: null, leaveRatio: 1 },
     { id: 'cheon',   pw: '1103', name: '천민기',  role: 'employee',  position: '건축설계',   joinDate: '2025-11-03', dept: '설계',   birthday: null, leaveRatio: 1 },
-    { id: 'lim',     pw: '1013', name: '임혜령',  role: 'employee',  position: '브랜딩마케팅', joinDate: '2025-10-13', dept: 'CX',    birthday: null, leaveRatio: 1 },
     { id: 'choi',    pw: '0410', name: '최선아',  role: 'employee',  position: '건축설계',   joinDate: '2026-04-10', dept: '설계',   birthday: null, leaveRatio: 1 },
     { id: 'son',     pw: '0504', name: '손동욱',  role: 'employee',  position: '공무',       joinDate: '2026-05-04', dept: '행정',   birthday: null, leaveRatio: 1 },
     { id: 'jang',    pw: '1103', name: '장숭월',  role: 'admin',     position: '재무회계',   joinDate: '2025-11-03', dept: '행정',   birthday: null, leaveRatio: 1 },
@@ -544,6 +545,7 @@ function load() {
     jang.dept = '행정';
   }
   d.employees = d.employees.filter(e => e.id !== 'finance');
+  d.employees = d.employees.filter(e => e.id !== 'lim'); // 임혜령 — 휴직 후 퇴사 예정으로 목록에서 제외
   // 정확한 입사일 동기화 (1회만 적용)
   if (!d.migrated_joindates_v1) {
     const joinDates = {
@@ -1144,11 +1146,6 @@ function employeeDashboardHTML(emp) {
         <button class="action-btn" onclick="openRequestModal('특별휴가')">
           <span class="ico">📋</span>특별휴가
         </button>
-        ${emp.position.includes('현장관리') ? '' : `
-        <button class="action-btn" onclick="openRequestModal('재택근무')">
-          <span class="ico">🏠</span>재택근무 신청
-        </button>
-        `}
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#eff6ff; border-radius:6px; font-size:12px; color:#1e40af; line-height:1.6;">
         ℹ️ 연차·반차를 입력하면 사내 Google 캘린더에 자동 등록되어 팀원들도 확인할 수 있습니다.
@@ -2725,11 +2722,10 @@ function renderSeveranceContent() {
 let adminTab = 'mine';
 function renderAdmin(emp) {
   const content = document.getElementById('appContent');
-  const pendingCount = DB.requests.filter(r => r.status === 'pending').length;
+  if (adminTab === 'pending') adminTab = 'mine';
   content.innerHTML = `
     <div class="tabs">
       <button class="tab ${adminTab==='mine'?'active':''}" onclick="setAdminTab('mine')">내 근태</button>
-      <button class="tab ${adminTab==='pending'?'active':''}" onclick="setAdminTab('pending')">재택근무 승인${pendingCount>0?` <span style="background:var(--danger); color:white; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:4px;">${pendingCount}</span>`:''}</button>
       <button class="tab ${adminTab==='employees'?'active':''}" onclick="setAdminTab('employees')">직원 현황</button>
       <button class="tab ${adminTab==='overtime'?'active':''}" onclick="setAdminTab('overtime')">추가근무 현황</button>
       <button class="tab ${adminTab==='fuel'?'active':''}" onclick="setAdminTab('fuel')">유류비 현황</button>
@@ -2767,7 +2763,7 @@ function renderBackupRestore() {
           <div class="stat-value">${empCount}<span style="font-size:14px; color:var(--muted);">명</span></div>
         </div>
         <div class="stat success">
-          <div class="stat-label">연차·반차·재택근무</div>
+          <div class="stat-label">연차·반차·휴가</div>
           <div class="stat-value">${reqCount}<span style="font-size:14px; color:var(--muted);">건</span></div>
         </div>
         <div class="stat warning">
@@ -2897,7 +2893,6 @@ function importData() {
 function renderAdminBody() {
   const body = document.getElementById('adminBody');
   if (adminTab === 'mine') body.innerHTML = employeeDashboardHTML(getEmployee(DB.session.empId));
-  else if (adminTab === 'pending') body.innerHTML = renderPendingRequests();
   else if (adminTab === 'employees') body.innerHTML = renderEmployeeStatus();
   else if (adminTab === 'overtime') body.innerHTML = renderOvertimeStatus();
   else if (adminTab === 'fuel') body.innerHTML = renderFuelStatus();
@@ -3007,9 +3002,9 @@ function renderOvertimeStatus() {
                 <tr>
                   ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><b>${m}</b>${m === mileageMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}</td>` : ''}
                   <td><button class="btn-link-emp" onclick="showOvertimeDetail('${eid}','${m}')">${e?.name || '-'} <span class="emp-more">세부내역 ›</span></button></td>
-                  <td>${h.count}건</td>
+                  <td><button class="btn-link-count" onclick="showOvertimeDetail('${eid}','${m}')">${h.count}건</button></td>
                   <td style="color:var(--primary); font-weight:600;">${h.hours}시간</td>
-                  ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><button class="btn-sm btn-secondary" onclick="setMileageMonth('${m}')">상세 보기</button></td>` : ''}
+                  ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><button class="btn-sm btn-secondary" onclick="setMileageMonth('${m}')">이 달로 조회</button></td>` : ''}
                 </tr>
               `;
             });
@@ -3058,7 +3053,7 @@ function renderFuelStatus() {
               <td>${r.emp.dept} · ${r.emp.position}</td>
               <td>${r.vehicle.fuelType}</td>
               <td>${r.vehicle.efficiency} km/L</td>
-              <td>${r.count}건</td>
+              <td>${r.count ? `<button class="btn-link-count" onclick="showMileageDetail('${r.emp.id}','${mileageMonth}')">${r.count}건</button>` : '0건'}</td>
               <td>${r.totalDist.toLocaleString()} km</td>
               <td>${r.fuelAmount.toLocaleString()}원</td>
               <td style="color:var(--muted);">+${r.surcharge.toLocaleString()}원</td>
@@ -3184,11 +3179,11 @@ function renderFuelHistoryAll() {
                   <td rowspan="${rows.length}" style="vertical-align:top;">
                     <b>${mt.month}</b>
                     ${mt.month === mileageMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}
-                    <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setMileageMonth('${mt.month}')">상세 보기</button>
+                    <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setMileageMonth('${mt.month}')">이 달로 조회</button>
                   </td>
                 ` : ''}
                 <td><button class="btn-link-emp" onclick="showMileageDetail('${r.eid}','${mt.month}')">${r.emp?.name || '-'} <span style="color:var(--muted); font-size:11px;">(${r.vehicle.fuelType} ${r.vehicle.efficiency}km/L)</span> <span class="emp-more">세부내역 ›</span></button></td>
-                <td>${r.count}건</td>
+                <td><button class="btn-link-count" onclick="showMileageDetail('${r.eid}','${mt.month}')">${r.count}건</button></td>
                 <td>${r.dist.toLocaleString()} km</td>
                 <td>${r.fuelTotal.toLocaleString()}원</td>
                 <td style="color:var(--primary); font-weight:600;">${r.finalAmt.toLocaleString()}원</td>
@@ -3199,37 +3194,6 @@ function renderFuelHistoryAll() {
                 <td style="color:var(--primary);">${mt.total.toLocaleString()}원</td>
               </tr>
             `);
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-function renderPendingRequests() {
-  const pending = DB.requests.filter(r => r.status === 'pending').sort((a,b) => a.createdAt - b.createdAt);
-  if (pending.length === 0) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">대기중인 재택근무 신청이 없습니다. ✅</p></div>`;
-  return `
-    <div class="card">
-      <div class="card-title">재택근무 승인 대기 (${pending.length}건)</div>
-      <table>
-        <thead><tr><th>신청자</th><th>기간</th><th>일수</th><th>사유</th><th>신청일</th><th>조치</th></tr></thead>
-        <tbody>
-          ${pending.map(r => {
-            const e = getEmployee(r.empId);
-            return `
-              <tr>
-                <td><b>${e?.name||'-'}</b><br><span style="color:var(--muted); font-size:11px;">${e?.position||''}</span></td>
-                <td>${r.startDate}${r.endDate !== r.startDate ? ' ~ ' + r.endDate : ''}</td>
-                <td>${r.days}일</td>
-                <td style="max-width:220px;">${escapeHtml(r.reason||'-')}</td>
-                <td style="color:var(--muted); font-size:12px;">${new Date(r.createdAt).toLocaleDateString('ko-KR')}</td>
-                <td>
-                  <button class="btn-sm btn-success" onclick="decideRequest('${r.id}','approved')">승인</button>
-                  <button class="btn-sm btn-danger" onclick="decideRequest('${r.id}','rejected')">반려</button>
-                </td>
-              </tr>
-            `;
           }).join('')}
         </tbody>
       </table>
@@ -4032,7 +3996,7 @@ async function submitRequest(type) {
     id: 'r' + Date.now(),
     empId: DB.session.empId,
     type, startDate: start, endDate: end, days, reason,
-    status: type === '재택근무' ? 'pending' : 'approved',
+    status: 'approved',
     halfType: isHalf ? halfType : null,
     specialType,
     eventId: null,
@@ -4056,7 +4020,7 @@ async function submitRequest(type) {
     return;
   }
 
-  // 연차·반차·생일연차·특별휴가는 캘린더 동기화 (재택근무는 승인 후)
+  // 연차·반차·생일연차·특별휴가는 캘린더 동기화
   if (type === '연차' || type === '반차' || type === '생일연차' || type === '특별휴가') {
     syncToCalendar(request);
   }
@@ -4505,7 +4469,7 @@ function showToast(msg, type) {
 // Sheets DB에서 모든 테이블을 가져와서 DB 객체에 주입
 async function syncFromDB() {
   const tables = await dbLoadAll();
-  DB.requests = tables.requests || [];
+  DB.requests = (tables.requests || []).filter(r => r.type !== '재택근무'); // 재택근무 제도 폐지 — 과거 기록은 시트에만 보관
   DB.overtime = tables.overtime || [];
   DB.mileage = tables.mileage || [];
   DB.tollgate = tables.tollgate || [];
