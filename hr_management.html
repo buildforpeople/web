@@ -194,11 +194,6 @@
   .badge-rejected { background: #fee2e2; color: #991b1b; }
 
   /* MODAL */
-  .btn-link-count { background: none; border: 0; padding: 2px 6px; margin: -2px -6px; border-radius: 6px; font: inherit; color: var(--primary); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-  .btn-link-count:hover { background: #eff6ff; }
-  .btn-link-emp { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
-  .btn-link-emp:hover { color: var(--primary); }
-  .btn-link-emp .emp-more { font-size: 11px; color: var(--primary); font-weight: 600; margin-left: 4px; }
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -450,10 +445,9 @@ async function dbCall(action, payload) {
     const res = await fetch(HARDCODED_DB_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(Object.assign({ action, idToken: getIdToken() }, payload || {}))
+      body: JSON.stringify(Object.assign({ action }, payload || {}))
     });
     const data = await res.json();
-    if (data.authError) { forceRelogin(data.error); throw new Error(data.error); }
     if (!data.success) throw new Error(data.error || 'DB 호출 실패');
     return data;
   } catch (err) {
@@ -497,6 +491,7 @@ function defaultData() {
     { id: 'ko',      pw: '0317', name: '고성윤',  role: 'employee',  position: '현장관리',   joinDate: '2025-03-17', dept: '시공',   birthday: null, leaveRatio: 1 },
     { id: 'jeon',    pw: '0126', name: '전종건',  role: 'employee',  position: '현장관리',   joinDate: '2026-01-26', dept: '시공',   birthday: null, leaveRatio: 1 },
     { id: 'cheon',   pw: '1103', name: '천민기',  role: 'employee',  position: '건축설계',   joinDate: '2025-11-03', dept: '설계',   birthday: null, leaveRatio: 1 },
+    { id: 'lim',     pw: '1013', name: '임혜령',  role: 'employee',  position: '브랜딩마케팅', joinDate: '2025-10-13', dept: 'CX',    birthday: null, leaveRatio: 1 },
     { id: 'choi',    pw: '0410', name: '최선아',  role: 'employee',  position: '건축설계',   joinDate: '2026-04-10', dept: '설계',   birthday: null, leaveRatio: 1 },
     { id: 'son',     pw: '0504', name: '손동욱',  role: 'employee',  position: '공무',       joinDate: '2026-05-04', dept: '행정',   birthday: null, leaveRatio: 1 },
     { id: 'jang',    pw: '1103', name: '장숭월',  role: 'admin',     position: '재무회계',   joinDate: '2025-11-03', dept: '행정',   birthday: null, leaveRatio: 1 },
@@ -545,7 +540,6 @@ function load() {
     jang.dept = '행정';
   }
   d.employees = d.employees.filter(e => e.id !== 'finance');
-  d.employees = d.employees.filter(e => e.id !== 'lim'); // 임혜령 — 휴직 후 퇴사 예정으로 목록에서 제외
   // 정확한 입사일 동기화 (1회만 적용)
   if (!d.migrated_joindates_v1) {
     const joinDates = {
@@ -594,13 +588,65 @@ function load() {
     });
     d.migrated_birthday_ratio_v1 = true;
   }
+  // 계약서·기존 기록으로 확인된 생일 1회 입력 (빈 값인 경우만)
+  // 추가 생일 정보 1회 반영 (장숭월 음력, 최선아·손동욱 양력)
+  if (!d.migrated_known_birthdays_v2) {
+    const extraBirthdays = {
+      jang: { birthday: '1977-03-12', birthdayLunar: true,  birthdayLunarLeap: false },
+      choi: { birthday: '1998-10-17', birthdayLunar: false, birthdayLunarLeap: false },
+      son:  { birthday: '1985-01-05', birthdayLunar: false, birthdayLunarLeap: false }
+    };
+    d.employees.forEach(e => {
+      if (!e.birthday && extraBirthdays[e.id]) {
+        Object.assign(e, extraBirthdays[e.id]);
+      }
+    });
+    d.migrated_known_birthdays_v2 = true;
+  }
+  // 전종건 생일 추가 (1회)
+  if (!d.migrated_known_birthdays_v3) {
+    const jeon = d.employees.find(e => e.id === 'jeon');
+    if (jeon && !jeon.birthday) {
+      jeon.birthday = '1996-09-24';
+      jeon.birthdayLunar = false;
+      jeon.birthdayLunarLeap = false;
+    }
+    d.migrated_known_birthdays_v3 = true;
+  }
   // 장숭월 연차 비례 해제 (전원 동일 법정 기준으로 통일)
   if (!d.migrated_jang_full_leave_v1) {
     const jang = d.employees.find(e => e.id === 'jang');
     if (jang) jang.leaveRatio = 1;
     d.migrated_jang_full_leave_v1 = true;
   }
-  // 생일 정보는 보안상 코드에서 제거하고 식구 DB 시트(birthdays)에서 불러옵니다.
+  // 고성윤 음력 전환, 손동욱 양력 1984-12-24 정정 (1회)
+  if (!d.migrated_known_birthdays_v4) {
+    const ko = d.employees.find(e => e.id === 'ko');
+    if (ko) {
+      ko.birthdayLunar = true;
+      ko.birthdayLunarLeap = false;
+    }
+    const son = d.employees.find(e => e.id === 'son');
+    if (son) {
+      son.birthday = '1984-12-24';
+      son.birthdayLunar = false;
+      son.birthdayLunarLeap = false;
+    }
+    d.migrated_known_birthdays_v4 = true;
+  }
+    if (!d.migrated_known_birthdays_v1) {
+    const knownBirthdays = {
+      admin: '1985-12-28', // 임상혁
+      hong:  '1990-04-05', // 홍경표
+      ko:    '1981-04-07', // 고성윤
+      cheon: '1991-11-28', // 천민기
+      lim:   '1991-11-19'  // 임혜령
+    };
+    d.employees.forEach(e => {
+      if (!e.birthday && knownBirthdays[e.id]) e.birthday = knownBirthdays[e.id];
+    });
+    d.migrated_known_birthdays_v1 = true;
+  }
   return d;
 }
 function save(data) {
@@ -873,7 +919,6 @@ function handleGoogleSignIn(response) {
     }
     const emp = DB.employees.find(e => e.id === empId);
     if (!emp) { showLoginError('직원 정보가 없습니다.'); return; }
-    sessionStorage.setItem('sikgu_id_token', response.credential); // 서버 검증용 로그인 토큰
     DB.session = { empId, email, name: payload.name || emp.name, picture: payload.picture || null, loginTime: Date.now() };
     save(DB);
     renderApp();
@@ -881,23 +926,6 @@ function handleGoogleSignIn(response) {
     console.error('handleGoogleSignIn error:', err);
     showLoginError('로그인 처리 중 오류: ' + err.message);
   }
-}
-
-// 계약 조회 서버에 보낼 구글 로그인 토큰 (약 1시간 유효, 브라우저 닫으면 삭제)
-function getIdToken() {
-  return sessionStorage.getItem('sikgu_id_token') || '';
-}
-
-// 토큰이 없거나 만료되면 로그인 화면으로 보내고 안내
-let _reloginShown = false;
-function forceRelogin(msg) {
-  if (_reloginShown) return;
-  _reloginShown = true;
-  hideLoader();
-  closeModal();
-  logout();
-  showLoginError(msg || '보안을 위해 다시 로그인해 주세요.');
-  setTimeout(() => { _reloginShown = false; }, 1500);
 }
 
 function showLoginError(msg) {
@@ -973,7 +1001,6 @@ ${years}년 도래일: ${anniversaryISO}
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               action: 'send_card_statement', // 메일 발송 액션 재사용
-              idToken: getIdToken(),
               to: 'my.new.homeplace@gmail.com',
               subject,
               body,
@@ -1005,7 +1032,6 @@ let _dbLoadedThisSession = false;
 
 async function renderApp() {
   if (!DB.session) { return; }
-  if (!getIdToken()) { forceRelogin('보안을 위해 다시 로그인해 주세요.'); return; }
   const emp = getEmployee(DB.session.empId);
   if (!emp) { logout(); return; }
   document.getElementById('loginView').classList.add('hidden');
@@ -1146,6 +1172,11 @@ function employeeDashboardHTML(emp) {
         <button class="action-btn" onclick="openRequestModal('특별휴가')">
           <span class="ico">📋</span>특별휴가
         </button>
+        ${emp.position.includes('현장관리') ? '' : `
+        <button class="action-btn" onclick="openRequestModal('재택근무')">
+          <span class="ico">🏠</span>재택근무 신청
+        </button>
+        `}
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#eff6ff; border-radius:6px; font-size:12px; color:#1e40af; line-height:1.6;">
         ℹ️ 연차·반차를 입력하면 사내 Google 캘린더에 자동 등록되어 팀원들도 확인할 수 있습니다.
@@ -1964,7 +1995,6 @@ ${lines.join('\n')}
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'send_card_statement',
-        idToken: getIdToken(),
         to: 'buildforpeople.sw@gmail.com',
         subject,
         body: bodyText,
@@ -2034,7 +2064,7 @@ async function loadMyContract(empId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_contract', idToken: getIdToken() })
+      body: JSON.stringify({ action: 'get_contract', empId })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2306,7 +2336,7 @@ async function loadAllContracts() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_all_contracts', idToken: getIdToken() })
+      body: JSON.stringify({ action: 'get_all_contracts' })
     });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2503,7 +2533,7 @@ async function loadSeveranceData() {
       const res = await fetch(HARDCODED_CONTRACT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'get_all_contracts', idToken: getIdToken() })
+        body: JSON.stringify({ action: 'get_all_contracts' })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2722,13 +2752,15 @@ function renderSeveranceContent() {
 let adminTab = 'mine';
 function renderAdmin(emp) {
   const content = document.getElementById('appContent');
-  if (adminTab === 'pending') adminTab = 'mine';
+  const pendingCount = DB.requests.filter(r => r.status === 'pending').length;
   content.innerHTML = `
     <div class="tabs">
       <button class="tab ${adminTab==='mine'?'active':''}" onclick="setAdminTab('mine')">내 근태</button>
+      <button class="tab ${adminTab==='pending'?'active':''}" onclick="setAdminTab('pending')">재택근무 승인${pendingCount>0?` <span style="background:var(--danger); color:white; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:4px;">${pendingCount}</span>`:''}</button>
       <button class="tab ${adminTab==='employees'?'active':''}" onclick="setAdminTab('employees')">직원 현황</button>
       <button class="tab ${adminTab==='overtime'?'active':''}" onclick="setAdminTab('overtime')">추가근무 현황</button>
       <button class="tab ${adminTab==='fuel'?'active':''}" onclick="setAdminTab('fuel')">유류비 현황</button>
+      <button class="tab ${adminTab==='cardAdmin'?'active':''}" onclick="setAdminTab('cardAdmin')">💳 개인카드</button>
       <button class="tab ${adminTab==='welfare'?'active':''}" onclick="setAdminTab('welfare')">복지 지원 ${DB.welfare.filter(w => w.status === 'pending').length > 0 ? `<span class="badge badge-pending" style="margin-left:4px;">${DB.welfare.filter(w => w.status === 'pending').length}</span>` : ''}</button>
       <button class="tab ${adminTab==='all'?'active':''}" onclick="setAdminTab('all')">전체 사용 이력</button>
       <button class="tab ${adminTab==='contracts'?'active':''}" onclick="setAdminTab('contracts')">📋 계약 현황</button>
@@ -2763,7 +2795,7 @@ function renderBackupRestore() {
           <div class="stat-value">${empCount}<span style="font-size:14px; color:var(--muted);">명</span></div>
         </div>
         <div class="stat success">
-          <div class="stat-label">연차·반차·휴가</div>
+          <div class="stat-label">연차·반차·재택근무</div>
           <div class="stat-value">${reqCount}<span style="font-size:14px; color:var(--muted);">건</span></div>
         </div>
         <div class="stat warning">
@@ -2893,51 +2925,17 @@ function importData() {
 function renderAdminBody() {
   const body = document.getElementById('adminBody');
   if (adminTab === 'mine') body.innerHTML = employeeDashboardHTML(getEmployee(DB.session.empId));
+  else if (adminTab === 'pending') body.innerHTML = renderPendingRequests();
   else if (adminTab === 'employees') body.innerHTML = renderEmployeeStatus();
   else if (adminTab === 'overtime') body.innerHTML = renderOvertimeStatus();
   else if (adminTab === 'fuel') body.innerHTML = renderFuelStatus();
+  else if (adminTab === 'cardAdmin') body.innerHTML = renderCardUsageAdmin();
   else if (adminTab === 'welfare') body.innerHTML = renderWelfareAdmin();
   else if (adminTab === 'all') body.innerHTML = renderAllRequests();
   else if (adminTab === 'manage') body.innerHTML = renderEmployeeManage();
   else if (adminTab === 'contracts') body.innerHTML = renderContractsAdmin();
   else if (adminTab === 'severance') body.innerHTML = renderSeveranceAdmin();
   else if (adminTab === 'backup') body.innerHTML = renderBackupRestore();
-}
-
-// 관리자용: 직원 한 명의 월 추가근무 세부내역 (표)
-function showOvertimeDetail(empId, month) {
-  const emp = getEmployee(empId) || { name: '-' };
-  const DOW = ['일','월','화','수','목','금','토'];
-  const list = DB.overtime.filter(o => o.empId === empId && o.date.slice(0,7) === month)
-    .sort((a,b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
-  let cum = 0;
-  const total = list.reduce((s, x) => s + Number(x.hours), 0);
-  const weekend = list.filter(x => [0,6].includes(new Date(x.date + 'T00:00:00').getDay())).reduce((s, x) => s + Number(x.hours), 0);
-  showModal(`
-    <h3>${escapeHtml(emp.name)} · ${month} 추가근무 세부내역</h3>
-    <p style="font-size:12px; color:var(--muted); margin:4px 0 14px;">${emp.dept || ''}${emp.position ? ' · ' + emp.position : ''}</p>
-    ${list.length ? `
-      <div style="overflow-x:auto;"><table>
-        <thead><tr><th>날짜</th><th>요일</th><th style="text-align:right;">시간</th><th>내용</th><th style="text-align:right;">누계</th></tr></thead>
-        <tbody>${list.map(x => {
-          cum += Number(x.hours);
-          const d = new Date(x.date + 'T00:00:00').getDay();
-          return `<tr>
-            <td>${x.date}</td>
-            <td style="${d === 0 ? 'color:var(--danger);' : d === 6 ? 'color:var(--primary);' : ''}">${DOW[d]}</td>
-            <td style="text-align:right; font-weight:600;">${x.hours}시간</td>
-            <td>${escapeHtml(x.description || '-')}</td>
-            <td style="text-align:right; color:var(--muted);">${cum}시간</td></tr>`;
-        }).join('')}</tbody>
-      </table></div>` : '<p style="color:var(--muted); text-align:center; padding:14px 0;">추가근무 내역이 없습니다.</p>'}
-    <div style="margin-top:14px; padding:14px 16px; background:#f1f5f9; border-radius:8px;">
-      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>건수</span><span>${list.length}건</span></div>
-      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>주말 근무</span><span>${weekend}시간</span></div>
-      <div style="display:flex; justify-content:space-between; padding:10px 0 4px; border-top:1px solid #cbd5e1; margin-top:6px; font-size:15px; font-weight:700; color:var(--primary);"><span>총 추가근무</span><span>${total}시간</span></div>
-    </div>
-    <div class="modal-actions" style="margin-top:16px;"><button class="btn-primary" onclick="closeModal()">닫기</button></div>
-  `);
-  const m = document.querySelector('#modalRoot .modal'); if (m) m.style.maxWidth = '720px';
 }
 
 function renderOvertimeStatus() {
@@ -2975,7 +2973,9 @@ function renderOvertimeStatus() {
               <td>${r.emp.dept} · ${r.emp.position}</td>
               <td>${r.count}건</td>
               <td style="color:var(--primary); font-weight:600;">${r.totalHours}시간</td>
-              <td>${r.count ? `<button class="btn-sm btn-secondary" onclick="showOvertimeDetail('${r.emp.id}','${mileageMonth}')">세부내역 보기</button>` : '<span style="color:var(--muted);">-</span>'}</td>
+              <td style="max-width:300px; font-size:12px; color:var(--muted);">
+                ${r.entries.map(x => `${x.date.slice(5)} ${x.hours}h${x.description?' ('+escapeHtml(x.description)+')':''}`).join(', ') || '-'}
+              </td>
             </tr>
           `).join('')}
           <tr style="background:#f9fafb; font-weight:700;">
@@ -3001,10 +3001,10 @@ function renderOvertimeStatus() {
               return `
                 <tr>
                   ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><b>${m}</b>${m === mileageMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}</td>` : ''}
-                  <td><button class="btn-link-emp" onclick="showOvertimeDetail('${eid}','${m}')">${e?.name || '-'} <span class="emp-more">세부내역 ›</span></button></td>
-                  <td><button class="btn-link-count" onclick="showOvertimeDetail('${eid}','${m}')">${h.count}건</button></td>
+                  <td>${e?.name || '-'}</td>
+                  <td>${h.count}건</td>
                   <td style="color:var(--primary); font-weight:600;">${h.hours}시간</td>
-                  ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><button class="btn-sm btn-secondary" onclick="setMileageMonth('${m}')">이 달로 조회</button></td>` : ''}
+                  ${i === 0 ? `<td rowspan="${empIds.length}" style="vertical-align:top;"><button class="btn-sm btn-secondary" onclick="setMileageMonth('${m}')">상세 보기</button></td>` : ''}
                 </tr>
               `;
             });
@@ -3013,6 +3013,132 @@ function renderOvertimeStatus() {
       </table>
     </div>
     `}
+  `;
+}
+
+/* ---------- 관리자: 개인카드 사용내역 현황 ---------- */
+let cardAdminMonth = new Date().toISOString().slice(0,7);
+function setCardAdminMonth(m) { cardAdminMonth = m; renderAdminBody(); }
+
+function renderCardUsageAdmin() {
+  const emps = DB.employees;
+  const entries = DB.cardUsage.filter(c => c.date && c.date.slice(0,7) === cardAdminMonth);
+
+  // 직원별 집계
+  const byEmp = {};
+  emps.forEach(e => { byEmp[e.id] = { emp: e, items: [], total: 0 }; });
+  entries.forEach(c => {
+    if (byEmp[c.empId]) {
+      byEmp[c.empId].items.push(c);
+      byEmp[c.empId].total += Number(c.amount) || 0;
+    }
+  });
+  const empList = Object.values(byEmp).filter(b => b.items.length > 0);
+  const grandTotal = empList.reduce((s, b) => s + b.total, 0);
+
+  return `
+    <div class="card">
+      <div class="card-title">💳 직원별 개인카드 사용내역</div>
+      <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+        <input type="month" value="${cardAdminMonth}" onchange="setCardAdminMonth(this.value)" style="max-width:180px;">
+        <span style="color:var(--muted); font-size:12px;">${entries.length}건 · 합계 <b>${grandTotal.toLocaleString()}원</b></span>
+      </div>
+
+      ${empList.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">해당 월 개인카드 사용내역이 없습니다.</p>' : empList.map(b => `
+        <div style="margin-bottom:24px; border:1px solid var(--border); border-radius:10px; overflow:hidden;">
+          <div style="padding:12px 16px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <b>${b.emp.name}</b> <span style="color:var(--muted); font-size:12px;">${b.emp.dept} · ${b.emp.position}</span>
+            </div>
+            <div style="font-weight:700; color:var(--primary); font-size:15px;">${b.total.toLocaleString()}원</div>
+          </div>
+          <table style="margin:0;">
+            <thead><tr><th>날짜</th><th>상호명</th><th>내용</th><th>금액</th><th>영수증</th><th>발송</th></tr></thead>
+            <tbody>
+              ${b.items.sort((a,c) => a.date.localeCompare(c.date)).map(c => `
+                <tr>
+                  <td>${c.date}</td>
+                  <td>${escapeHtml(c.merchant || '-')}</td>
+                  <td>${escapeHtml(c.description || '-')}</td>
+                  <td style="font-weight:600;">${Number(c.amount).toLocaleString()}원</td>
+                  <td>${c.imageData ? `<button class="btn-sm btn-secondary" onclick="showCardImage('${c.id}')">📷 보기</button>` : '<span style="color:var(--muted); font-size:11px;">없음</span>'}</td>
+                  <td>${c.sentAt ? '<span class="badge badge-approved">발송됨</span>' : '<span class="badge badge-pending">미발송</span>'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">월별 개인카드 사용 이력</div>
+      ${renderCardHistoryAll()}
+    </div>
+  `;
+}
+
+function showCardImage(cardId) {
+  const entry = DB.cardUsage.find(c => c.id === cardId);
+  if (!entry || !entry.imageData) { alert('영수증 이미지가 없습니다.'); return; }
+  showModal(`
+    <h3>영수증 · ${entry.date} · ${escapeHtml(entry.merchant || '')}</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">${escapeHtml(entry.description || '')} · ${Number(entry.amount).toLocaleString()}원</p>
+    <div style="text-align:center; max-height:70vh; overflow:auto;">
+      <img src="${entry.imageData}" alt="영수증" style="max-width:100%; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+    </div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-primary" onclick="closeModal()">닫기</button>
+    </div>
+  `);
+}
+
+function renderCardHistoryAll() {
+  const allCards = DB.cardUsage.filter(c => c.date);
+  if (allCards.length === 0) return '<p style="color:var(--muted); text-align:center;">개인카드 사용 이력이 없습니다.</p>';
+
+  const byMonth = {};
+  allCards.forEach(c => {
+    const m = c.date.slice(0,7);
+    if (!byMonth[m]) byMonth[m] = {};
+    if (!byMonth[m][c.empId]) byMonth[m][c.empId] = { count: 0, total: 0, sent: 0 };
+    byMonth[m][c.empId].count++;
+    byMonth[m][c.empId].total += Number(c.amount) || 0;
+    if (c.sentAt) byMonth[m][c.empId].sent++;
+  });
+  const months = Object.keys(byMonth).sort((a,b) => b.localeCompare(a));
+
+  return `
+    <table>
+      <thead><tr><th>월</th><th>직원</th><th>건수</th><th>합계</th><th>발송</th></tr></thead>
+      <tbody>
+        ${months.flatMap(mo => {
+          const empRows = Object.keys(byMonth[mo]).map(eid => {
+            const e = getEmployee(eid);
+            return { emp: e, ...byMonth[mo][eid] };
+          });
+          const monthTotal = empRows.reduce((s, r) => s + r.total, 0);
+          return empRows.map((r, i) => `
+            <tr>
+              ${i === 0 ? `<td rowspan="${empRows.length}" style="vertical-align:top;">
+                <b>${mo}</b>${mo === cardAdminMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}
+                <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setCardAdminMonth('${mo}')">상세 보기</button>
+              </td>` : ''}
+              <td>${r.emp?.name || '-'}</td>
+              <td>${r.count}건</td>
+              <td style="font-weight:600;">${r.total.toLocaleString()}원</td>
+              <td>${r.sent === r.count ? '<span class="badge badge-approved">전체 발송</span>' : `<span class="badge badge-pending">${r.sent}/${r.count}</span>`}</td>
+            </tr>
+          `).concat(`
+            <tr style="background:#f9fafb; font-weight:700;">
+              <td colspan="2" style="text-align:right;">${mo} 합계</td>
+              <td style="color:var(--primary);">${monthTotal.toLocaleString()}원</td>
+              <td></td>
+            </tr>
+          `);
+        }).join('')}
+      </tbody>
+    </table>
   `;
 }
 
@@ -3049,11 +3175,11 @@ function renderFuelStatus() {
         <tbody>
           ${rows.map(r => `
             <tr>
-              <td>${r.count ? `<button class="btn-link-emp" onclick="showMileageDetail('${r.emp.id}','${mileageMonth}')"><b>${r.emp.name}</b> <span class="emp-more">세부내역 ›</span></button>` : `<b>${r.emp.name}</b>`}</td>
+              <td><b>${r.emp.name}</b></td>
               <td>${r.emp.dept} · ${r.emp.position}</td>
               <td>${r.vehicle.fuelType}</td>
               <td>${r.vehicle.efficiency} km/L</td>
-              <td>${r.count ? `<button class="btn-link-count" onclick="showMileageDetail('${r.emp.id}','${mileageMonth}')">${r.count}건</button>` : '0건'}</td>
+              <td>${r.count}건</td>
               <td>${r.totalDist.toLocaleString()} km</td>
               <td>${r.fuelAmount.toLocaleString()}원</td>
               <td style="color:var(--muted);">+${r.surcharge.toLocaleString()}원</td>
@@ -3072,62 +3198,6 @@ function renderFuelStatus() {
 
     ${renderFuelHistoryAll()}
   `;
-}
-
-// 관리자용: 직원 한 명의 월 유류비 세부내역 (본인 화면과 같은 구성)
-function showMileageDetail(empId, month) {
-  const emp = getEmployee(empId) || { name: '-' };
-  const vehicle = DB.vehicles[empId] || { fuelType: '휘발유', efficiency: 12 };
-  const entries = DB.mileage.filter(m => m.empId === empId && m.date.slice(0,7) === month)
-    .sort((a,b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
-  let cumulative = 0;
-  const rows = entries.map(e => {
-    cumulative += Number(e.distance);
-    const ep = Number(e.fuelPrice) || 0;
-    const amount = vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(e.distance) / vehicle.efficiency) * ep) : 0;
-    return { ...e, cumulative, amount, ep };
-  });
-  const totalDistance = rows.reduce((s, r) => s + Number(r.distance), 0);
-  const fuelAmount = rows.reduce((s, r) => s + r.amount, 0);
-  const surcharge = Math.round(fuelAmount * 0.1);
-  const tolls = DB.tollgate.filter(t => t.empId === empId && t.date.slice(0,7) === month)
-    .sort((a,b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
-  const tollTotal = tolls.reduce((s, t) => s + Number(t.amount || 0), 0);
-  const finalAmount = fuelAmount + surcharge + tollTotal;
-  const line = (k, v, strong) => `<div style="display:flex; justify-content:space-between; padding:${strong ? '10px 0 4px' : '4px 0'}; ${strong ? 'border-top:1px solid #cbd5e1; margin-top:6px; font-size:15px; font-weight:700; color:var(--primary);' : 'font-size:13px; color:var(--muted);'}"><span>${k}</span><span>${v}</span></div>`;
-
-  showModal(`
-    <h3>${escapeHtml(emp.name)} · ${month} 유류비 세부내역</h3>
-    <p style="font-size:12px; color:var(--muted); margin:4px 0 14px;">${vehicle.fuelType} · 연비 ${vehicle.efficiency} km/L</p>
-    ${rows.length ? `
-      <div style="overflow-x:auto;"><table>
-        <thead><tr><th>날짜</th><th>거리</th><th>유가</th><th>이동 내용</th><th>누계</th><th>금액</th></tr></thead>
-        <tbody>${rows.map(r => `<tr>
-          <td>${r.date}</td><td>${Number(r.distance).toLocaleString()} km</td>
-          <td>${r.ep > 0 ? r.ep.toLocaleString() + '원' : '<span style="color:var(--danger);">미입력</span>'}</td>
-          <td>${escapeHtml(r.description || '-')}</td>
-          <td style="color:var(--muted);">${r.cumulative.toLocaleString()} km</td>
-          <td style="font-weight:600;">${r.amount.toLocaleString()}원</td></tr>`).join('')}</tbody>
-      </table></div>` : '<p style="color:var(--muted); text-align:center; padding:14px 0;">운행 내역이 없습니다.</p>'}
-    ${tolls.length ? `
-      <div class="card-title" style="margin-top:18px; font-size:14px;">톨게이트</div>
-      <div style="overflow-x:auto;"><table>
-        <thead><tr><th>날짜</th><th>내용</th><th>금액</th><th>첨부</th></tr></thead>
-        <tbody>${tolls.map(t => `<tr>
-          <td>${t.date.slice(5)}</td><td>${escapeHtml(t.description || '-')}</td>
-          <td style="text-align:right; font-weight:600;">${Number(t.amount).toLocaleString()}원</td>
-          <td>${t.fileData ? `<button class="btn-sm btn-ghost" onclick="viewTollgateFile('${t.id}')">📎 보기</button>` : '<span style="color:var(--muted);">-</span>'}</td></tr>`).join('')}</tbody>
-      </table></div>` : ''}
-    <div style="margin-top:14px; padding:14px 16px; background:#f1f5f9; border-radius:8px;">
-      ${line('총 이동거리', '<b>' + totalDistance.toLocaleString() + ' km</b>')}
-      ${line('유류비 합계', fuelAmount.toLocaleString() + '원')}
-      ${line('감가·유지보수 (10%)', '+ ' + surcharge.toLocaleString() + '원')}
-      ${line('톨게이트 (' + tolls.length + '건)', '+ ' + tollTotal.toLocaleString() + '원')}
-      ${line('최종 지급액', finalAmount.toLocaleString() + '원', true)}
-    </div>
-    <div class="modal-actions" style="margin-top:16px;"><button class="btn-primary" onclick="closeModal()">닫기</button></div>
-  `);
-  const m = document.querySelector('#modalRoot .modal'); if (m) m.style.maxWidth = '760px';
 }
 
 // 관리자용 전체 월별 유류비 이력 (월 × 직원)
@@ -3156,7 +3226,7 @@ function renderFuelHistoryAll() {
       const vehicle = DB.vehicles[eid] || { fuelType: '휘발유', efficiency: 12 };
       const data = history[mo][eid];
       const surcharge = Math.round(data.fuelTotal * 0.1);
-      return { eid, emp: e, vehicle, ...data, surcharge, finalAmt: data.fuelTotal + surcharge };
+      return { emp: e, vehicle, ...data, surcharge, finalAmt: data.fuelTotal + surcharge };
     });
     const total = empRows.reduce((s, r) => s + r.finalAmt, 0);
     return { month: mo, empRows, total };
@@ -3179,11 +3249,11 @@ function renderFuelHistoryAll() {
                   <td rowspan="${rows.length}" style="vertical-align:top;">
                     <b>${mt.month}</b>
                     ${mt.month === mileageMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}
-                    <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setMileageMonth('${mt.month}')">이 달로 조회</button>
+                    <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setMileageMonth('${mt.month}')">상세 보기</button>
                   </td>
                 ` : ''}
-                <td><button class="btn-link-emp" onclick="showMileageDetail('${r.eid}','${mt.month}')">${r.emp?.name || '-'} <span style="color:var(--muted); font-size:11px;">(${r.vehicle.fuelType} ${r.vehicle.efficiency}km/L)</span> <span class="emp-more">세부내역 ›</span></button></td>
-                <td><button class="btn-link-count" onclick="showMileageDetail('${r.eid}','${mt.month}')">${r.count}건</button></td>
+                <td>${r.emp?.name || '-'} <span style="color:var(--muted); font-size:11px;">(${r.vehicle.fuelType} ${r.vehicle.efficiency}km/L)</span></td>
+                <td>${r.count}건</td>
                 <td>${r.dist.toLocaleString()} km</td>
                 <td>${r.fuelTotal.toLocaleString()}원</td>
                 <td style="color:var(--primary); font-weight:600;">${r.finalAmt.toLocaleString()}원</td>
@@ -3194,6 +3264,37 @@ function renderFuelHistoryAll() {
                 <td style="color:var(--primary);">${mt.total.toLocaleString()}원</td>
               </tr>
             `);
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderPendingRequests() {
+  const pending = DB.requests.filter(r => r.status === 'pending').sort((a,b) => a.createdAt - b.createdAt);
+  if (pending.length === 0) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">대기중인 재택근무 신청이 없습니다. ✅</p></div>`;
+  return `
+    <div class="card">
+      <div class="card-title">재택근무 승인 대기 (${pending.length}건)</div>
+      <table>
+        <thead><tr><th>신청자</th><th>기간</th><th>일수</th><th>사유</th><th>신청일</th><th>조치</th></tr></thead>
+        <tbody>
+          ${pending.map(r => {
+            const e = getEmployee(r.empId);
+            return `
+              <tr>
+                <td><b>${e?.name||'-'}</b><br><span style="color:var(--muted); font-size:11px;">${e?.position||''}</span></td>
+                <td>${r.startDate}${r.endDate !== r.startDate ? ' ~ ' + r.endDate : ''}</td>
+                <td>${r.days}일</td>
+                <td style="max-width:220px;">${escapeHtml(r.reason||'-')}</td>
+                <td style="color:var(--muted); font-size:12px;">${new Date(r.createdAt).toLocaleDateString('ko-KR')}</td>
+                <td>
+                  <button class="btn-sm btn-success" onclick="decideRequest('${r.id}','approved')">승인</button>
+                  <button class="btn-sm btn-danger" onclick="decideRequest('${r.id}','rejected')">반려</button>
+                </td>
+              </tr>
+            `;
           }).join('')}
         </tbody>
       </table>
@@ -3996,7 +4097,7 @@ async function submitRequest(type) {
     id: 'r' + Date.now(),
     empId: DB.session.empId,
     type, startDate: start, endDate: end, days, reason,
-    status: 'approved',
+    status: type === '재택근무' ? 'pending' : 'approved',
     halfType: isHalf ? halfType : null,
     specialType,
     eventId: null,
@@ -4020,7 +4121,7 @@ async function submitRequest(type) {
     return;
   }
 
-  // 연차·반차·생일연차·특별휴가는 캘린더 동기화
+  // 연차·반차·생일연차·특별휴가는 캘린더 동기화 (재택근무는 승인 후)
   if (type === '연차' || type === '반차' || type === '생일연차' || type === '특별휴가') {
     syncToCalendar(request);
   }
@@ -4072,7 +4173,6 @@ async function syncToCalendar(request) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'create',
-        idToken: getIdToken(),
         title: calendarEventTitle(request, emp),
         startDate: request.startDate,
         endDate: request.endDate,
@@ -4108,7 +4208,7 @@ async function deleteFromCalendar(eventId) {
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', eventId, idToken: getIdToken() })
+      body: JSON.stringify({ action: 'delete', eventId })
     });
   } catch (err) {
     console.warn('캘린더 이벤트 삭제 오류:', err);
@@ -4381,10 +4481,6 @@ function saveEmployee(existingId) {
   save(DB);
   closeModal();
   renderAdminBody();
-  const targetId = existingId || id;
-  dbUpsert('birthdays', 'empId', { empId: targetId, birthday: birthday || '', lunar: birthdayLunar, leap: birthdayLunarLeap })
-    .then(() => showToast('생일 정보 저장 완료', 'success'))
-    .catch(err => showToast('생일 저장 실패: ' + err.message, 'error'));
 }
 
 async function deleteEmployee(id) {
@@ -4469,7 +4565,7 @@ function showToast(msg, type) {
 // Sheets DB에서 모든 테이블을 가져와서 DB 객체에 주입
 async function syncFromDB() {
   const tables = await dbLoadAll();
-  DB.requests = (tables.requests || []).filter(r => r.type !== '재택근무'); // 재택근무 제도 폐지 — 과거 기록은 시트에만 보관
+  DB.requests = tables.requests || [];
   DB.overtime = tables.overtime || [];
   DB.mileage = tables.mileage || [];
   DB.tollgate = tables.tollgate || [];
@@ -4496,15 +4592,6 @@ async function syncFromDB() {
     if (emp) {
       emp.legacyLeaveUsed = Number(l.used) || 0;
       emp.legacyBirthdayUsed = !!l.birthdayUsed;
-    }
-  });
-  // birthdays: 생일 정보 (시트 보관) — employees에 주입
-  (tables.birthdays || []).forEach(b => {
-    const emp = DB.employees.find(e => e.id === b.empId);
-    if (emp && b.birthday) {
-      emp.birthday = String(b.birthday);
-      emp.birthdayLunar = b.lunar === true || String(b.lunar).toUpperCase() === 'TRUE';
-      emp.birthdayLunarLeap = b.leap === true || String(b.leap).toUpperCase() === 'TRUE';
     }
   });
   // 숫자 필드 정규화
@@ -4535,16 +4622,17 @@ async function migrateLocalToDB() {
       total += b.rows.length;
     }
   }
-  // vehicles 맵 → 배열 (본인 것만 이전 가능)
+  // vehicles 맵 → 배열
   for (const [empId, v] of Object.entries(DB.vehicles || {})) {
-    try { await dbUpsert('vehicles', 'empId', { empId, fuelType: v.fuelType, efficiency: v.efficiency }); } catch (e) {}
+    await dbUpsert('vehicles', 'empId', { empId, fuelType: v.fuelType, efficiency: v.efficiency });
   }
-  // fuelPrices·tenureNotifications는 관리자만 이전 가능
+  // fuelPrices 맵 → 배열
   for (const [month, f] of Object.entries(DB.fuelPrices || {})) {
-    try { await dbUpsert('fuelPrices', 'month', { month, gasoline: f.gasoline, diesel: f.diesel }); } catch (e) {}
+    await dbUpsert('fuelPrices', 'month', { month, gasoline: f.gasoline, diesel: f.diesel });
   }
+  // tenureNotifications 맵 → 배열
   for (const [key, sentAt] of Object.entries(DB.tenureNotifications || {})) {
-    try { await dbUpsert('tenureNotifications', 'key', { key, sentAt }); } catch (e) {}
+    await dbUpsert('tenureNotifications', 'key', { key, sentAt });
   }
   DB.migrated_to_sheets_v1 = true;
   save(DB);
