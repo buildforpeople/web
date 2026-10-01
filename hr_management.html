@@ -1038,6 +1038,13 @@ let _dbLoadedThisSession = false;
 
 async function renderApp() {
   if (!DB.session) { return; }
+  // 이전 세션에 idToken이 없으면 재로그인 필요 (보안 강화 이전 세션)
+  if (!DB.session.idToken) {
+    DB.session = null;
+    save(DB);
+    location.reload();
+    return;
+  }
   const emp = getEmployee(DB.session.empId);
   if (!emp) { logout(); return; }
   document.getElementById('loginView').classList.add('hidden');
@@ -1179,9 +1186,7 @@ function employeeDashboardHTML(emp) {
           <span class="ico">📋</span>특별휴가
         </button>
         ${emp.position.includes('현장관리') ? '' : `
-        <button class="action-btn" onclick="openRequestModal('재택근무')">
-          <span class="ico">🏠</span>재택근무 신청
-        </button>
+
         `}
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#eff6ff; border-radius:6px; font-size:12px; color:#1e40af; line-height:1.6;">
@@ -2762,7 +2767,7 @@ function renderAdmin(emp) {
   content.innerHTML = `
     <div class="tabs">
       <button class="tab ${adminTab==='mine'?'active':''}" onclick="setAdminTab('mine')">내 근태</button>
-      <button class="tab ${adminTab==='pending'?'active':''}" onclick="setAdminTab('pending')">재택근무 승인${pendingCount>0?` <span style="background:var(--danger); color:white; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:4px;">${pendingCount}</span>`:''}</button>
+
       <button class="tab ${adminTab==='employees'?'active':''}" onclick="setAdminTab('employees')">직원 현황</button>
       <button class="tab ${adminTab==='overtime'?'active':''}" onclick="setAdminTab('overtime')">추가근무 현황</button>
       <button class="tab ${adminTab==='fuel'?'active':''}" onclick="setAdminTab('fuel')">유류비 현황</button>
@@ -2801,7 +2806,7 @@ function renderBackupRestore() {
           <div class="stat-value">${empCount}<span style="font-size:14px; color:var(--muted);">명</span></div>
         </div>
         <div class="stat success">
-          <div class="stat-label">연차·반차·재택근무</div>
+          <div class="stat-label">연차·반차·특별휴가</div>
           <div class="stat-value">${reqCount}<span style="font-size:14px; color:var(--muted);">건</span></div>
         </div>
         <div class="stat warning">
@@ -2931,7 +2936,7 @@ function importData() {
 function renderAdminBody() {
   const body = document.getElementById('adminBody');
   if (adminTab === 'mine') body.innerHTML = employeeDashboardHTML(getEmployee(DB.session.empId));
-  else if (adminTab === 'pending') body.innerHTML = renderPendingRequests();
+
   else if (adminTab === 'employees') body.innerHTML = renderEmployeeStatus();
   else if (adminTab === 'overtime') body.innerHTML = renderOvertimeStatus();
   else if (adminTab === 'fuel') body.innerHTML = renderFuelStatus();
@@ -3279,10 +3284,10 @@ function renderFuelHistoryAll() {
 
 function renderPendingRequests() {
   const pending = DB.requests.filter(r => r.status === 'pending').sort((a,b) => a.createdAt - b.createdAt);
-  if (pending.length === 0) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">대기중인 재택근무 신청이 없습니다. ✅</p></div>`;
+  if (pending.length === 0) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">대기중인 신청이 없습니다. ✅</p></div>`;
   return `
     <div class="card">
-      <div class="card-title">재택근무 승인 대기 (${pending.length}건)</div>
+      <div class="card-title">승인 대기 (${pending.length}건)</div>
       <table>
         <thead><tr><th>신청자</th><th>기간</th><th>일수</th><th>사유</th><th>신청일</th><th>조치</th></tr></thead>
         <tbody>
@@ -4103,7 +4108,7 @@ async function submitRequest(type) {
     id: 'r' + Date.now(),
     empId: DB.session.empId,
     type, startDate: start, endDate: end, days, reason,
-    status: type === '재택근무' ? 'pending' : 'approved',
+    status: 'approved',
     halfType: isHalf ? halfType : null,
     specialType,
     eventId: null,
@@ -4127,7 +4132,7 @@ async function submitRequest(type) {
     return;
   }
 
-  // 연차·반차·생일연차·특별휴가는 캘린더 동기화 (재택근무는 승인 후)
+  // 연차·반차·생일연차·특별휴가는 캘린더 동기화
   if (type === '연차' || type === '반차' || type === '생일연차' || type === '특별휴가') {
     syncToCalendar(request);
   }
