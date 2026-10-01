@@ -2980,7 +2980,7 @@ function renderOvertimeStatus() {
         <tbody>
           ${rows.map(r => `
             <tr>
-              <td><b>${r.emp.name}</b></td>
+              <td><b>${r.emp.name}</b> ${r.count > 0 ? `<a href="#" onclick="event.preventDefault(); showOvertimeDetail('${r.emp.id}','${mileageMonth}')" style="font-size:11px; color:var(--primary);">세부내역 &gt;</a>` : ''}</td>
               <td>${r.emp.dept} · ${r.emp.position}</td>
               <td>${r.count}건</td>
               <td style="color:var(--primary); font-weight:600;">${r.totalHours}시간</td>
@@ -3025,6 +3025,110 @@ function renderOvertimeStatus() {
     </div>
     `}
   `;
+}
+
+function showFuelDetail(empId, month) {
+  const emp = getEmployee(empId);
+  if (!emp) return;
+  const vehicle = DB.vehicles[empId] || { fuelType: '휘발유', efficiency: 12 };
+  const entries = DB.mileage
+    .filter(m => m.empId === empId && m.date.slice(0,7) === month)
+    .sort((a,b) => a.date.localeCompare(b.date));
+  let cumulative = 0;
+  const rows = entries.map(e => {
+    cumulative += Number(e.distance);
+    const ep = Number(e.fuelPrice) || 0;
+    const amount = vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(e.distance) / vehicle.efficiency) * ep) : 0;
+    return { ...e, cumulative, amount, fuelPriceNum: ep };
+  });
+  const totalDist = rows.reduce((s, r) => s + Number(r.distance), 0);
+  const fuelTotal = rows.reduce((s, r) => s + r.amount, 0);
+  const surcharge = Math.round(fuelTotal * 0.1);
+  const tollEntries = DB.tollgate.filter(t => t.empId === empId && t.date.slice(0,7) === month);
+  const tollTotal = tollEntries.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+  showModal(`
+    <h3>${emp.name} · ${month} 유류비 세부내역</h3>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">${vehicle.fuelType} · 연비 ${vehicle.efficiency}km/L</p>
+    ${rows.length === 0 ? '<p style="color:var(--muted);">해당 월 운행 내역이 없습니다.</p>' : `
+      <table>
+        <thead><tr><th>날짜</th><th>거리</th><th>유가</th><th>이동 내용</th><th>누계</th><th>금액</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${r.date}</td>
+              <td>${Number(r.distance).toLocaleString()} km</td>
+              <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미입력</span>'}</td>
+              <td>${escapeHtml(r.description || '-')}</td>
+              <td style="color:var(--muted);">${r.cumulative.toLocaleString()} km</td>
+              <td style="font-weight:600;">${r.amount.toLocaleString()}원</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `}
+    ${tollEntries.length > 0 ? `
+      <div class="card-title" style="margin-top:18px;">톨게이트</div>
+      <table>
+        <thead><tr><th>날짜</th><th>내용</th><th>금액</th>${tollEntries.some(t=>t.fileData)?'<th>첨부</th>':''}</tr></thead>
+        <tbody>
+          ${tollEntries.map(t => `
+            <tr>
+              <td>${t.date.slice(5)}</td>
+              <td>${escapeHtml(t.description || '-')}</td>
+              <td style="font-weight:600;">${Number(t.amount).toLocaleString()}원</td>
+              ${t.fileData ? `<td><a href="${t.fileData}" target="_blank" style="font-size:12px;">📎 보기</a></td>` : (tollEntries.some(x=>x.fileData)?'<td></td>':'')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    ` : ''}
+    <div style="margin-top:14px; padding:12px 16px; background:#f1f5f9; border-radius:8px;">
+      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>총 이동거리</span><span><b>${totalDist.toLocaleString()} km</b></span></div>
+      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>유류비 합계</span><span>${fuelTotal.toLocaleString()}원</span></div>
+      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>감가·유지보수 (10%)</span><span>+ ${surcharge.toLocaleString()}원</span></div>
+      <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px; color:var(--muted);"><span>톨게이트 (${tollEntries.length}건)</span><span>+ ${tollTotal.toLocaleString()}원</span></div>
+      <div style="display:flex; justify-content:space-between; padding:10px 0 4px; border-top:1px solid #cbd5e1; margin-top:6px; font-size:15px; font-weight:700; color:var(--primary);"><span>최종 지급액</span><span>${(fuelTotal + surcharge + tollTotal).toLocaleString()}원</span></div>
+    </div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-primary" onclick="closeModal()">닫기</button>
+    </div>
+  `);
+}
+
+function showOvertimeDetail(empId, month) {
+  const emp = getEmployee(empId);
+  if (!emp) return;
+  const entries = DB.overtime
+    .filter(o => o.empId === empId && o.date.slice(0,7) === month)
+    .sort((a,b) => a.date.localeCompare(b.date));
+  const totalHours = entries.reduce((s, o) => s + Number(o.hours), 0);
+
+  showModal(`
+    <h3>${emp.name} · ${month} 추가근무 세부내역</h3>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">${emp.dept} · ${emp.position}</p>
+    ${entries.length === 0 ? '<p style="color:var(--muted);">해당 월 추가근무 내역이 없습니다.</p>' : `
+      <table>
+        <thead><tr><th>날짜</th><th>시간</th><th>내용</th></tr></thead>
+        <tbody>
+          ${entries.map(o => `
+            <tr>
+              <td>${o.date}</td>
+              <td style="font-weight:600;">${o.hours}시간</td>
+              <td>${escapeHtml(o.description || '-')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:14px; padding:12px 16px; background:#f1f5f9; border-radius:8px; display:flex; justify-content:space-between; font-weight:700;">
+        <span>총 추가근무</span>
+        <span style="color:var(--primary);">${totalHours}시간</span>
+      </div>
+    `}
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-primary" onclick="closeModal()">닫기</button>
+    </div>
+  `);
 }
 
 /* ---------- 관리자: 개인카드 사용내역 현황 ---------- */
@@ -3089,6 +3193,44 @@ function renderCardUsageAdmin() {
   `;
 }
 
+function showCardDetail(empId, month) {
+  const emp = getEmployee(empId);
+  if (!emp) return;
+  const entries = DB.cardUsage
+    .filter(c => c.empId === empId && c.date && c.date.slice(0,7) === month)
+    .sort((a,b) => a.date.localeCompare(b.date));
+  const total = entries.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+
+  showModal(`
+    <h3>${emp.name} · ${month} 개인카드 세부내역</h3>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">${emp.dept} · ${emp.position}</p>
+    ${entries.length === 0 ? '<p style="color:var(--muted);">해당 월 개인카드 사용내역이 없습니다.</p>' : `
+      <table>
+        <thead><tr><th>날짜</th><th>상호명</th><th>내용</th><th>금액</th><th>영수증</th><th>발송</th></tr></thead>
+        <tbody>
+          ${entries.map(c => `
+            <tr>
+              <td>${c.date}</td>
+              <td>${escapeHtml(c.merchant || '-')}</td>
+              <td>${escapeHtml(c.description || '-')}</td>
+              <td style="font-weight:600;">${Number(c.amount).toLocaleString()}원</td>
+              <td>${c.imageData ? `<button class="btn-sm btn-secondary" onclick="closeModal(); setTimeout(()=>showCardImage('${c.id}'),300)">📷 보기</button>` : '<span style="color:var(--muted); font-size:11px;">없음</span>'}</td>
+              <td>${c.sentAt ? '<span class="badge badge-approved">발송됨</span>' : '<span class="badge badge-pending">미발송</span>'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:14px; padding:12px 16px; background:#f1f5f9; border-radius:8px; display:flex; justify-content:space-between; font-weight:700;">
+        <span>합계 (${entries.length}건)</span>
+        <span style="color:var(--primary);">${total.toLocaleString()}원</span>
+      </div>
+    `}
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-primary" onclick="closeModal()">닫기</button>
+    </div>
+  `);
+}
+
 function showCardImage(cardId) {
   const entry = DB.cardUsage.find(c => c.id === cardId);
   if (!entry || !entry.imageData) { alert('영수증 이미지가 없습니다.'); return; }
@@ -3135,7 +3277,7 @@ function renderCardHistoryAll() {
                 <b>${mo}</b>${mo === cardAdminMonth ? '<br><span class="badge badge-approved">조회중</span>' : ''}
                 <br><button class="btn-sm btn-secondary" style="margin-top:6px;" onclick="setCardAdminMonth('${mo}')">상세 보기</button>
               </td>` : ''}
-              <td>${r.emp?.name || '-'}</td>
+              <td>${r.emp?.name || '-'} <a href="#" onclick="event.preventDefault(); showCardDetail('${r.emp?.id || ''}','${mo}')" style="font-size:11px; color:var(--primary);">세부내역 &gt;</a></td>
               <td>${r.count}건</td>
               <td style="font-weight:600;">${r.total.toLocaleString()}원</td>
               <td>${r.sent === r.count ? '<span class="badge badge-approved">전체 발송</span>' : `<span class="badge badge-pending">${r.sent}/${r.count}</span>`}</td>
@@ -3186,7 +3328,7 @@ function renderFuelStatus() {
         <tbody>
           ${rows.map(r => `
             <tr>
-              <td><b>${r.emp.name}</b></td>
+              <td><b>${r.emp.name}</b> ${r.count > 0 ? `<a href="#" onclick="event.preventDefault(); showFuelDetail('${r.emp.id}','${mileageMonth}')" style="font-size:11px; color:var(--primary);">세부내역 &gt;</a>` : ''}</td>
               <td>${r.emp.dept} · ${r.emp.position}</td>
               <td>${r.vehicle.fuelType}</td>
               <td>${r.vehicle.efficiency} km/L</td>
