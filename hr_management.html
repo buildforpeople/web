@@ -467,9 +467,10 @@ async function dbCall(action, payload) {
   }
 }
 
-async function dbLoadAll() {
+async function dbLoadAll(tableList) {
   // 서버가 idToken으로 사용자를 검증하고, 권한에 맞는 데이터만 반환
-  const data = await dbCall('get_all');
+  // tableList가 있으면 해당 테이블만 요청 (속도 최적화)
+  const data = await dbCall('get_all', tableList ? { tables: tableList } : {});
   return data.tables;
 }
 async function dbInsert(table, row) {
@@ -944,6 +945,7 @@ function logout() {
   DB.session = null;
   save(DB);
   _dbLoadedThisSession = false;
+  _deferredLoaded = false;
   document.getElementById('appView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
   // Google 자동 선택 해제 — 다음 로그인 시 계정 선택 가능
@@ -1010,7 +1012,8 @@ ${years}년 도래일: ${anniversaryISO}
               to: 'my.new.homeplace@gmail.com',
               subject,
               body,
-              attachments: []
+              attachments: [],
+              idToken: DB.session ? DB.session.idToken : null
             })
           });
           const data = await res.json();
@@ -1076,6 +1079,14 @@ async function renderApp() {
       await syncFromDB();
       _dbLoadedThisSession = true;
       hideLoader();
+      // Phase 2 완료 후 UI 갱신 (유류비/카드/복지 데이터 반영)
+      if (!_deferredLoaded) {
+        loadDeferredTables().then(() => {
+          const empNow = getEmployee(DB.session.empId);
+          if (empNow && empNow.role === 'admin') renderAdminBody();
+          else if (empNow) renderEmployee(empNow);
+        });
+      }
     } catch (err) {
       hideLoader();
       alert('중앙 DB 연결 실패: ' + err.message + '\n\n새로고침 후 다시 시도해 주세요.');
@@ -2009,7 +2020,8 @@ ${lines.join('\n')}
         to: 'buildforpeople.sw@gmail.com',
         subject,
         body: bodyText,
-        attachments
+        attachments,
+        idToken: DB.session ? DB.session.idToken : null
       })
     });
     const data = await res.json();
@@ -2075,10 +2087,13 @@ async function loadMyContract(empId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_contract', empId })
+      body: JSON.stringify({ action: 'get_contract', empId, idToken: DB.session ? DB.session.idToken : null })
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || '조회 실패');
+    if (!data.success) {
+      if (data.authError) throw new Error('로그인이 필요합니다. 로그아웃 후 다시 로그인해 주세요.');
+      throw new Error(data.error || '조회 실패');
+    }
     _myContract = data.contract;
     el.innerHTML = renderContractSummary(data.contract);
     // 예상 급여 카드가 있으면 함께 갱신
@@ -2347,10 +2362,13 @@ async function loadAllContracts() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'get_all_contracts' })
+      body: JSON.stringify({ action: 'get_all_contracts', idToken: DB.session ? DB.session.idToken : null })
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || '조회 실패');
+    if (!data.success) {
+      if (data.authError) throw new Error('로그인이 필요합니다. 로그아웃 후 다시 로그인해 주세요.');
+      throw new Error(data.error || '조회 실패');
+    }
     _loadedContracts = data.contracts || [];
     const totalSalary = _loadedContracts.reduce((s, c) => s + (Number(c['월급여총액']) || 0), 0);
     el.innerHTML = `
@@ -2544,7 +2562,7 @@ async function loadSeveranceData() {
       const res = await fetch(HARDCODED_CONTRACT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'get_all_contracts' })
+        body: JSON.stringify({ action: 'get_all_contracts', idToken: DB.session ? DB.session.idToken : null })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || '조회 실패');
@@ -2939,9 +2957,9 @@ function renderAdminBody() {
 
   else if (adminTab === 'employees') body.innerHTML = renderEmployeeStatus();
   else if (adminTab === 'overtime') body.innerHTML = renderOvertimeStatus();
-  else if (adminTab === 'fuel') body.innerHTML = renderFuelStatus();
-  else if (adminTab === 'cardAdmin') body.innerHTML = renderCardUsageAdmin();
-  else if (adminTab === 'welfare') body.innerHTML = renderWelfareAdmin();
+  else if (adminTab === 'fuel') { ensureDeferredLoaded().then(() => { body.innerHTML = renderFuelStatus(); }); return; }
+  else if (adminTab === 'cardAdmin') { ensureDeferredLoaded().then(() => { body.innerHTML = renderCardUsageAdmin(); }); return; }
+  else if (adminTab === 'welfare') { ensureDeferredLoaded().then(() => { body.innerHTML = renderWelfareAdmin(); }); return; }
   else if (adminTab === 'all') body.innerHTML = renderAllRequests();
   else if (adminTab === 'manage') body.innerHTML = renderEmployeeManage();
   else if (adminTab === 'contracts') body.innerHTML = renderContractsAdmin();
@@ -4329,7 +4347,8 @@ async function syncToCalendar(request) {
         title: calendarEventTitle(request, emp),
         startDate: request.startDate,
         endDate: request.endDate,
-        description: request.reason || ''
+        description: request.reason || '',
+        idToken: DB.session ? DB.session.idToken : null
       })
     });
     const data = await res.json();
@@ -4361,7 +4380,7 @@ async function deleteFromCalendar(eventId) {
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', eventId })
+      body: JSON.stringify({ action: 'delete', eventId, idToken: DB.session ? DB.session.idToken : null })
     });
   } catch (err) {
     console.warn('캘린더 이벤트 삭제 오류:', err);
@@ -4716,45 +4735,67 @@ function showToast(msg, type) {
    CENTRAL DB SYNC
    ============================================================ */
 // Sheets DB에서 모든 테이블을 가져와서 DB 객체에 주입
+// 테이블 데이터를 DB에 적용하는 공통 함수
+function applyTables(tables) {
+  if (tables.requests) { DB.requests = tables.requests; DB.requests.forEach(r => { r.days = Number(r.days) || 0; r.createdAt = Number(r.createdAt) || 0; if (r.decidedAt) r.decidedAt = Number(r.decidedAt); }); }
+  if (tables.overtime) { DB.overtime = tables.overtime; DB.overtime.forEach(o => { o.hours = Number(o.hours) || 0; o.createdAt = Number(o.createdAt) || 0; }); }
+  if (tables.mileage) { DB.mileage = tables.mileage; DB.mileage.forEach(m => { m.distance = Number(m.distance) || 0; m.fuelPrice = Number(m.fuelPrice) || 0; m.createdAt = Number(m.createdAt) || 0; }); }
+  if (tables.tollgate) { DB.tollgate = tables.tollgate; DB.tollgate.forEach(t => { t.amount = Number(t.amount) || 0; t.createdAt = Number(t.createdAt) || 0; }); }
+  if (tables.cardUsage) { DB.cardUsage = tables.cardUsage; DB.cardUsage.forEach(c => { c.amount = Number(c.amount) || 0; c.createdAt = Number(c.createdAt) || 0; if (c.sentAt) c.sentAt = Number(c.sentAt); }); }
+  if (tables.welfare) { DB.welfare = tables.welfare; DB.welfare.forEach(w => { w.year = Number(w.year) || 0; w.totalAmount = Number(w.totalAmount) || 0; w.companyAmount = Number(w.companyAmount) || 0; w.createdAt = Number(w.createdAt) || 0; }); }
+  if (tables.vehicles) {
+    DB.vehicles = {};
+    tables.vehicles.forEach(v => { if (v.empId) DB.vehicles[v.empId] = { fuelType: v.fuelType || '휘발유', efficiency: Number(v.efficiency) || 12 }; });
+  }
+  if (tables.fuelPrices) {
+    DB.fuelPrices = {};
+    tables.fuelPrices.forEach(f => { if (f.month) DB.fuelPrices[f.month] = { gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0 }; });
+  }
+  if (tables.tenureNotifications) {
+    DB.tenureNotifications = {};
+    tables.tenureNotifications.forEach(t => { if (t.key) DB.tenureNotifications[t.key] = t.sentAt; });
+  }
+  if (tables.legacyLeave) {
+    tables.legacyLeave.forEach(l => {
+      const emp = DB.employees.find(e => e.id === l.empId);
+      if (emp) { emp.legacyLeaveUsed = Number(l.used) || 0; emp.legacyBirthdayUsed = !!l.birthdayUsed; }
+    });
+  }
+}
+
+// Phase 1: 대시보드에 필요한 핵심 테이블만 먼저 로드 (빠름)
+const ESSENTIAL_TABLES = ['requests', 'overtime', 'legacyLeave', 'vehicles', 'fuelPrices', 'tenureNotifications'];
+// Phase 2: 나머지 테이블 (탭 진입 시 또는 백그라운드)
+const DEFERRED_TABLES = ['mileage', 'tollgate', 'cardUsage', 'welfare'];
+let _deferredLoaded = false;
+
 async function syncFromDB() {
-  const tables = await dbLoadAll();
-  DB.requests = tables.requests || [];
-  DB.overtime = tables.overtime || [];
-  DB.mileage = tables.mileage || [];
-  DB.tollgate = tables.tollgate || [];
-  DB.cardUsage = tables.cardUsage || [];
-  DB.welfare = tables.welfare || [];
-  // vehicles: 배열 → 객체 맵 변환 ({empId: {fuelType, efficiency}})
-  DB.vehicles = {};
-  (tables.vehicles || []).forEach(v => {
-    if (v.empId) DB.vehicles[v.empId] = { fuelType: v.fuelType || '휘발유', efficiency: Number(v.efficiency) || 12 };
-  });
-  // fuelPrices: 배열 → 객체 맵 ({month: {gasoline, diesel}})
-  DB.fuelPrices = {};
-  (tables.fuelPrices || []).forEach(f => {
-    if (f.month) DB.fuelPrices[f.month] = { gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0 };
-  });
-  // tenureNotifications: 배열 → 객체 맵
-  DB.tenureNotifications = {};
-  (tables.tenureNotifications || []).forEach(t => {
-    if (t.key) DB.tenureNotifications[t.key] = t.sentAt;
-  });
-  // legacyLeave: 직원별 앱 도입 전 사용 조정값 — employees에 주입
-  (tables.legacyLeave || []).forEach(l => {
-    const emp = DB.employees.find(e => e.id === l.empId);
-    if (emp) {
-      emp.legacyLeaveUsed = Number(l.used) || 0;
-      emp.legacyBirthdayUsed = !!l.birthdayUsed;
-    }
-  });
-  // 숫자 필드 정규화
-  DB.requests.forEach(r => { r.days = Number(r.days) || 0; r.createdAt = Number(r.createdAt) || 0; if (r.decidedAt) r.decidedAt = Number(r.decidedAt); });
-  DB.overtime.forEach(o => { o.hours = Number(o.hours) || 0; o.createdAt = Number(o.createdAt) || 0; });
-  DB.mileage.forEach(m => { m.distance = Number(m.distance) || 0; m.fuelPrice = Number(m.fuelPrice) || 0; m.createdAt = Number(m.createdAt) || 0; });
-  DB.tollgate.forEach(t => { t.amount = Number(t.amount) || 0; t.createdAt = Number(t.createdAt) || 0; });
-  DB.cardUsage.forEach(c => { c.amount = Number(c.amount) || 0; c.createdAt = Number(c.createdAt) || 0; if (c.sentAt) c.sentAt = Number(c.sentAt); });
-  DB.welfare.forEach(w => { w.year = Number(w.year) || 0; w.totalAmount = Number(w.totalAmount) || 0; w.companyAmount = Number(w.companyAmount) || 0; w.createdAt = Number(w.createdAt) || 0; });
+  // Phase 1: 핵심 테이블만 로드 → 대시보드 즉시 렌더
+  const tables = await dbLoadAll(ESSENTIAL_TABLES);
+  applyTables(tables);
   save(DB);
+  // Phase 2: 나머지 백그라운드 로드 (UI 렌더 후 비동기)
+  loadDeferredTables();
+}
+
+async function loadDeferredTables() {
+  if (_deferredLoaded) return;
+  try {
+    const tables = await dbLoadAll(DEFERRED_TABLES);
+    applyTables(tables);
+    save(DB);
+    _deferredLoaded = true;
+  } catch (err) {
+    console.warn('지연 테이블 로드 실패:', err.message);
+  }
+}
+
+// 특정 탭 진입 시 지연 데이터가 아직 안 왔으면 기다리기
+async function ensureDeferredLoaded() {
+  if (_deferredLoaded) return;
+  showLoader('추가 데이터 불러오는 중...');
+  await loadDeferredTables();
+  hideLoader();
 }
 
 // 기존 localStorage 데이터를 Sheets DB로 1회성 마이그레이션
