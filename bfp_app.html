@@ -369,6 +369,25 @@
   .dt-txt { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
   .dt-full { padding: 8px; }
   .dt-full img { width: 100%; display: block; border-radius: 6px; background: #fff; cursor: zoom-in; }
+  /* ===== 공정표 ===== */
+  .sc-gantt { padding: 12px 14px; margin-bottom: 12px; overflow: hidden; }
+  .sc-months { position: relative; height: 18px; margin-left: 120px; font-size: 11px; color: var(--muted); }
+  .sc-months span { position: absolute; text-align: center; border-left: 1px solid var(--line); padding-left: 4px; }
+  .sc-rows { position: relative; }
+  .sc-row { display: flex; align-items: center; gap: 8px; height: 22px; cursor: pointer; }
+  .sc-row:hover { background: #F7F8F5; }
+  .sc-name { flex: none; width: 112px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sc-track { position: relative; flex: 1; height: 100%; }
+  .sc-bar { position: absolute; top: 5px; height: 12px; border-radius: 3px; background: var(--green-2); opacity: .85; }
+  .sc-bar.done { background: var(--gray); }
+  .sc-bar.doing { background: var(--amber); }
+  .sc-bar.late { background: var(--red); }
+  .sc-bar b { display: block; height: 100%; background: rgba(255,255,255,.45); border-radius: 3px; }
+  .sc-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--heritage); z-index: 1; margin-left: 120px; }
+  .sc-item .cr-title.done { color: var(--muted); text-decoration: line-through; }
+  .sc-opt { display: grid; grid-template-columns: 1fr 90px 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .sc-opt input[type=number] { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; width: 100%; }
+  .sc-opt input:disabled { background: var(--gray-soft); }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -563,7 +582,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; renderTab(); };
 
   // 설계 → 현장관리 → 입금요청 → 변경요청 → 식구 순 (고객관리는 계약 전 단계라 맨 앞)
   $('tabs').innerHTML = TAB_ORDER.map(key => {
@@ -705,10 +724,17 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '건축주 계정'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '공정표', '건축주 계정'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   $('toInfo').onclick = () => selectTab('info');
   if (S.siteSub === '대시보드') { ovRenderSite($('subBody')); return; }
+  if (S.siteSub === '공정표') {
+    if (S.me.role === 'client') { $('subBody').innerHTML = '<section class="panel empty"><h3>공정표</h3>준비 중입니다.</section>'; return; }
+    scLoad(s.code).then(() => { if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '공정표' && $('subBody')) scRender($('subBody')); })
+      .catch(e => { if ($('subBody')) $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+    if (SC.site === s.code && $('subBody')) scRender($('subBody'));
+    return;
+  }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
   if (S.siteSub === '현장보고') {
     rpLoad(s.code).then(() => {
@@ -1122,6 +1148,217 @@ function dtForm(o) {
     if (i >= 0) DT.items[i] = d.item; else DT.items.push(d.item);
     closeSheet(); renderDetailTab(); toast('저장했습니다');
   });
+}
+
+// ---------- 공정표 ----------
+const SC = { site: null, cond: null, tasks: [], meta: null, canEdit: false, loading: false };
+
+async function scLoad(code) {
+  if (SC.site === code || SC.loading) return;
+  SC.loading = true;
+  try {
+    const d = await api({ action: 'sc_get', siteCode: code });
+    Object.assign(SC, { site: code, cond: d.cond, tasks: d.tasks, canEdit: d.canEdit,
+      meta: { template: d.template, options: d.options, statuses: d.statuses, structs: d.structs } });
+  } finally { SC.loading = false; }
+}
+
+function scDday(t) {
+  if (t.status === '완료') return { cls: '', text: '완료' };
+  const d = dayDiff(today(), t.end);
+  if (t.start > today()) return { cls: '', text: `D-${dayDiff(today(), t.start)}` };
+  if (d < 0) return { cls: 'over', text: `${-d}일 지연` };
+  return { cls: d <= 2 ? 'today' : '', text: `D-${d}` };
+}
+
+function scRender(el) {
+  if (!SC.cond || !SC.tasks.length) return scCreateForm(el);
+  const ts = SC.tasks;
+  const total = ts.reduce((s, t) => s + t.days, 0);
+  const doneDays = ts.reduce((s, t) => s + t.days * (t.progress / 100), 0);
+  const pct = total ? Math.round(doneDays / total * 100) : 0;
+  const late = ts.filter(t => t.status !== '완료' && t.end < today());
+  const now = ts.filter(t => t.status === '진행중' || (t.status === '예정' && t.start <= today() && t.end >= today()));
+  const next = ts.filter(t => t.status === '예정' && t.start > today()).slice(0, 3);
+  const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
+  const span = Math.max(1, dayDiff(first, last));
+  const months = [];
+  for (let d = new Date(first + 'T00:00:00'); ymd(d) <= last; d.setMonth(d.getMonth() + 1)) {
+    const m0 = new Date(d.getFullYear(), d.getMonth(), 1), m1 = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    const s = ymd(m0) < first ? first : ymd(m0), e = ymd(m1) > last ? last : ymd(m1);
+    months.push({ label: (d.getMonth() + 1) + '월', left: dayDiff(first, s) / span * 100, width: Math.max(0.5, (dayDiff(s, e) + 1) / span * 100) });
+  }
+  const todayLeft = today() >= first && today() <= last ? dayDiff(first, today()) / span * 100 : null;
+
+  el.innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">공정표 <span class="cr-sub" style="font-weight:500">${esc(first)} ~ ${esc(last)}</span></h2>
+      <button class="btn ghost" type="button" id="scPrint">🖨 인쇄</button>
+      ${SC.canEdit ? '<button class="btn ghost" type="button" id="scShift">이후 공정 순연</button>' : ''}
+      ${S.me.role === 'admin' ? '<button class="btn ghost" type="button" id="scReset">다시 만들기</button>' : ''}</div>
+
+    <section class="panel ds-time">
+      <div class="ds-time-top">
+        <div><span class="cr-id">공정 진행률 (소요일 기준)</span><div class="ds-now">${pct}%</div></div>
+        <div class="ds-counts">${late.length ? `<span class="ds-late"><b>${late.length}</b> 지연</span>` : ''}
+          <span class="cr-sub">완료 ${ts.filter(t => t.status === '완료').length}/${ts.length}</span></div>
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="ds-next">${now.length ? `진행 중 · <b>${esc(now.map(t => t.name).join(', '))}</b>` : next.length ? `다음 · <b>${esc(next[0].name)}</b> ${esc(next[0].start.slice(5).replace('-', '/'))} 시작` : '모든 공정 완료'}</div>
+    </section>
+
+    <section class="panel sc-gantt">
+      <div class="sc-months">${months.map(m => `<span style="left:${m.left}%;width:${m.width}%">${m.label}</span>`).join('')}</div>
+      <div class="sc-rows">
+        ${todayLeft !== null ? `<i class="sc-today" style="left:${todayLeft}%"></i>` : ''}
+        ${ts.map(t => {
+          const l = dayDiff(first, t.start) / span * 100, w = Math.max(1.2, (dayDiff(t.start, t.end) + 1) / span * 100);
+          const late2 = t.status !== '완료' && t.end < today();
+          return `<div class="sc-row" data-id="${esc(t.id)}"><span class="sc-name">${esc(t.name)}</span>
+            <span class="sc-track"><i class="sc-bar ${t.status === '완료' ? 'done' : late2 ? 'late' : t.status === '진행중' ? 'doing' : ''}" style="left:${l}%;width:${w}%">
+              ${t.progress > 0 && t.progress < 100 ? `<b style="width:${t.progress}%"></b>` : ''}</i></span></div>`;
+        }).join('')}
+      </div>
+    </section>
+
+    <section class="panel">
+      ${(() => { let ph = ''; return ts.map(t => {
+        const dd = scDday(t);
+        const head = t.phase !== ph ? (ph = t.phase, `<div class="ds-phase">${esc(t.phase)}</div>`) : '';
+        return head + `<button class="cr-row sc-item ${t.status !== '완료' && t.end < today() ? 'urgent' : ''}" data-id="${esc(t.id)}">
+          <span class="cr-id">${esc(t.start.slice(5).replace('-', '/'))} ~ ${esc(t.end.slice(5).replace('-', '/'))} · ${t.days}일${t.owner ? ' · ' + esc(t.owner) : ''}</span>
+          <span class="cr-title ${t.status === '완료' ? 'done' : ''}">${esc(t.name)}</span>
+          ${t.note ? `<span class="cr-sub">${esc(t.note)}</span>` : ''}
+          <span class="cr-right"><span class="st ${t.status === '완료' ? '완료' : dd.cls === 'over' ? '반려' : ''}">${t.status === '완료' ? '완료' : t.progress ? t.progress + '%' : dd.text}</span></span>
+        </button>`; }).join(''); })()}
+    </section>`;
+
+  el.querySelectorAll('.sc-item, .sc-row').forEach(b => b.onclick = () => scTaskForm(b.dataset.id));
+  if ($('scShift')) $('scShift').onclick = scShiftForm;
+  if ($('scReset')) $('scReset').onclick = () => { if (confirm('공정표를 지우고 다시 만들까요? 입력한 진행 상황도 함께 지워집니다.')) { SC.cond = null; SC.tasks = []; scRender(el); } };
+  $('scPrint').onclick = scPrint;
+}
+
+function scCreateForm(el) {
+  const s = currentSite();
+  if (!SC.canEdit) { el.innerHTML = '<div class="panel empty"><h3>공정표가 아직 없습니다</h3>소장님·본사가 만들면 여기에 표시됩니다.</div>'; return; }
+  const cp = contractPy(s.area);
+  const floorTotal = (s.floorAreas || []).reduce((t, f) => t + (Number(f.area) || 0), 0);
+  const area0 = cp || (floorTotal ? Math.round(toPy(floorTotal)) : '');
+  el.innerHTML = `<section class="panel" style="padding:18px">
+    <h4 style="margin:0 0 4px">공정표 만들기</h4>
+    <div class="hint">평수·구조·층수와 특이사항 물량으로 공종별 기간을 계산해 날짜를 배치합니다. 만든 뒤 개별 공종은 바꿀 수 있습니다.</div>
+    <div class="cx-when" style="margin-top:14px">
+      <div class="f"><label for="scStart">착공일</label><input type="date" id="scStart" value="${esc(s.startDate || s.plannedStart || today())}"></div>
+      <div class="f"><label for="scArea">연면적 (평)</label><input type="number" id="scArea" value="${esc(area0)}" step="0.1" inputmode="decimal"></div>
+    </div>
+    <div class="f"><span class="lb">구조</span>${segHtml('scSt', SC.meta.structs, s.struct && SC.meta.structs.includes(s.struct) ? s.struct : '경목')}</div>
+    <div class="f"><span class="lb">지상 층수</span>${segHtml('scFl', [['1', '단층'], ['2', '2층'], ['3', '3층'], ['4', '4층']], String(s.floorsAbove || 2))}</div>
+    <div class="card" style="margin:14px 0">
+      <h4>특이사항 (해당 항목만 체크하고 물량 입력)</h4>
+      ${SC.meta.options.map(o => `<div class="sc-opt">
+        <label class="check"><input type="checkbox" class="scOpt" data-k="${esc(o.key)}"> ${esc(o.name)}</label>
+        <input type="number" class="scQty" data-k="${esc(o.key)}" placeholder="0" inputmode="decimal" disabled><span class="cr-sub">${esc(o.unit)}</span>
+      </div>`).join('')}
+    </div>
+    <div class="f"><label for="scNote">메모</label><input type="text" id="scNote" placeholder="예: 겨울 타설 양생 여유 포함"></div>
+    <div id="scPrev"></div>
+    <div class="actions"><button class="btn ghost" type="button" id="scPreview">미리보기</button><button class="btn" type="button" id="scMake">공정표 만들기</button></div>
+  </section>`;
+  bindSegs(el);
+  el.querySelectorAll('.scOpt').forEach(c => c.onchange = () => {
+    const q = el.querySelector(`.scQty[data-k="${c.dataset.k}"]`);
+    q.disabled = !c.checked; if (c.checked) q.focus();
+  });
+  const params = () => ({
+    startDate: $('scStart').value, area: $('scArea').value, struct: segVal(el, 'scSt'), floors: segVal(el, 'scFl'),
+    note: $('scNote').value,
+    options: Object.fromEntries([...el.querySelectorAll('.scOpt:checked')].map(c =>
+      [c.dataset.k, { on: 1, qty: el.querySelector(`.scQty[data-k="${c.dataset.k}"]`).value }]))
+  });
+  $('scPreview').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'sc_preview', params: params() });
+    const last = d.tasks.reduce((m, t) => t.end > m ? t.end : m, d.tasks[0].end);
+    const fin = d.tasks.filter(t => t.phase !== '준공').reduce((m, t) => t.end > m ? t.end : m, d.tasks[0].end);
+    $('scPrev').innerHTML = `<div class="sum"><b>미리보기</b>
+      <div class="ds-prev-row"><span>공사 완료 (마감까지)</span><b>${esc(fin)}</b></div>
+      <div class="ds-prev-row"><span>준공·사용승인</span><b>${esc(last)}</b></div>
+      ${d.tasks.filter(t => ['골조', '외피', '마감'].includes(t.phase)).slice(0, 3).map(t => `<div class="ds-prev-row"><span>${esc(t.name)}</span><span>${esc(t.start)} ~ ${esc(t.end)} (${t.days}일)</span></div>`).join('')}</div>`;
+  });
+  $('scMake').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'sc_create', siteCode: s.code, replace: true, params: params() });
+    SC.cond = d.cond; SC.tasks = d.tasks;
+    renderSiteTab(); toast('공정표를 만들었습니다');
+  });
+}
+
+function scTaskForm(id) {
+  const t = SC.tasks.find(x => x.id === id); if (!t) return;
+  const can = SC.canEdit;
+  const body = openSheet(esc(t.name), `${esc(currentSite().code)} · ${esc(t.phase)} · ${t.days}일`, `
+    <div class="card">
+      <div class="cx-when"><div class="f"><label>시작일</label><input type="date" id="tStart" value="${esc(t.start)}" ${can ? '' : 'disabled'}></div>
+        <div class="f"><label>종료일</label><input type="date" id="tEnd" value="${esc(t.end)}" ${can ? '' : 'disabled'}></div></div>
+      <div class="f"><span class="lb">상태</span>${segHtml('tSt', SC.meta.statuses, t.status)}</div>
+      <div class="f"><label>진행률 <b id="tPv">${t.progress}%</b></label><input type="range" id="tProg" min="0" max="100" step="10" value="${t.progress}" ${can ? '' : 'disabled'} style="width:100%"></div>
+      <div class="f"><label>담당 (팀·업체)</label><input type="text" id="tOwner" value="${esc(t.owner)}" ${can ? '' : 'disabled'}></div>
+      <div class="f"><label>메모</label><textarea id="tNote" rows="2" ${can ? '' : 'disabled'}>${esc(t.note)}</textarea></div>
+      ${t.doneDate ? `<div class="hint">완료일 ${esc(t.doneDate)}${t.doneDate > t.end ? ` · 계획보다 ${dayDiff(t.end, t.doneDate)}일 늦음` : ''}</div>` : ''}
+    </div>
+    ${can ? `<label class="check" style="margin-bottom:10px"><input type="checkbox" id="tShift" checked> <span>완료일이 계획보다 늦으면 <b>이후 공정도 함께 미루기</b></span></label>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="tClose">닫기</button>
+      <button class="btn" type="button" id="tDone">공정 완료</button>
+      <button class="btn ghost" type="button" id="tSave">저장</button></div>` : ''}`);
+  bindSegs(body);
+  if (!can) return;
+  $('tProg').oninput = () => $('tPv').textContent = $('tProg').value + '%';
+  $('tClose').onclick = closeSheet;
+  const send = (extra) => api(Object.assign({ action: 'sc_task', id: t.id, shiftAfter: $('tShift').checked, fields: Object.assign({
+    start: $('tStart').value, end: $('tEnd').value, status: segVal(body, 'tSt'), progress: $('tProg').value,
+    owner: $('tOwner').value, note: $('tNote').value }, extra) }, {}));
+  $('tSave').onclick = e => submitting(e.target, async () => {
+    const d = await send(); SC.tasks = d.tasks; closeSheet(); renderSiteTab();
+    toast(d.moved ? `저장 · 이후 ${d.moved}개 공정을 옮겼습니다` : '저장했습니다');
+  });
+  $('tDone').onclick = e => submitting(e.target, async () => {
+    const d = await send({ status: '완료', progress: 100, doneDate: today() });
+    SC.tasks = d.tasks; closeSheet(); renderSiteTab();
+    toast(d.moved ? `완료 · 이후 ${d.moved}개 공정을 옮겼습니다` : `${t.name} 완료`);
+  });
+}
+
+function scShiftForm() {
+  const s = currentSite();
+  const body = openSheet('이후 공정 순연', esc(s.code + ' ' + s.name), `
+    <div class="card">
+      <div class="hint">완료되지 않은 공정을 한꺼번에 미루거나 당깁니다. 주말·공휴일은 자동으로 건너뜁니다.</div>
+      <div class="f" style="margin-top:12px"><label>며칠 옮길까요? (당기려면 -3 처럼)</label><input type="number" id="scDays" value="3" step="1"></div>
+      <div class="f"><label>이 날짜 이후 공정만</label><input type="date" id="scFrom" value="${today()}"></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="scClose">닫기</button><button class="btn" type="button" id="scGo">순연</button></div>`);
+  $('scClose').onclick = closeSheet;
+  $('scGo').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'sc_shift', siteCode: s.code, days: $('scDays').value, fromDate: $('scFrom').value });
+    SC.tasks = d.tasks; closeSheet(); renderSiteTab(); toast(`${d.moved}개 공정을 옮겼습니다`);
+  });
+}
+
+function scPrint() {
+  const s = currentSite(), ts = SC.tasks;
+  const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+  const rows = ts.map(t => `<tr class="${t.status === '완료' ? 'done' : t.end < today() && t.status !== '완료' ? 'late' : ''}">
+    <td>${esc(t.phase)}</td><td>${esc(t.name)}</td><td>${t.days}일</td><td>${esc(t.start)}</td><td>${esc(t.end)}</td>
+    <td>${esc(t.status)}${t.progress && t.progress < 100 ? ` ${t.progress}%` : ''}</td><td>${esc(t.owner)}</td><td>${esc(t.note)}</td></tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>공정표 ${esc(s.code)}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#1E261B;padding:24px}
+    h1{font-size:18px;margin:0 0 4px;color:#00509D;border-top:3px solid #00509D;padding-top:10px}.sub{color:#697164;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#FEFAE0;color:#2D5016}
+    tr.done td{color:#888;text-decoration:line-through}tr.late td{background:#F9ECEA}
+    button{margin-bottom:12px;padding:9px 20px;background:#2D5016;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
+  </style></head><body><button onclick="window.print()">인쇄</button>
+    <h1>시공 공정표</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · ${esc(ts[0].start)} ~ ${esc(ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end))} · (주)사람사는집종합건설</div>
+    <table><tr><th>단계</th><th>공종</th><th>소요</th><th>시작</th><th>종료</th><th>상태</th><th>담당</th><th>메모</th></tr>${rows}</table>
+  </body></html>`);
+  w.document.close();
 }
 
 // ---------- 현장보고 ----------
