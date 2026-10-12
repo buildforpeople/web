@@ -1264,24 +1264,6 @@
     return n.endsWith('.pdf') || n.endsWith('.xlsx') || n.endsWith('.xls') || n.endsWith('.csv');
   }
 
-  function fileIcon(f) {
-    if (f.type === 'application/pdf') return '📄';
-    if (f.type.startsWith('image/')) return '🖼️';
-    const name = (f.name || '').toLowerCase();
-    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')
-        || f.type.includes('spreadsheet') || f.type.includes('excel') || f.type === 'text/csv') return '📊';
-    return '📎';
-  }
-
-  function isAllowedFile(f) {
-    if (f.type.startsWith('image/')) return true;
-    if (f.type === 'application/pdf') return true;
-    if (f.type === 'text/csv') return true;
-    if (f.type.includes('spreadsheet') || f.type.includes('excel')) return true;
-    const n = (f.name || '').toLowerCase();
-    return n.endsWith('.pdf') || n.endsWith('.xlsx') || n.endsWith('.xls') || n.endsWith('.csv');
-  }
-
   function renderPreview(previewId) {
     const container = document.getElementById(previewId);
     const files = fileStores[previewId];
