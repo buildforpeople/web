@@ -1308,7 +1308,7 @@
 
     box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
     box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
-        box.addEventListener('drop', e => {
+    box.addEventListener('drop', e => {
       e.preventDefault();
       box.classList.remove('drag-over');
       const files = Array.from(e.dataTransfer.files).filter(isAllowedFile);
