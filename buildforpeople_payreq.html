@@ -1083,7 +1083,7 @@
         </div>
         <div>
           <div class="amount-wrap">
-            <input type="number" name="amount" id="amountInput" placeholder="0" min="0" required>
+            <input type="number" name="amount" id="amountInput" placeholder="0" step="any" required>
             <span class="unit">원</span>
           </div>
           <div class="amount-preview" id="amountPreview"></div>
@@ -1139,16 +1139,16 @@
         <input type="text" name="account" id="accountInput" placeholder="계좌번호 입력" inputmode="numeric" pattern="[0-9\-]*" oninput="this.value=this.value.replace(/[^0-9\-]/g,'')">
       </div>
 
-      <div class="field">
+            <div class="field">
         <div class="field-label">
           <span class="q-num">11.</span>
           <label>견적서 첨부</label>
-          <span class="hint">이미지 또는 PDF<br>여러 파일 가능</span>
+          <span class="hint">이미지 · PDF · Excel<br>여러 파일 가능</span>
         </div>
         <div class="upload-box" id="quoteUploadBox" onclick="document.getElementById('quoteFiles').click()">
-          <input type="file" id="quoteFiles" name="quoteFiles" multiple accept="image/*,.pdf" style="display:none" onchange="handleFiles(this,'quotePreview')">
+          <input type="file" id="quoteFiles" name="quoteFiles" multiple accept="image/*,.pdf,.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" style="display:none" onchange="handleFiles(this,'quotePreview')">
           <div class="upload-icon">📎</div>
-          <div class="upload-text">클릭하여 파일 선택<br><span>이미지(JPG, PNG) · PDF</span></div>
+          <div class="upload-text">클릭하여 파일 선택<br><span>이미지(JPG, PNG) · PDF · Excel(XLSX, XLS, CSV)</span></div>
         </div>
         <div class="file-preview" id="quotePreview"></div>
       </div>
@@ -1246,12 +1246,30 @@
     input.value = ''; // 같은 파일 재선택 허용
   }
 
+  function fileIcon(f) {
+    if (f.type === 'application/pdf') return '📄';
+    if (f.type.startsWith('image/')) return '🖼️';
+    const name = (f.name || '').toLowerCase();
+    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')
+        || f.type.includes('spreadsheet') || f.type.includes('excel') || f.type === 'text/csv') return '📊';
+    return '📎';
+  }
+
+  function isAllowedFile(f) {
+    if (f.type.startsWith('image/')) return true;
+    if (f.type === 'application/pdf') return true;
+    if (f.type === 'text/csv') return true;
+    if (f.type.includes('spreadsheet') || f.type.includes('excel')) return true;
+    const n = (f.name || '').toLowerCase();
+    return n.endsWith('.pdf') || n.endsWith('.xlsx') || n.endsWith('.xls') || n.endsWith('.csv');
+  }
+
   function renderPreview(previewId) {
     const container = document.getElementById(previewId);
     const files = fileStores[previewId];
     container.innerHTML = files.map((f, i) => `
       <div class="file-item">
-        <span class="file-icon">${f.type === 'application/pdf' ? '📄' : '🖼️'}</span>
+        <span class="file-icon">${fileIcon(f)}</span>
         <span class="file-name">${f.name}</span>
         <span class="file-size">${(f.size / 1024).toFixed(0)}KB</span>
         <button type="button" class="file-del" onclick="removeFile('${previewId}',${i})" title="삭제">✕</button>
@@ -1272,12 +1290,10 @@
 
     box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('drag-over'); });
     box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
-    box.addEventListener('drop', e => {
+        box.addEventListener('drop', e => {
       e.preventDefault();
       box.classList.remove('drag-over');
-      const files = Array.from(e.dataTransfer.files).filter(f =>
-        f.type.startsWith('image/') || f.type === 'application/pdf'
-      );
+      const files = Array.from(e.dataTransfer.files).filter(isAllowedFile);
       fileStores[previewId] = fileStores[previewId].concat(files);
       renderPreview(previewId);
     });
@@ -1444,16 +1460,19 @@
     return result.trim() + '원';
   }
 
-  document.getElementById('amountInput').addEventListener('input', function() {
-    const val = parseInt(this.value) || 0;
+    document.getElementById('amountInput').addEventListener('input', function() {
+    const val = parseInt(this.value);
     const preview = document.getElementById('amountPreview');
-    if (val > 0) {
-      preview.textContent = val.toLocaleString('ko-KR') + '원 · ' + toKoreanAmount(val);
+    if (!isNaN(val) && val !== 0) {
+      const sign = val < 0 ? '-' : '';
+      preview.textContent = val.toLocaleString('ko-KR') + '원 · ' + sign + toKoreanAmount(Math.abs(val));
+      preview.style.color = val < 0 ? '#c0392b' : '';
       this.classList.remove('input-error');
       const err = preview.nextSibling;
       if (err && err.classList?.contains('field-error')) err.remove();
     } else {
       preview.textContent = '';
+      preview.style.color = '';
     }
   });
 
@@ -1548,7 +1567,8 @@
     if (!item.value.trim()) markError(item, '품목 및 수량을 입력해 주세요.');
 
     const amount = this.querySelector('input[name="amount"]');
-    if (!amount.value || Number(amount.value) <= 0) {
+    const amtNum = Number(amount.value);
+    if (!amount.value || amtNum === 0 || isNaN(amtNum)) {
       ok = false;
       amount.classList.add('input-error');
       if (!firstError) firstError = amount;
@@ -1556,7 +1576,7 @@
       if (!amountPreview.nextSibling || !amountPreview.nextSibling.classList?.contains('field-error')) {
         const err = document.createElement('div');
         err.className = 'field-error';
-        err.textContent = '청구 총액을 입력해 주세요.';
+        err.textContent = '청구 총액을 입력해 주세요. (음수는 반환 금액)';
         amountPreview.parentNode.insertBefore(err, amountPreview.nextSibling);
       }
     }
