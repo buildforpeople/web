@@ -510,6 +510,7 @@ function defaultData() {
     overtime: [], // {id, empId, date, hours, description, createdAt}
     vehicles: {}, // {empId: {fuelType:'휘발유'|'경유', efficiency:number}}
     fuelPrices: {}, // {'2026-04': {gasoline: 1720, diesel: 1650}}
+    fuelPriceDaily: [], // [{date:'2026-04-01', gasoline:1720, diesel:1650}, ...]
     welfare: [], // [{id, empId, year, category, subcategory, description, totalAmount, companyAmount, requestDate, status, note, createdAt}]
     cardUsage: [], // [{id, empId, date, amount, merchant, description, imageData, imageName, imageMime, createdAt, sentAt}]
     tollgate: [], // [{id, empId, date, amount, description, fileData, fileName, fileMime, createdAt}]
@@ -532,6 +533,7 @@ function load() {
   if (!d.overtime) d.overtime = [];
   if (!d.vehicles) d.vehicles = {};
   if (!d.fuelPrices) d.fuelPrices = {};
+  if (!d.fuelPriceDaily) d.fuelPriceDaily = [];
   if (!d.welfare) d.welfare = [];
   if (!d.cardUsage) d.cardUsage = [];
   if (!d.tollgate) d.tollgate = [];
@@ -695,6 +697,21 @@ let DB = load();
    ============================================================ */
 function daysBetween(d1, d2) {
   return Math.floor((new Date(d2) - new Date(d1)) / (1000*60*60*24));
+}
+
+// 근속 표시: 'X년 X월 X일 (N일)' — 달력 기준
+function formatTenure(joinStr, refDate) {
+  if (!joinStr) return '-';
+  const j = new Date(joinStr), r = refDate ? new Date(refDate) : new Date();
+  if (isNaN(j.getTime())) return '-';
+  let y = r.getFullYear() - j.getFullYear();
+  let m = r.getMonth() - j.getMonth();
+  let d = r.getDate() - j.getDate();
+  if (d < 0) { m--; d += new Date(r.getFullYear(), r.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+  const total = daysBetween(joinStr, r);
+  if (total < 0) return '입사 전';
+  return `${y}년 ${m}월 ${d}일 (${total.toLocaleString()}일)`;
 }
 
 // 한국 근로기준법 연차 계산
@@ -1090,6 +1107,129 @@ ${benefits}
   if (newlyNotified) save(DB);
 }
 
+/* ---------- 복지혜택 잔여 알림 ---------- */
+// 7/1~7/10: 상반기 점검(H1), 10/15~10/24: 소멸 임박(Q4) — 관리자 첫 로그인 시 직원별 1회 발송
+let _welfareNotifyRunning = false;
+async function checkWelfareNotifications() {
+  if (_welfareNotifyRunning) return; // 중복 실행 방지
+  const currentEmp = getEmployee(DB.session?.empId);
+  if (!currentEmp || currentEmp.role !== 'admin') return;
+  const url = HARDCODED_CALENDAR_URL;
+  if (!url) return;
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const mo = today.getMonth() + 1, day = today.getDate();
+  let period = null;
+  if (mo === 7 && day >= 1 && day <= 10) period = 'H1';
+  else if (mo === 10 && day >= 15 && day <= 24) period = 'Q4';
+  if (!period) return;
+
+  const adminKey = `welfare_${year}_${period}_adminSummary`;
+  if (!DB.tenureNotifications) DB.tenureNotifications = {};
+  if (DB.tenureNotifications[adminKey]) return; // 이번 기간 이미 완료
+  _welfareNotifyRunning = true;
+
+  try { await loadDeferredTables(); } catch (e) { console.warn('[복지알림] 데이터 로드 실패', e); }
+  if (!_deferredLoaded) { _welfareNotifyRunning = false; return; } // 복지 데이터 없이 발송하지 않음
+
+  const empIdToEmail = {};
+  Object.entries(EMAIL_WHITELIST).forEach(([email, id]) => { empIdToEmail[id] = email; });
+  const won = n => Number(n).toLocaleString() + '원';
+  const send = (to, subject, body) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'send_card_statement', to, subject, body, attachments: [], idToken: DB.session ? DB.session.idToken : null })
+  });
+
+  const summary = [];
+  for (const emp of DB.employees) {
+    if (emp.id === 'admin') continue; // 대표 본인 제외
+    const email = empIdToEmail[emp.id];
+    if (!email) continue;
+    const key = `welfare_${year}_${period}_${emp.id}`;
+
+    const usage = calcWelfareUsage(emp.id, year);
+    const cats = Object.keys(WELFARE_CATEGORIES).filter(cat => {
+      const c = WELFARE_CATEGORIES[cat];
+      return !(c.restrictToPosition && emp.position !== c.restrictToPosition);
+    });
+    const totalRemain = cats.reduce((s, cat) => s + Math.max(0, usage[cat].remaining - usage[cat].pending), 0);
+    summary.push({ emp, totalRemain });
+    if (DB.tenureNotifications[key] || totalRemain <= 0) continue;
+
+    const lines = cats.map(cat => {
+      const c = WELFARE_CATEGORIES[cat], u = usage[cat];
+      const pend = u.pending > 0 ? ` (결재 대기 ${won(u.pending)})` : '';
+      return `${c.icon} ${c.name} : 잔여 ${won(Math.max(0, u.remaining - u.pending))} / 한도 ${won(u.limit)}${pend}`;
+    }).join('\n');
+    const table = `━━━━━━━━━━━━━━━━━━\n${lines}\n━━━━━━━━━━━━━━━━━━\n💰 남은 혜택 합계: ${won(totalRemain)}`;
+
+    let subject, body;
+    if (period === 'H1') {
+      subject = `📢 [사람사는집] ${emp.name}님, ${year}년 복지혜택 상반기 사용 현황 안내`;
+      body = `${emp.name}님, 안녕하세요.
+${year}년 상반기가 마무리되어 복지혜택 사용 현황을 알려드립니다.
+
+${table}
+
+⏳ 복지혜택은 12월 31일에 소멸되며 다음 해로 이월되지 않습니다.
+하반기에 꼭 챙겨 쓰세요!
+
+신청: 식구 앱 → 복지지원 탭
+
+— 사람사는집 식구 앱에서 자동 발송`;
+    } else {
+      subject = `⏰ [사람사는집] ${emp.name}님, 안 쓰면 사라지는 복지혜택 ${won(totalRemain)}이 남아 있어요`;
+      body = `${emp.name}님, 올해가 2달 반 남았습니다.
+아직 사용하지 않은 복지혜택이 있어 알려드립니다.
+
+${table}
+
+⚠️ 12월 31일이 지나면 남은 혜택은 모두 사라집니다.
+연말에는 결재가 몰리니 미리 신청해 주세요.
+
+신청: 식구 앱 → 복지지원 탭
+
+— 사람사는집 식구 앱에서 자동 발송`;
+    }
+
+    try {
+      await send(email, subject, body);
+      const sentAt = Date.now();
+      DB.tenureNotifications[key] = sentAt;
+      try { await dbUpsert('tenureNotifications', 'key', { key, sentAt }); } catch (e) { console.warn('[복지알림] 기록 저장 실패', e); }
+      console.log(`[복지알림] ${emp.name} ${period} 발송 완료`);
+    } catch (err) {
+      console.warn(`[복지알림] ${emp.name} 발송 실패:`, err);
+    }
+  }
+
+  // 관리자 요약 메일
+  try {
+    const label = period === 'H1' ? '상반기 점검' : '소멸 임박';
+    const rows = summary.sort((a, b) => b.totalRemain - a.totalRemain)
+      .map(s => `· ${s.emp.name} (${s.emp.position}) : ${won(s.totalRemain)}${s.totalRemain <= 0 ? ' — 소진, 미발송' : ''}`).join('\n');
+    const grand = summary.reduce((s, x) => s + x.totalRemain, 0);
+    await send('my.new.homeplace@gmail.com', `[식구] ${year}년 복지혜택 잔여 알림 발송 완료 (${label})`,
+`${year}년 복지혜택 잔여 알림(${label})을 직원들에게 발송했습니다.
+
+직원별 잔여 혜택
+${rows}
+
+전체 잔여 합계: ${won(grand)}
+
+— 식구 앱에서 자동 발송`);
+    const sentAt = Date.now();
+    DB.tenureNotifications[adminKey] = sentAt;
+    try { await dbUpsert('tenureNotifications', 'key', { key: adminKey, sentAt }); } catch (e) {}
+  } catch (err) {
+    console.warn('[복지알림] 관리자 요약 발송 실패:', err);
+  }
+  save(DB);
+  _welfareNotifyRunning = false;
+}
+
 let _dbLoadedThisSession = false;
 
 async function renderApp() {
@@ -1150,6 +1290,7 @@ async function renderApp() {
   if (emp.role === 'admin') {
     renderAdmin(emp);
     checkTenureNotifications(); // 비동기로 근속 알림 체크 (백그라운드)
+    checkWelfareNotifications(); // 복지혜택 잔여 알림 (7/1~7/10, 10/15~10/24)
   } else {
     renderEmployee(emp);
   }
@@ -1212,7 +1353,7 @@ function employeeDashboardHTML(emp) {
         <div class="stat primary">
           <div class="stat-label">입사일</div>
           <div class="stat-value" style="font-size:17px;">${emp.joinDate}</div>
-          <div class="stat-sub">근속 ${years}년 ${remainingDays}일 (총 ${tenureDays}일)</div>
+          <div class="stat-sub">근속 ${formatTenure(emp.joinDate)}</div>
         </div>
         <div class="stat success">
           <div class="stat-label">전체 연차</div>
@@ -1412,10 +1553,12 @@ function renderMileageSection(emp) {
     .filter(m => m.empId === emp.id && m.date.slice(0,7) === mileageMonth)
     .sort((a,b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
 
+  const monthMaxPrice = getMonthlyMaxFuelPrice(mileageMonth, vehicle.fuelType);
+
   let cumulative = 0;
   const rows = entries.map(e => {
     cumulative += Number(e.distance);
-    const ep = Number(e.fuelPrice) || 0;
+    const ep = resolveEntryFuelPrice(e, vehicle.fuelType);
     const amount = vehicle.efficiency > 0 && ep > 0
       ? Math.round((Number(e.distance) / vehicle.efficiency) * ep)
       : 0;
@@ -1435,7 +1578,8 @@ function renderMileageSection(emp) {
 
   return `
     <div class="card">
-      <div class="card-title">개인 차량 유류비 정산</div>
+      <div class="card-title" style="margin-bottom:4px;">개인 차량 유류비 정산</div>
+      <p style="font-size:11px; color:var(--muted); margin-bottom:14px;">유류비는 opinet 전국 유가 기준, 그 달의 가장 높은 금액으로 자동 적용됩니다.</p>
 
       <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;">
         <div style="flex:0 0 160px;">
@@ -1455,27 +1599,29 @@ function renderMileageSection(emp) {
         </div>
       </div>
 
-      <p style="padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:14px;">
-        ℹ️ 주유 시 <b>리터당 단가</b>를 직접 입력해 주세요. 금액 산식: <b>(이동거리 ÷ 차량 연비) × 주유 유가 × 1.1</b> (감가·유지보수 10% 포함)
+      <p style="padding:10px 14px; background:${monthMaxPrice > 0 ? '#ecfdf5' : '#fef3c7'}; border-radius:6px; font-size:12px; color:${monthMaxPrice > 0 ? '#065f46' : '#92400e'}; line-height:1.6; margin-bottom:14px;">
+        ${monthMaxPrice > 0
+          ? `⛽ <b>${mileageMonth}</b> 적용 유가 (월 최고가): <b>${vehicle.fuelType} ${monthMaxPrice.toLocaleString()}원/L</b> · 금액 산식: <b>(거리 ÷ 연비) × 유가 × 1.1</b>`
+          : `⚠️ <b>${mileageMonth}</b> 유가 데이터가 없습니다. 관리자에게 유가 수집을 요청하세요.`
+        }
       </p>
 
-      <div style="display:grid; grid-template-columns: 140px 100px 110px 1fr auto; gap:8px; margin-bottom:14px;">
+      <div style="display:grid; grid-template-columns: 140px 100px 1fr auto; gap:8px; margin-bottom:14px;">
         <input type="date" id="mlDate" value="${new Date().toISOString().slice(0,10)}">
         <input type="number" id="mlDist" placeholder="거리(km)" step="0.1">
-        <input type="number" id="mlFuelPrice" placeholder="유가(원/L)" step="10">
         <input type="text" id="mlDesc" placeholder="이동 내용 (예: 용인수지 현장)">
         <button class="btn-primary btn-sm" onclick="addMileage('${emp.id}')">+ 추가</button>
       </div>
 
       ${rows.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">해당 월 운행 내역이 없습니다.</p>' : `
         <table>
-          <thead><tr><th>날짜</th><th>거리</th><th>유가</th><th>이동 내용</th><th>누계</th><th>금액</th><th></th></tr></thead>
+          <thead><tr><th>날짜</th><th>거리</th><th>적용 유가</th><th>이동 내용</th><th>누계</th><th>금액</th><th></th></tr></thead>
           <tbody>
             ${rows.map(r => `
               <tr>
                 <td>${r.date}</td>
                 <td>${Number(r.distance).toLocaleString()} km</td>
-                <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미입력</span>'}</td>
+                <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미수집</span>'}</td>
                 <td>${escapeHtml(r.description||'-')}</td>
                 <td style="color:var(--muted);">${r.cumulative.toLocaleString()} km</td>
                 <td style="font-weight:600;">${r.amount.toLocaleString()}원</td>
@@ -1560,7 +1706,7 @@ function renderMileageHistory(empId) {
     if (!byMonth[m]) byMonth[m] = { count: 0, dist: 0, fuelTotal: 0 };
     byMonth[m].count++;
     byMonth[m].dist += Number(e.distance);
-    const ep = Number(e.fuelPrice) || 0;
+    const ep = resolveEntryFuelPrice(e, vehicle.fuelType);
     byMonth[m].fuelTotal += vehicle.efficiency > 0 && ep > 0
       ? Math.round((Number(e.distance) / vehicle.efficiency) * ep)
       : 0;
@@ -1576,7 +1722,7 @@ function renderMileageHistory(empId) {
   return `
     <div class="card-title" style="margin-top:28px;">월별 유류비 이력</div>
     <p style="font-size:11px; color:var(--muted); margin-bottom:10px; line-height:1.6;">
-      ※ 각 운행 건별로 입력된 주유 유가와 차량 연비(${vehicle.efficiency}km/L) 기준 산출 결과입니다. 산식: 건별 (거리 ÷ 연비) × 유가 × 1.1
+      ※ 오피넷 월 최고 유가 · 차량 연비(${vehicle.efficiency}km/L) 기준 자동 산출. 산식: (거리 ÷ 연비) × 월 최고 유가 × 1.1
     </p>
     <table>
       <thead><tr><th>월</th><th>건수</th><th>총 거리</th><th>유류비</th><th>감가 10%</th><th>최종 지급액</th><th></th></tr></thead>
@@ -1616,6 +1762,58 @@ async function saveVehicle(empId, field, value) {
   renderApp();
 }
 
+// ─── 오피넷 월간 최고 유가 자동 산출 ───
+function getMonthlyMaxFuelPrice(month, fuelType) {
+  // month: 'YYYY-MM', fuelType: '휘발유' | '경유'
+  const key = fuelType === '경유' ? 'diesel' : 'gasoline';
+  const prices = DB.fuelPriceDaily
+    .filter(f => f.date && f.date.slice(0, 7) === month && f[key] > 0)
+    .map(f => f[key]);
+  if (prices.length === 0) return 0;
+  return Math.max(...prices);
+}
+
+// 서버에서 오피넷 유가 수집 트리거 (관리자가 수동 실행 가능)
+async function fetchFuelPricesFromServer() {
+  showLoader('오피넷 유가 수집 중...');
+  try {
+    const resp = await fetch(HARDCODED_DB_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'fetch_fuel_prices', idToken: DB.session?.idToken || '' })
+    });
+    const json = await resp.json();
+    if (!json.success) throw new Error(json.error || '수집 실패');
+    // 성공하면 fuelPriceDaily 갱신
+    const resp2 = await fetch(HARDCODED_DB_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'get_all', table: 'fuelPriceDaily', idToken: DB.session?.idToken || '' })
+    });
+    const json2 = await resp2.json();
+    if (json2.success && json2.data) {
+      DB.fuelPriceDaily = json2.data.map(f => ({
+        date: String(f.date), gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0
+      }));
+      save(DB);
+    }
+    hideLoader();
+    showToast(`유가 수집 완료 (${json.data.date}: 휘발유 ${json.data.gasoline}원, 경유 ${json.data.diesel}원)`, 'success');
+    renderApp();
+  } catch (err) {
+    hideLoader();
+    showToast('유가 수집 실패: ' + err.message, 'error');
+  }
+}
+
+// 운행 기록의 유가 결정: 해당 건에 수동 입력된 유가가 있으면 사용, 없으면 월간 최고가 자동 적용
+function resolveEntryFuelPrice(entry, fuelType) {
+  const manual = Number(entry.fuelPrice) || 0;
+  if (manual > 0) return manual; // 기존 수동 입력 데이터 호환
+  const month = entry.date ? entry.date.slice(0, 7) : '';
+  return getMonthlyMaxFuelPrice(month, fuelType);
+}
+
 async function saveFuelPrice(month, fuelType, price) {
   if (!DB.fuelPrices[month]) DB.fuelPrices[month] = { gasoline: 0, diesel: 0 };
   const key = fuelType === '경유' ? 'diesel' : 'gasoline';
@@ -1637,13 +1835,14 @@ async function saveFuelPrice(month, fuelType, price) {
 async function addMileage(empId) {
   const date = document.getElementById('mlDate').value;
   const distance = document.getElementById('mlDist').value;
-  const fuelPrice = document.getElementById('mlFuelPrice').value;
   const description = document.getElementById('mlDesc').value.trim();
   if (!date || !distance) { alert('날짜와 거리를 입력해 주세요.'); return; }
-  if (!fuelPrice || Number(fuelPrice) <= 0) { alert('주유 유가(원/L)를 입력해 주세요.'); return; }
+  const vehicle = DB.vehicles[empId] || { fuelType: '휘발유', efficiency: 12 };
+  const autoPrice = getMonthlyMaxFuelPrice(date.slice(0,7), vehicle.fuelType);
+  if (autoPrice <= 0) { alert('해당 월의 유가 데이터가 없습니다. 관리자에게 유가 수집을 요청하세요.'); return; }
   const row = {
     id: 'm' + Date.now(),
-    empId, date, distance: Number(distance), fuelPrice: Number(fuelPrice), description,
+    empId, date, distance: Number(distance), fuelPrice: 0, description,
     createdAt: Date.now()
   };
   showLoader('저장 중...');
@@ -2260,12 +2459,12 @@ function refreshSalaryEstimate() {
   const otHours = otEntries.reduce((s, o) => s + Number(o.hours), 0);
   const otPay = Math.round(hourlyRate * multiplier * otHours);
 
-  // 3) 유류비 (건별 유가 × 주행 + 감가 10% + 톨게이트)
+  // 3) 유류비 (월 최고 유가 × 주행 + 감가 10% + 톨게이트)
   const vehicle = DB.vehicles[emp.id] || { fuelType: '휘발유', efficiency: 12 };
   const mlEntries = DB.mileage.filter(m => m.empId === emp.id && m.date.slice(0,7) === month);
   const totalDist = mlEntries.reduce((s, m) => s + Number(m.distance), 0);
   const fuelBase = mlEntries.reduce((s, m) => {
-    const ep = Number(m.fuelPrice) || 0;
+    const ep = resolveEntryFuelPrice(m, vehicle.fuelType);
     return s + (vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(m.distance) / vehicle.efficiency) * ep) : 0);
   }, 0);
   const fuelSurcharge = Math.round(fuelBase * 0.1);
@@ -2710,13 +2909,12 @@ function renderSeveranceContent() {
               </tr>
             `;
           }
-          const yrs = Math.floor(r.result.tenureDays / 365);
-          const dys = r.result.tenureDays - yrs * 365;
+          const _ref = new Date(new Date(r.contract['입사일']).getTime() + r.result.tenureDays * 86400000);
           return `
             <tr>
               <td><b>${r.emp?.name || r.contract['이름'] || '-'}</b></td>
               <td>${r.contract['입사일']}</td>
-              <td>${yrs}년 ${dys}일</td>
+              <td>${formatTenure(r.contract['입사일'], _ref)}</td>
               <td>${money(r.result.monthlySalary)}</td>
               <td style="text-align:right; color:var(--primary); font-weight:700;">${money(r.result.severance)}</td>
               <td style="text-align:right; color:var(--primary); font-weight:600;">${future5?.eligible ? money(future5.severance) : '-'}</td>
@@ -3108,7 +3306,7 @@ function showFuelDetail(empId, month) {
   let cumulative = 0;
   const rows = entries.map(e => {
     cumulative += Number(e.distance);
-    const ep = Number(e.fuelPrice) || 0;
+    const ep = resolveEntryFuelPrice(e, vehicle.fuelType);
     const amount = vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(e.distance) / vehicle.efficiency) * ep) : 0;
     return { ...e, cumulative, amount, fuelPriceNum: ep };
   });
@@ -3123,13 +3321,13 @@ function showFuelDetail(empId, month) {
     <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">${vehicle.fuelType} · 연비 ${vehicle.efficiency}km/L</p>
     ${rows.length === 0 ? '<p style="color:var(--muted);">해당 월 운행 내역이 없습니다.</p>' : `
       <table>
-        <thead><tr><th>날짜</th><th>거리</th><th>유가</th><th>이동 내용</th><th>누계</th><th>금액</th></tr></thead>
+        <thead><tr><th>날짜</th><th>거리</th><th>적용 유가</th><th>이동 내용</th><th>누계</th><th>금액</th></tr></thead>
         <tbody>
           ${rows.map(r => `
             <tr>
               <td>${r.date}</td>
               <td>${Number(r.distance).toLocaleString()} km</td>
-              <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미입력</span>'}</td>
+              <td>${r.fuelPriceNum > 0 ? r.fuelPriceNum.toLocaleString()+'원' : '<span style="color:var(--danger);">미수집</span>'}</td>
               <td>${escapeHtml(r.description || '-')}</td>
               <td style="color:var(--muted);">${r.cumulative.toLocaleString()} km</td>
               <td style="font-weight:600;">${r.amount.toLocaleString()}원</td>
@@ -3368,13 +3566,15 @@ function renderCardHistoryAll() {
 
 function renderFuelStatus() {
   const emps = DB.employees;
+  const gasolineMax = getMonthlyMaxFuelPrice(mileageMonth, '휘발유');
+  const dieselMax = getMonthlyMaxFuelPrice(mileageMonth, '경유');
 
   const rows = emps.map(e => {
     const vehicle = DB.vehicles[e.id] || { fuelType: '휘발유', efficiency: 12 };
     const entries = DB.mileage.filter(m => m.empId === e.id && m.date.slice(0,7) === mileageMonth);
     const totalDist = entries.reduce((s, x) => s + Number(x.distance), 0);
     const fuelAmount = entries.reduce((s, x) => {
-      const ep = Number(x.fuelPrice) || 0;
+      const ep = resolveEntryFuelPrice(x, vehicle.fuelType);
       return s + (vehicle.efficiency > 0 && ep > 0 ? Math.round((Number(x.distance) / vehicle.efficiency) * ep) : 0);
     }, 0);
     const surcharge = Math.round(fuelAmount * 0.1);
@@ -3390,9 +3590,11 @@ function renderFuelStatus() {
       <div class="card-title">직원별 유류비 지급 현황</div>
       <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
         <input type="month" value="${mileageMonth}" onchange="setMileageMonth(this.value)" style="max-width:180px;">
+        <button class="btn-sm btn-secondary" onclick="fetchFuelPricesFromServer()">⛽ 유가 수집</button>
       </div>
-      <p style="padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:14px;">
-        ℹ️ 직원이 운행 기록 입력 시 <b>주유 유가(원/L)</b>를 직접 입력합니다. 금액 산식: <b>건별 (거리 ÷ 연비) × 주유 유가 × 1.1</b> (감가·유지보수 10% 포함)
+      <p style="padding:10px 14px; background:#ecfdf5; border-radius:6px; font-size:12px; color:#065f46; line-height:1.6; margin-bottom:14px;">
+        ⛽ <b>${mileageMonth}</b> 적용 유가 (월 최고가): 휘발유 <b>${gasolineMax > 0 ? gasolineMax.toLocaleString() + '원' : '미수집'}</b> · 경유 <b>${dieselMax > 0 ? dieselMax.toLocaleString() + '원' : '미수집'}</b><br>
+        ℹ️ 금액 산식: <b>(거리 ÷ 연비) × 월 최고 유가 × 1.1</b> (감가·유지보수 10% 포함) — 오피넷 전국 평균 기준 자동 산출
       </p>
       <table>
         <thead><tr><th>이름</th><th>부서/직책</th><th>연료</th><th>연비</th><th>건수</th><th>총 거리</th><th>유류비</th><th>감가 10%</th><th>최종 지급액</th></tr></thead>
@@ -3428,7 +3630,7 @@ function renderFuelStatus() {
 function renderFuelHistoryAll() {
   if (DB.mileage.length === 0) return '';
 
-  // 월별 × 직원별 집계 (건별 유가 기반)
+  // 월별 × 직원별 집계 (자동 유가 기반)
   const history = {}; // {month: {empId: {count, dist, fuelTotal}}}
   DB.mileage.forEach(m => {
     const mo = m.date.slice(0,7);
@@ -3436,8 +3638,8 @@ function renderFuelHistoryAll() {
     if (!history[mo][m.empId]) history[mo][m.empId] = { count: 0, dist: 0, fuelTotal: 0 };
     history[mo][m.empId].count++;
     history[mo][m.empId].dist += Number(m.distance);
-    const vehicle = DB.vehicles[m.empId] || { efficiency: 12 };
-    const ep = Number(m.fuelPrice) || 0;
+    const vehicle = DB.vehicles[m.empId] || { fuelType: '휘발유', efficiency: 12 };
+    const ep = resolveEntryFuelPrice(m, vehicle.fuelType);
     history[mo][m.empId].fuelTotal += vehicle.efficiency > 0 && ep > 0
       ? Math.round((Number(m.distance) / vehicle.efficiency) * ep)
       : 0;
@@ -3460,7 +3662,7 @@ function renderFuelHistoryAll() {
     <div class="card">
       <div class="card-title">전체 월별 유류비 이력</div>
       <p style="font-size:11px; color:var(--muted); margin-bottom:14px; line-height:1.6;">
-        ※ 각 운행 건별로 직원이 입력한 주유 유가와 차량 연비를 기준으로 산출한 금액입니다.
+        ※ 오피넷 전국 평균 월 최고 유가와 차량 연비를 기준으로 자동 산출한 금액입니다.
       </p>
       <table>
         <thead><tr><th>월</th><th>직원</th><th>건수</th><th>총 거리</th><th>유류비</th><th>최종 지급액</th></tr></thead>
@@ -3526,22 +3728,58 @@ function renderPendingRequests() {
   `;
 }
 
+let empStatusSort = { key: 'joinDate', dir: 'asc' };
+function setEmpStatusSort(key) {
+  if (empStatusSort.key === key) empStatusSort.dir = empStatusSort.dir === 'asc' ? 'desc' : 'asc';
+  else empStatusSort = { key, dir: 'asc' };
+  renderAdminBody();
+}
+
 function renderEmployeeStatus() {
-  const emps = DB.employees;
+  // 정렬용 값 미리 계산
+  const data = DB.employees.map(e => {
+    const leave = calcAnnualLeave(e);
+    const used = usedLeaveDays(e.id);
+    return {
+      e, leave, total: leave.total, used, remain: leave.total - used,
+      rate: leave.total > 0 ? Math.round(used / leave.total * 100) : 0,
+      tenure: daysBetween(e.joinDate, new Date())
+    };
+  });
+  const sortVal = (r) => {
+    switch (empStatusSort.key) {
+      case 'name': return r.e.name;
+      case 'dept': return (r.e.dept || '') + (r.e.position || '');
+      case 'birthday': return r.e.birthday ? r.e.birthday.slice(5) : null; // 월-일 기준 (생일 순)
+      case 'joinDate': return r.e.joinDate || null;
+      case 'tenure': return r.tenure;
+      case 'total': return r.total;
+      case 'used': return r.used;
+      case 'remain': return r.remain;
+      case 'rate': return r.rate;
+    }
+  };
+  data.sort((a, b) => {
+    const va = sortVal(a), vb = sortVal(b);
+    if (va === null && vb === null) return 0;
+    if (va === null) return 1;   // 미등록은 항상 맨 아래
+    if (vb === null) return -1;
+    const c = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'ko');
+    return empStatusSort.dir === 'asc' ? c : -c;
+  });
+  const th = (key, label) => {
+    const on = empStatusSort.key === key;
+    const arrow = on ? (empStatusSort.dir === 'asc' ? ' ▲' : ' ▼') : ' <span style="color:#cbd5e1;">↕</span>';
+    return `<th style="cursor:pointer; user-select:none; ${on ? 'color:var(--primary);' : ''}" onclick="setEmpStatusSort('${key}')">${label}${arrow}</th>`;
+  };
   return `
     <div class="card">
       <div class="card-title">직원별 연차 현황 (${new Date().getFullYear()}년)</div>
+      <p style="font-size:11px; color:var(--muted); margin-bottom:8px;">열 제목을 누르면 정렬됩니다. (생년월일은 월·일 기준 생일 순)</p>
       <table>
-        <thead><tr><th>이름</th><th>부서/직책</th><th>생년월일</th><th>입사일</th><th>근속</th><th>전체 연차</th><th>사용</th><th>잔여</th><th>사용률</th></tr></thead>
+        <thead><tr>${th('name','이름')}${th('dept','부서/직책')}${th('birthday','생년월일')}${th('joinDate','입사일')}${th('tenure','근속')}${th('total','전체 연차')}${th('used','사용')}${th('remain','잔여')}${th('rate','사용률')}</tr></thead>
         <tbody>
-          ${emps.map(e => {
-            const leave = calcAnnualLeave(e);
-            const total = leave.total;
-            const used = usedLeaveDays(e.id);
-            const remain = total - used;
-            const rate = total > 0 ? Math.round(used/total*100) : 0;
-            const tenure = daysBetween(e.joinDate, new Date());
-            const years = Math.floor(tenure/365);
+          ${data.map(({ e, leave, total, used, remain, rate }) => {
             const bdayCell = e.birthday
               ? `${e.birthday}<br><span style="font-size:10px; color:var(--muted);">${e.birthdayLunar ? '음력' + (e.birthdayLunarLeap ? ' 윤달' : '') : '양력'}</span>`
               : '<span style="color:var(--muted); font-size:11px;">미등록</span>';
@@ -3551,7 +3789,7 @@ function renderEmployeeStatus() {
                 <td>${e.dept} · ${e.position}</td>
                 <td>${bdayCell}</td>
                 <td>${e.joinDate}</td>
-                <td>${years}년 ${tenure - years*365}일</td>
+                <td style="white-space:nowrap;">${formatTenure(e.joinDate)}</td>
                 <td>${total}일${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">${leave.years === 7 ? '🌴 안식월' : leave.years === 10 ? '👑✈️ 포상' : '🏆 포상'} ${leave.tenureBonus}일</span>` : ''}</td>
                 <td style="color:var(--warning);">${used}일</td>
                 <td style="color:var(--success); font-weight:600;">${remain}일</td>
@@ -3570,16 +3808,36 @@ function renderEmployeeStatus() {
   `;
 }
 
+let leaveHistoryFilter = '';
+function setLeaveHistoryFilter(empId) { leaveHistoryFilter = empId; renderAdminBody(); }
+
 function renderAllRequests() {
   const all = [...DB.requests].sort((a,b) => b.createdAt - a.createdAt);
+  const filtered = leaveHistoryFilter ? all.filter(r => r.empId === leaveHistoryFilter) : all;
+
+  // 필터 드롭다운에 쓸 직원 목록 (사용 이력이 있는 직원만)
+  const empIds = [...new Set(all.map(r => r.empId))];
+  const empOptions = empIds.map(id => { const e = getEmployee(id); return e ? { id, name: e.name } : null; }).filter(Boolean).sort((a,b) => a.name.localeCompare(b.name));
+
   if (all.length === 0) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">사용 이력이 없습니다.</p></div>`;
+
+  const filterEmpName = leaveHistoryFilter ? (getEmployee(leaveHistoryFilter)?.name || '') : '';
+  const totalDays = filtered.reduce((s, r) => s + r.days, 0);
+
   return `
     <div class="card">
-      <div class="card-title">연차사용이력 (${all.length}건)</div>
+      <div class="card-title">연차사용이력 (${filtered.length}건${leaveHistoryFilter ? ' · ' + filterEmpName : ''})</div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+        <select onchange="setLeaveHistoryFilter(this.value)" style="max-width:180px;">
+          <option value="">전체 직원</option>
+          ${empOptions.map(o => `<option value="${o.id}" ${leaveHistoryFilter === o.id ? 'selected' : ''}>${o.name}</option>`).join('')}
+        </select>
+        ${leaveHistoryFilter ? `<span style="font-size:13px; color:var(--primary); font-weight:600;">합계 ${totalDays}일</span>` : ''}
+      </div>
       <table>
         <thead><tr><th>이름</th><th>유형</th><th>기간</th><th>일수</th><th>사유</th><th>등록일</th><th></th></tr></thead>
         <tbody>
-          ${all.map(r => {
+          ${filtered.map(r => {
             const e = getEmployee(r.empId);
             return `
               <tr>
@@ -4808,6 +5066,13 @@ function applyTables(tables) {
     DB.fuelPrices = {};
     tables.fuelPrices.forEach(f => { if (f.month) DB.fuelPrices[f.month] = { gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0 }; });
   }
+  if (tables.fuelPriceDaily) {
+    DB.fuelPriceDaily = tables.fuelPriceDaily.map(f => ({
+      date: String(f.date),
+      gasoline: Number(f.gasoline) || 0,
+      diesel: Number(f.diesel) || 0
+    }));
+  }
   if (tables.tenureNotifications) {
     DB.tenureNotifications = {};
     tables.tenureNotifications.forEach(t => { if (t.key) DB.tenureNotifications[t.key] = t.sentAt; });
@@ -4821,7 +5086,7 @@ function applyTables(tables) {
 }
 
 // Phase 1: 대시보드에 필요한 핵심 테이블만 먼저 로드 (빠름)
-const ESSENTIAL_TABLES = ['requests', 'overtime', 'legacyLeave', 'vehicles', 'fuelPrices', 'tenureNotifications'];
+const ESSENTIAL_TABLES = ['requests', 'overtime', 'legacyLeave', 'vehicles', 'fuelPrices', 'fuelPriceDaily', 'tenureNotifications'];
 // Phase 2: 나머지 테이블 (탭 진입 시 또는 백그라운드)
 const DEFERRED_TABLES = ['mileage', 'tollgate', 'cardUsage', 'welfare'];
 let _deferredLoaded = false;
