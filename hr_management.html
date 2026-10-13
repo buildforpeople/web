@@ -283,6 +283,32 @@
   .sync-toast.error { background: var(--danger); }
   .sync-toast.success { background: var(--success); }
 
+  /* 함께 가는 목표 */
+  .tg-btn { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 999px; font-weight: 700; }
+  .tg-btn:hover { background: #dbeafe; }
+  .modal.modal-wide { max-width: 820px; }
+  .tg-route { position: relative; height: 110px; margin: 6px 50px 4px; }
+  .tg-line { position: absolute; left: 0; right: 0; top: 36px; border-top: 3px dashed #cbd5e1; }
+  .tg-trail { position: absolute; left: 0; top: 35px; height: 5px; background: #2563eb; border-radius: 3px; }
+  .tg-stop { position: absolute; top: 0; width: 110px; margin-left: -55px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; text-align: center; }
+  .tg-circle { width: 72px; height: 72px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0; }
+  button.tg-circle { cursor: pointer; }
+  .tg-plane { position: absolute; top: 0; margin-left: -18px; }
+  .tg-goals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tg-member { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .tg-goal { display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; line-height: 1.5; }
+  .tg-check { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #9ca3af; background: #fff; padding: 0; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; margin-top: 1px; }
+  .tg-check.done { background: #059669; border-color: #059669; }
+  .tg-places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+  @media (max-width: 640px) {
+    .tg-btn-label { display: none; }
+    .tg-goals, .tg-places { grid-template-columns: 1fr; }
+    .tg-route { margin: 6px 36px 4px; }
+    .tg-stop { width: 76px; margin-left: -38px; font-size: 11px; }
+    .tg-circle { width: 52px; height: 52px; }
+  }
+
   @media (max-width: 640px) {
     body { font-size: 13px; }
     .container { padding: 12px; }
@@ -396,6 +422,7 @@
       <span id="userLabel"></span>
       <button class="btn-ghost btn-sm hidden" id="calendarSetupBtn" onclick="openCalendarSetup()">⚙️ 캘린더 연동</button>
       
+      <button class="btn-sm tg-btn hidden" id="teamGoalBtn" onclick="openTeamGoal()" aria-label="함께 가는 목표"><svg width="15" height="15" viewBox="0 0 24 24" fill="#1d4ed8" aria-hidden="true"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z" transform="rotate(90 12 12)"></path></svg><span class="tg-btn-label">함께 가는 목표</span></button>
       <button class="btn-ghost btn-sm" onclick="logout()">로그아웃</button>
     </div>
   </div>
@@ -511,6 +538,8 @@ function defaultData() {
     vehicles: {}, // {empId: {fuelType:'휘발유'|'경유', efficiency:number}}
     fuelPrices: {}, // {'2026-04': {gasoline: 1720, diesel: 1650}}
     fuelPriceDaily: [], // [{date:'2026-04-01', gasoline:1720, diesel:1650}, ...]
+    teamGoals: [], // [{id, empId, content, done, doneAt, ceoComment, createdAt, updatedAt}]
+    appSettings: {}, // {key: value}
     welfare: [], // [{id, empId, year, category, subcategory, description, totalAmount, companyAmount, requestDate, status, note, createdAt}]
     cardUsage: [], // [{id, empId, date, amount, merchant, description, imageData, imageName, imageMime, createdAt, sentAt}]
     tollgate: [], // [{id, empId, date, amount, description, fileData, fileName, fileMime, createdAt}]
@@ -534,6 +563,8 @@ function load() {
   if (!d.vehicles) d.vehicles = {};
   if (!d.fuelPrices) d.fuelPrices = {};
   if (!d.fuelPriceDaily) d.fuelPriceDaily = [];
+  if (!d.teamGoals) d.teamGoals = [];
+  if (!d.appSettings) d.appSettings = {};
   if (!d.welfare) d.welfare = [];
   if (!d.cardUsage) d.cardUsage = [];
   if (!d.tollgate) d.tollgate = [];
@@ -1263,6 +1294,7 @@ async function renderApp() {
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('appView').classList.remove('hidden');
   document.getElementById('userLabel').textContent = `${emp.name} (${emp.position})`;
+  const _tgBtn = document.getElementById('teamGoalBtn'); if (_tgBtn) _tgBtn.classList.remove('hidden');
   document.getElementById('headerTitle').textContent = '식구';
   document.getElementById('calendarSetupBtn').classList.add('hidden');
 
@@ -1793,7 +1825,7 @@ function getMonthlyMaxFuelPrice(month, fuelType) {
   return Math.max(...prices);
 }
 
-// 서버에 오피넷 유가 수집 요청 (최근 7일치 저장 후 전체 일별 유가 반환)
+// 서버에 오피넷 유가 수집 요청 (오늘 전국 평균가 저장 후 전체 일별 유가 반환)
 // silent=true: 로그인 시 자동 보충용 (로더·토스트 없음)
 let _fuelFetchTried = false;
 async function fetchFuelPricesFromServer(silent) {
@@ -3067,7 +3099,7 @@ function renderAdmin(emp) {
       <button class="tab ${adminTab==='welfare'?'active':''}" onclick="setAdminTab('welfare')">복지 지원 ${DB.welfare.filter(w => w.status === 'pending').length > 0 ? `<span class="badge badge-pending" style="margin-left:4px;">${DB.welfare.filter(w => w.status === 'pending').length}</span>` : ''}</button>
       <button class="tab ${adminTab==='contracts'?'active':''}" onclick="setAdminTab('contracts')">📋 계약 현황</button>
       <button class="tab ${adminTab==='severance'?'active':''}" onclick="setAdminTab('severance')">💰 퇴직금 시뮬</button>
-      ${isCEO() ? `<button class="tab ${adminTab==='rolling'?'active':''}" onclick="setAdminTab('rolling')">🌱 롤링페이퍼</button>` : ''}
+      ${isCEO() ? `<button class="tab ${adminTab==='rolling'?'active':''}" onclick="setAdminTab('rolling')">🌱 축하메시지</button>` : ''}
       <button class="tab ${adminTab==='manage'?'active':''}" onclick="setAdminTab('manage')">직원 관리</button>
       <button class="tab ${adminTab==='backup'?'active':''}" onclick="setAdminTab('backup')">💾 백업/복원</button>
     </div>
@@ -4637,6 +4669,56 @@ async function submitRequest(type) {
   if (type === '연차' || type === '반차' || type === '생일연차' || type === '특별휴가') {
     syncToCalendar(request);
   }
+  // 경조사 특별휴가 → 대표·재무회계에 경조사비 지급 알림 메일
+  if (isSpecial && specialType && specialType !== '기타') {
+    sendCondolencePayAlert(request);
+  }
+}
+
+/* ---------- 경조사비 지급 알림 ---------- */
+// 경조금 금액이 정해지면 여기에 입력 (null = 기준 미정)
+const CONDOLENCE_PAY = {
+  '결혼': null,
+  '배우자 출산': null,
+  '본인/배우자 부모 사망': null,
+  '본인/배우자 조부모·외조부모 사망': null,
+  '형제·자매 사망': null,
+  '자녀 사망': null
+};
+const CONDOLENCE_ALERT_EMP_IDS = ['admin', 'jang']; // 대표, 장숭월 팀장
+
+async function sendCondolencePayAlert(request) {
+  const url = HARDCODED_CALENDAR_URL;
+  const emp = getEmployee(request.empId);
+  if (!url || !emp) return;
+  const empIdToEmail = {};
+  Object.entries(EMAIL_WHITELIST).forEach(([email, id]) => { empIdToEmail[id] = email; });
+  const amount = CONDOLENCE_PAY[request.specialType];
+  const subject = `[경조사비 지급 알림] ${emp.name} · ${request.specialType}`;
+  const body = `경조사 특별휴가가 등록되어 경조사비 지급을 알려드립니다.
+
+직원: ${emp.name} (${emp.dept} · ${emp.position})
+경조 사유: ${request.specialType}
+휴가 기간: ${request.startDate}${request.endDate !== request.startDate ? ' ~ ' + request.endDate : ''} (${request.days}일)
+메모: ${request.reason || '-'}
+등록 일시: ${new Date(request.createdAt).toLocaleString('ko-KR')}
+
+경조금: ${amount ? Number(amount).toLocaleString() + '원' : '회사 기준 금액 확인 후 지급해 주세요'}
+
+— 식구 앱에서 자동 발송`;
+  for (const id of CONDOLENCE_ALERT_EMP_IDS) {
+    const to = empIdToEmail[id];
+    if (!to) continue;
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'send_card_statement', to, subject, body, attachments: [], idToken: DB.session ? DB.session.idToken : null })
+      });
+    } catch (err) {
+      console.warn('[경조사비 알림] 발송 실패:', to, err);
+    }
+  }
 }
 
 async function cancelRequest(id) {
@@ -5040,8 +5122,9 @@ function statusBadge(s) {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function showModal(html) {
-  document.getElementById('modalRoot').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">${html}</div></div>`;
+function showModal(html, opts) {
+  const wide = opts && opts.wide ? ' modal-wide' : '';
+  document.getElementById('modalRoot').innerHTML = `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal${wide}">${html}</div></div>`;
 }
 function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
@@ -5095,7 +5178,7 @@ function myRollingNotes(targetId, years) {
     .sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
 }
 
-// 근속을 앞둔 본인: '나의 O년 돌아보기' (기여한 일·보람·연봉협상 참고) — 본인과 대표만 봄
+// 근속을 앞둔 본인: '나의 O년 돌아보기' (잘 해낸 일·보람) — 본인과 대표만 봄
 function mySelfTarget() {
   const me = DB.session ? DB.session.empId : null;
   return rollingTargets(ROLLING_OPEN_DAYS, 0).find(t => t.emp.id === me) || null;
@@ -5141,7 +5224,7 @@ function renderRollingBanner() {
         <div style="font-size:28px; line-height:1;">🌟</div>
         <div style="flex:1; min-width:220px;">
           <div style="font-weight:700; font-size:15px;">곧 근속 ${self.years}년이 됩니다 <span style="font-weight:400; font-size:12px; color:var(--muted);">(${self.date})</span></div>
-          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">지난 ${self.years}년 동안 내가 해결했거나 기여한 일을 정리해 보세요. 연봉협상 때 함께 보는 자료가 됩니다.<br>내가 정리한 항목 ${selfCount}개</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">지난 ${self.years}년 동안 내가 잘 해낸 일을 가볍게 돌아보세요.<br>내가 정리한 항목 ${selfCount}개</div>
         </div>
         <button class="btn-primary btn-sm" onclick="openSelfModal(${self.years})">${selfCount > 0 ? '더 쓰기 · 고치기' : '정리하기'}</button>
       </div>` : '';
@@ -5153,7 +5236,7 @@ function renderRollingBanner() {
         <div style="font-size:28px; line-height:1;">🌱</div>
         <div style="flex:1; min-width:220px;">
           <div style="font-weight:700; font-size:15px;">${t.emp.name}님이 곧 근속 ${t.years}년이 됩니다 <span style="font-weight:400; font-size:12px; color:var(--muted);">(${t.date})</span></div>
-          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">롤링페이퍼에 한마디 남겨 주세요. 이름 없이 모아서 ${t.emp.name}님께 전해 드려요. ${t.emp.name}님에게는 비밀이에요!<br>마감 ${ymdLocal(deadline)} · 내가 남긴 글 ${mineCount}개</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">축하메시지 한마디 남겨 주세요. 이름 없이 모아서 ${t.emp.name}님께 전해 드려요. ${t.emp.name}님에게는 비밀이에요!<br>마감 ${ymdLocal(deadline)} · 내가 남긴 글 ${mineCount}개</div>
         </div>
         <button class="btn-primary btn-sm" onclick="openRollingModal('${t.emp.id}', ${t.years})">${mineCount > 0 ? '더 쓰기 · 고치기' : '한마디 쓰기'}</button>
       </div>`;
@@ -5176,7 +5259,7 @@ function openRollingModal(targetId, years) {
   if (!t) return;
   const mine = myRollingNotes(targetId, years);
   showModal(`
-    <h3 style="margin-bottom:6px;">🌱 ${t.name}님 근속 ${years}년 롤링페이퍼</h3>
+    <h3 style="margin-bottom:6px;">🌱 ${t.name}님 근속 ${years}년 축하메시지</h3>
     <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">${t.name}님 몰래 모아서 전할 글입니다. 다른 분들께도 비밀로 해 주세요.</p>
     <div style="padding:12px 14px; background:#f7fee7; border-radius:8px; font-size:13px; line-height:1.75; margin-bottom:16px;">
       <b>이런 주제로 써 주세요</b><br>
@@ -5252,13 +5335,13 @@ function openSelfModal(years) {
   const mine = mySelfNotes(years);
   showModal(`
     <h3 style="margin-bottom:6px;">🌟 나의 ${years}년 돌아보기</h3>
-    <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">곧 근속 ${years}년이 됩니다. 그동안 해 온 일을 스스로 정리해 두는 자리예요.</p>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">곧 근속 ${years}년이 됩니다. 그동안 내가 잘 해낸 일을 가볍게 돌아보는 자리예요.</p>
     <div style="padding:12px 14px; background:#eff6ff; border-radius:8px; font-size:13px; line-height:1.75; margin-bottom:16px;">
       <b>이런 것들을 적어 보세요</b><br>
-      · 내가 해결했거나 기여한 일 (현장, 프로젝트, 개선한 업무)<br>
-      · 가장 보람을 느꼈던 순간<br>
-      · 연봉협상 때 꼭 이야기하고 싶은 성과
-      <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.6;">적은 내용은 대표님께 공유되어 연봉협상 때 함께 봅니다. 다른 직원에게는 보이지 않아요. 생각날 때마다 더 쓰거나 고칠 수 있어요.</div>
+      · 내가 해결했거나 기여한 일<br>
+      · 힘들었지만 해냈다고 느낀 업무<br>
+      · 가장 보람을 느꼈던 순간
+      <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.6;">한 줄씩 짧게 써도 괜찮아요. 다른 직원에게는 보이지 않아요. 생각날 때마다 더 쓰거나 고칠 수 있어요.</div>
     </div>
     ${mine.length > 0 ? `
       <div style="font-size:12px; font-weight:700; margin-bottom:8px;">내가 정리한 항목 (${mine.length})</div>
@@ -5273,7 +5356,7 @@ function openSelfModal(years) {
     ` : ''}
     <div class="form-row" style="margin-top:6px;">
       <label>${mine.length > 0 ? '항목 더 추가하기' : '항목 추가하기'}</label>
-      <textarea id="snNew" rows="4" style="font-size:13px;" placeholder="예: OO현장 창호 하자를 시공사와 협의해 2주 만에 해결함"></textarea>
+      <textarea id="snNew" rows="4" style="font-size:13px;"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal()">닫기</button>
@@ -5350,16 +5433,16 @@ function groupNotesByWriter(notes) {
 
 function renderRollingAdmin() {
   if (!isCEO()) return '';
-  if (!ROLLING.loaded) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">${ROLLING.failed ? '롤링페이퍼를 불러오지 못했습니다. 식구 DB Apps Script가 최신 버전으로 배포됐는지 확인해 주세요.' : '불러오는 중...'}</p></div>`;
+  if (!ROLLING.loaded) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">${ROLLING.failed ? '축하메시지를 불러오지 못했습니다. 식구 DB Apps Script가 최신 버전으로 배포됐는지 확인해 주세요.' : '불러오는 중...'}</p></div>`;
   const groups = rollingGroups();
   return `
     <div class="card">
-      <div class="card-title">🌱 근속 롤링페이퍼</div>
+      <div class="card-title">🌱 근속 축하메시지</div>
       <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:16px;">
         근속 주년 ${ROLLING_OPEN_DAYS}일 전부터 ${ROLLING_CLOSE_DAYS}일 전까지 동료들이 남긴 글을 모았습니다. 쓴 사람 이름은 저장되지 않고, 같은 사람이 쓴 글끼리만 '식구 A'처럼 묶어 보여 줍니다.<br>
         [📋 원문 복사]를 눌러 Claude에게 붙여넣으면, 쓴 사람 말투를 살린 초안을 만들어 드립니다.
       </p>
-      ${groups.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">진행 중인 롤링페이퍼가 없습니다.</p>' : groups.map(g => {
+      ${groups.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">진행 중인 축하메시지가 없습니다.</p>' : groups.map(g => {
         const writers = groupNotesByWriter(g.notes);
         const peerCount = g.notes.filter(n => n.kind !== 'self').length;
         const selfNotes = g.notes.filter(n => n.kind === 'self').sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
@@ -5375,7 +5458,7 @@ function renderRollingAdmin() {
             </div>
             ${selfNotes.length > 0 ? `
               <div style="margin-top:12px; padding:10px 12px; background:#eff6ff; border-radius:8px;">
-                <div style="font-size:12px; font-weight:700; color:#1e40af;">🌟 ${g.emp.name}님이 직접 정리한 기여 (연봉협상 참고 · ${selfNotes.length}개)</div>
+                <div style="font-size:12px; font-weight:700; color:#1e40af;">🌟 ${g.emp.name}님이 직접 돌아본 내용 (${selfNotes.length}개)</div>
                 ${selfNotes.map(n => `<div style="font-size:13px; line-height:1.7; white-space:pre-wrap; padding:4px 0 0 10px;">· ${escapeHtml(n.content)}</div>`).join('')}
               </div>` : ''}
             ${writers.length === 0 ? '<p style="font-size:12px; color:var(--muted); margin-top:10px;">아직 동료들이 남긴 글이 없습니다.</p>' : writers.map(w => `
@@ -5394,7 +5477,7 @@ function copyRollingNotes(targetId, years) {
   if (!g) return;
   const writers = groupNotesByWriter(g.notes);
   const text = [
-    `『나의 ${years}년 마일스톤 — ${milestoneSubtitle(g.emp)}』 ${g.emp.name}님 (${g.emp.dept} · ${g.emp.position}) 롤링페이퍼 원문`,
+    `『나의 ${years}년 마일스톤 — ${milestoneSubtitle(g.emp)}』 ${g.emp.name}님 (${g.emp.dept} · ${g.emp.position}) 축하메시지 원문`,
     '아래 원문을 동료 한 명당 한마디씩, 쓴 사람 말투를 살려 2~3문장 대화체 초안으로 풀어 주세요.',
     '',
     ...writers.map(w => `식구 ${w.writer}\n` + w.notes.map(n => '- ' + n.content.replace(/\n+/g, ' ')).join('\n') + '\n')
@@ -5413,6 +5496,295 @@ function fallbackCopy(text, done) {
   document.body.appendChild(ta); ta.select();
   try { document.execCommand('copy'); done(); } catch (e) { alert(text); }
   document.body.removeChild(ta);
+}
+
+/* ---------- 함께 가는 목표 (상단 버튼 → 팝업) ---------- */
+// ~2027-01-31: 일본 나고야/기후 연수 D-day + 각자 목표 / 2027-02-01~: 2년 누적 매출로 연수지 업그레이드
+const TG_START = '2026-10-13';
+const TG_DEPART = '2027-01-19';
+const TG_REVEAL = '2026-12-31'; // 이 날부터 모두의 목표 공개 (그 전엔 본인 것만)
+const TG_SWITCH = '2027-02-01';
+const TG_REVENUE_KEY = 'goalRevenue_2027_2028'; // 단위: 억원
+const TG_TIERS = { VN: 140, SG: 160, DE: 180 };
+const TG_MAX_GOALS = 2;
+let _tgView = null; // null | 'form:<id|new>' | 'place:VN|SG|DE'
+
+const TG_PLANE = '<svg width="36" height="36" viewBox="0 0 24 24" fill="#2563eb" aria-hidden="true"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z" transform="rotate(90 12 12)"></path></svg>';
+const TG_FLAGS = {
+  JP: '<svg width="42" height="28" viewBox="0 0 30 20" role="img" aria-label="일본 국기"><rect x="0.5" y="0.5" width="29" height="19" fill="#fff" stroke="#d1d5db"></rect><circle cx="15" cy="10" r="6" fill="#BC002D"></circle></svg>',
+  VN: '<svg width="42" height="28" viewBox="0 0 30 20" role="img" aria-label="베트남 국기"><rect width="30" height="20" fill="#DA251D"></rect><polygon points="15.00,4.50 16.41,8.56 20.71,8.65 17.28,11.24 18.53,15.35 15.00,12.90 11.47,15.35 12.72,11.24 9.29,8.65 13.59,8.56" fill="#FFFF00"></polygon></svg>',
+  SG: '<svg width="42" height="28" viewBox="0 0 30 20" role="img" aria-label="싱가포르 국기"><rect width="30" height="10" fill="#EF3340"></rect><rect x="0.5" y="10" width="29" height="9.5" fill="#fff" stroke="#d1d5db"></rect><circle cx="7.5" cy="5.2" r="3.4" fill="#fff"></circle><circle cx="9" cy="5.2" r="3.1" fill="#EF3340"></circle><circle cx="12" cy="3.3" r="0.6" fill="#fff"></circle><circle cx="13.81" cy="4.61" r="0.6" fill="#fff"></circle><circle cx="13.12" cy="6.74" r="0.6" fill="#fff"></circle><circle cx="10.88" cy="6.74" r="0.6" fill="#fff"></circle><circle cx="10.19" cy="4.61" r="0.6" fill="#fff"></circle></svg>',
+  DE: '<svg width="42" height="28" viewBox="0 0 30 20" role="img" aria-label="독일 국기"><rect width="30" height="6.67" fill="#000"></rect><rect y="6.67" width="30" height="6.67" fill="#DD0000"></rect><rect y="13.33" width="30" height="6.67" fill="#FFCE00"></rect></svg>'
+};
+const TG_PLACES = {
+  VN: { name: '베트남', copy: '나무와 대나무, 그리고 우리 CLT의 내일', study: ['목재 가공 공장 — 우리 CLT·패널 생산 파트너가 될 수 있는 곳을 직접 봅니다', '빠르게 크는 동남아 건설 현장의 에너지를 느껴 봅니다', '호이안 옛 거리(유네스코 세계유산) — 수백 년 된 목조 상가 주택', '다낭의 대나무 건축 — 보 쫑 응이아가 설계한 대나무 리조트 건물'], rest: '다낭 미케 해변 · 호이안 야시장', move: '직항 약 4시간 30분' },
+  SG: { name: '싱가포르', copy: '도시 전체가 미래 건축 교과서', study: ['난양공대 Gaia — CLT로 지은 대형 목조 건물', '가든스 바이 더 베이 — 거대한 온실 돔과 슈퍼트리 정원', '주얼 창이 공항 — 실내 폭포와 숲을 품은 유리돔 건축'], rest: '센토사 섬 해변 · 마리나베이 야경 · 호커센터 미식', move: '직항 6시간 40분' },
+  DE: { name: '독일', copy: '패시브하우스가 태어난 곳', study: ['다름슈타트 — 세계 첫 패시브하우스(1991년) 외관 관람', '프라이부르크 보봉 마을 — 걸어서 둘러보는 친환경 주거 단지', '프라이부르크 태양광 주택 단지 — 쓰는 것보다 더 많은 에너지를 만드는 마을'], rest: '하이델베르크 고성 · 온천 도시 바덴바덴', move: '직항 약 14시간' }
+};
+
+function tgDayTs(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d).getTime(); }
+function tgToday() { const n = new Date(); n.setHours(0, 0, 0, 0); return n.getTime(); }
+function tgMembers() {
+  const withEmail = new Set(Object.values(EMAIL_WHITELIST));
+  return DB.employees.filter(e => withEmail.has(e.id));
+}
+function tgTeamLabel(e) {
+  if (e.id === CEO_EMP_ID) return '대표';
+  if (e.dept === '시공') return '현장';
+  if (e.dept === '설계') return '설계';
+  if ((e.position || '').includes('공무')) return '공무';
+  if (e.dept === '행정') return '회계';
+  return e.dept || '';
+}
+function tgCanAdmin() { const me = getEmployee(DB.session?.empId); return !!me && me.role === 'admin'; }
+
+function openTeamGoal() {
+  _tgView = null;
+  renderTeamGoal();
+}
+
+function renderTeamGoal() {
+  const html = tgToday() < tgDayTs(TG_SWITCH) ? tgJapanHTML() : tgUpgradeHTML();
+  showModal(html, { wide: true });
+}
+
+function tgHeader(label) {
+  return `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:8px; color:#1d4ed8; font-size:13px; font-weight:700;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V4"></path><path d="M4 4h12l-2 4 2 4H4"></path></svg>
+        <span>함께 가는 목표 · ${label}</span>
+      </div>
+      <button class="btn-secondary btn-sm" onclick="closeModal()" aria-label="닫기">닫기</button>
+    </div>`;
+}
+
+// ── 일본 연수 D-day ──
+function tgJapanHTML() {
+  const day = 86400000, t = tgToday(), start = tgDayTs(TG_START), depart = tgDayTs(TG_DEPART);
+  const dday = Math.round((depart - t) / day);
+  const pct = Math.max(0, Math.min(100, (t - start) / (depart - start) * 100));
+  const me = DB.session?.empId;
+  const members = tgMembers();
+  const goalsOf = id => DB.teamGoals.filter(g => g.empId === id).sort((a, b) => a.createdAt - b.createdAt);
+  const doneCount = members.filter(m => { const gs = goalsOf(m.id); return gs.length > 0 && gs.every(g => g.done); }).length;
+  const myGoals = goalsOf(me);
+  const ceo = isCEO();
+  const revealed = t >= tgDayTs(TG_REVEAL);
+  const shown = revealed ? members : members.filter(m => m.id === me);
+
+  const memberHTML = shown.map(m => {
+    const gs = goalsOf(m.id);
+    const mine = m.id === me;
+    const goalsHTML = gs.length === 0
+      ? `<div class="tg-goal" style="color:#9ca3af;"><span class="tg-check" style="border-style:dashed; border-color:#d1d5db;"></span><span>아직 목표를 적지 않았어요</span></div>`
+      : gs.map(g => `
+        <div class="tg-goal">
+          ${mine
+            ? `<button class="tg-check ${g.done ? 'done' : ''}" onclick="tgToggleGoal('${g.id}')" aria-label="${g.done ? '완료 취소' : '완료 체크'}">${g.done ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg>' : ''}</button>`
+            : `<span class="tg-check ${g.done ? 'done' : ''}">${g.done ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg>' : ''}</span>`}
+          <div style="flex:1; min-width:0;">
+            <div style="${g.done ? 'color:#6b7280; text-decoration:line-through;' : ''} word-break:keep-all;">${escapeHtml(g.content || '')}</div>
+            ${g.ceoComment ? `<div style="font-size:12px; color:#b45309; margin-top:2px;">💬 대표: ${escapeHtml(g.ceoComment)}</div>` : ''}
+            <div style="display:flex; gap:4px; margin-top:2px;">
+              ${mine ? `<button class="btn-ghost btn-sm" style="padding:2px 6px;" onclick="tgOpenForm('${g.id}')">수정</button><button class="btn-ghost btn-sm" style="padding:2px 6px;" onclick="tgDeleteGoal('${g.id}')">삭제</button>` : ''}
+              ${ceo && !mine ? `<button class="btn-ghost btn-sm" style="padding:2px 6px; color:#b45309;" onclick="tgComment('${g.id}')">${g.ceoComment ? '한마디 고치기' : '한마디'}</button>` : ''}
+            </div>
+          </div>
+        </div>`).join('');
+    return `
+      <div class="tg-member" style="${mine ? 'border-color:#93c5fd;' : ''}">
+        <div style="display:flex; align-items:baseline; gap:6px;"><b style="font-size:14px;">${m.name}</b><span style="font-size:12px; color:var(--muted);">${tgTeamLabel(m)}</span>${mine ? '<span style="font-size:11px; color:#1d4ed8; font-weight:700;">· 나</span>' : ''}</div>
+        ${goalsHTML}
+      </div>`;
+  }).join('');
+
+  const formHTML = (_tgView && _tgView.startsWith('form:')) ? (() => {
+    const id = _tgView.slice(5);
+    const g = id !== 'new' ? DB.teamGoals.find(x => x.id === id) : null;
+    return `
+      <div style="margin-top:10px; padding:12px 14px; background:#eff6ff; border-radius:10px;">
+        <label for="tgInput" style="font-size:13px; font-weight:700; color:#1d4ed8;">${g ? '내 목표 고치기' : '일본 가기 전(1월 19일)까지 끝낼 내 목표'}</label>
+        <textarea id="tgInput" rows="2" maxlength="120" placeholder="예: OO현장 골조 완료 / 2026년 연말 결산 마무리 / OO현장 실시설계 도면 완성" style="margin-top:6px; font-size:13px;">${g ? escapeHtml(g.content || '') : ''}</textarea>
+        <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:8px;">
+          <button class="btn-secondary btn-sm" onclick="_tgView=null; renderTeamGoal()">취소</button>
+          <button class="btn-primary btn-sm" onclick="tgSaveGoal('${id}')">저장</button>
+        </div>
+      </div>`;
+  })() : '';
+
+  return `
+    ${tgHeader('일본 나고야/기후 연수')}
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+      <div style="font-size:24px; font-weight:800; line-height:1.35;">남은 2026 화이팅!<br><span style="color:#2563eb;">다가오는 2027 대박 가즈아!</span></div>
+      <div style="text-align:right; margin-left:auto;">
+        <div style="font-size:40px; font-weight:800; color:#1d4ed8; line-height:1.05;">${dday > 0 ? 'D-' + dday : 'D-DAY'}</div>
+        <div style="font-size:12px; color:var(--muted);">출발 2027년 1월 19일 · 3박 4일</div>
+      </div>
+    </div>
+    <div class="tg-route">
+      <div class="tg-line"></div>
+      <div class="tg-trail" style="width:${pct}%;"></div>
+      <div class="tg-stop" style="left:0;">
+        <div class="tg-circle" style="border:3px solid #2563eb;"><svg width="30" height="30" viewBox="0 0 64 56" fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linejoin="round" aria-hidden="true"><path d="M6 26 L32 6 L58 26"></path><path d="M12 22 V50 H52 V22"></path><path d="M26 50 V34 H38 V50"></path></svg></div>
+        <span>사람사는집</span>
+      </div>
+      <div class="tg-stop" style="left:100%;">
+        <div class="tg-circle" style="border:3px dashed #059669;">${TG_FLAGS.JP}</div>
+        <span>나고야/기후</span>
+      </div>
+      <div class="tg-plane" style="left:calc(57px + (100% - 114px) * ${pct / 100});">${TG_PLANE}</div>
+    </div>
+    <div style="background:#f9fafb; border-radius:12px; padding:12px 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div><b style="font-size:14px;">일본 가기 전, 각자 하나씩</b> ${revealed
+          ? `<span style="font-size:12px; font-weight:700; color:#059669; margin-left:6px;">완료 ${doneCount} / ${members.length}명</span>`
+          : `<span style="font-size:12px; font-weight:700; color:#6b7280; margin-left:6px;">🔒 나만 보여요</span>`}</div>
+        ${myGoals.length < TG_MAX_GOALS ? `<button class="btn-primary btn-sm" onclick="tgOpenForm('new')">내 목표 적기</button>` : ''}
+      </div>
+      ${formHTML}
+      <div class="tg-goals" style="margin-top:10px; ${revealed ? '' : 'grid-template-columns:1fr;'}">${memberHTML}</div>
+      <div style="font-size:11px; color:var(--muted); margin-top:8px; line-height:1.6;">${revealed ? '' : '연말까지는 본인만 보이고, 12월 31일에 모두의 목표가 함께 공개됩니다.<br>'}1인 ${TG_MAX_GOALS}개까지 · 끝내면 동그라미를 눌러 체크해 주세요.</div>
+    </div>
+  `;
+}
+
+function tgOpenForm(id) { _tgView = 'form:' + id; renderTeamGoal(); setTimeout(() => { const el = document.getElementById('tgInput'); if (el) el.focus(); }, 50); }
+
+async function tgSaveGoal(id) {
+  const el = document.getElementById('tgInput');
+  const content = (el ? el.value : '').trim();
+  if (!content) { alert('목표를 적어 주세요.'); return; }
+  const me = DB.session.empId;
+  showLoader('저장 중...');
+  try {
+    if (id === 'new') {
+      if (DB.teamGoals.filter(g => g.empId === me).length >= TG_MAX_GOALS) { hideLoader(); alert(`목표는 ${TG_MAX_GOALS}개까지 적을 수 있어요.`); return; }
+      const row = { id: 'tg' + Date.now(), empId: me, content, done: false, doneAt: '', ceoComment: '', createdAt: Date.now(), updatedAt: Date.now() };
+      await dbInsert('teamGoals', row);
+      DB.teamGoals.push(row);
+    } else {
+      await dbUpdate('teamGoals', 'id', id, { content, updatedAt: Date.now() });
+      const g = DB.teamGoals.find(x => x.id === id); if (g) g.content = content;
+    }
+    save(DB);
+    hideLoader();
+    _tgView = null;
+    renderTeamGoal();
+  } catch (err) { hideLoader(); alert('저장 실패: ' + err.message); }
+}
+
+async function tgToggleGoal(id) {
+  const g = DB.teamGoals.find(x => x.id === id);
+  if (!g) return;
+  const done = !g.done;
+  try {
+    await dbUpdate('teamGoals', 'id', id, { done, doneAt: done ? Date.now() : '', updatedAt: Date.now() });
+    g.done = done; g.doneAt = done ? Date.now() : '';
+    save(DB);
+    if (done) showToast('목표 완료! 수고했어요 👏', 'success');
+    renderTeamGoal();
+  } catch (err) { alert('저장 실패: ' + err.message); }
+}
+
+async function tgDeleteGoal(id) {
+  if (!confirm('이 목표를 지울까요?')) return;
+  try {
+    await dbDelete('teamGoals', 'id', id);
+    DB.teamGoals = DB.teamGoals.filter(x => x.id !== id);
+    save(DB);
+    renderTeamGoal();
+  } catch (err) { alert('삭제 실패: ' + err.message); }
+}
+
+async function tgComment(id) {
+  const g = DB.teamGoals.find(x => x.id === id);
+  if (!g) return;
+  const text = prompt('이 목표에 남길 대표님 한마디', g.ceoComment || '');
+  if (text === null) return;
+  try {
+    await dbUpdate('teamGoals', 'id', id, { ceoComment: text.trim(), updatedAt: Date.now() });
+    g.ceoComment = text.trim();
+    save(DB);
+    renderTeamGoal();
+  } catch (err) { alert('저장 실패: ' + err.message); }
+}
+
+// ── 2027.2.1~ 연수지 업그레이드 ──
+function tgUpgradeHTML() {
+  if (_tgView && _tgView.startsWith('place:')) return tgPlaceHTML(_tgView.slice(6));
+  const cur = Math.max(0, Number(DB.appSettings[TG_REVENUE_KEY]) || 0);
+  const { VN: vn, SG: sg, DE: de } = TG_TIERS;
+  let pct;
+  if (cur < vn) pct = 40 * cur / vn;
+  else if (cur < sg) pct = 40 + 30 * (cur - vn) / (sg - vn);
+  else pct = 70 + 30 * Math.min(1, (cur - sg) / (de - sg));
+  const rV = cur >= vn, rS = cur >= sg, rD = cur >= de;
+  const status = rD ? '독일 확정! 최고 단계 달성' : rS ? `싱가포르 확정! 독일까지 ${de - cur}억` : rV ? `베트남 확정! 싱가포르까지 ${sg - cur}억` : `베트남까지 ${vn - cur}억 남았어요`;
+  const ring = (reached, isNext) => reached ? 'border:4px solid #059669;' : isNext ? 'border:3px dashed #2563eb;' : 'border:2px solid #e5e7eb; opacity:.85;';
+  const tag = (reached, isNext, amt) => `<span style="color:${reached ? '#059669' : isNext ? '#1d4ed8' : '#6b7280'};">${amt}억${reached ? ' · 확정' : ''}</span>`;
+  const stop = (code, left, reached, isNext, amt) => `
+    <div class="tg-stop" style="left:${left}%;">
+      <button class="tg-circle" style="${ring(reached, isNext)}" onclick="_tgView='place:${code}'; renderTeamGoal()" aria-label="${TG_PLACES[code].name} 연수 소개 보기">${TG_FLAGS[code]}</button>
+      <span>${TG_PLACES[code].name}</span>${tag(reached, isNext, amt)}
+    </div>`;
+  return `
+    ${tgHeader('2029년 1~2월 연수')}
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+      <div style="font-size:24px; font-weight:800; line-height:1.35;">함께 달린 만큼,<br><span style="color:#2563eb;">더 멀리</span> 떠납니다</div>
+      <div style="text-align:right;">
+        <div style="font-size:12px; color:var(--muted);">2027~2028 함께 쌓은 매출</div>
+        <div style="font-size:32px; font-weight:800; color:#1d4ed8; line-height:1.1;">${cur}억</div>
+        <div style="font-size:13px; font-weight:700;">${status}</div>
+      </div>
+    </div>
+    <div class="tg-route" style="height:130px;">
+      <div class="tg-line"></div>
+      <div class="tg-trail" style="width:${pct}%;"></div>
+      <div class="tg-stop" style="left:0; top:24px;"><div style="width:24px; height:24px; border-radius:50%; background:#2563eb; border:4px solid #dbeafe; box-sizing:border-box;"></div><span>출발</span><span style="color:#6b7280;">0억</span></div>
+      ${stop('VN', 40, rV, true, vn)}
+      ${stop('SG', 70, rS, rV, sg)}
+      ${stop('DE', 100, rD, rS, de)}
+      <div class="tg-plane" style="left:${pct}%; top:-30px;">${TG_PLANE}</div>
+    </div>
+    <div style="background:#f9fafb; border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.7;">
+      <b>2년 동안 함께 쌓은 매출로 떠나는 연수입니다.</b> 출발은 1~2월 건축 비수기예요.<br>
+      ${vn}억이면 베트남, ${sg}억이면 싱가포르, ${de}억이면 독일! 국기를 누르면 연수지 소개를 볼 수 있어요.
+    </div>
+    ${tgCanAdmin() ? `
+      <div style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; color:var(--muted); flex-wrap:wrap;">
+        <label for="tgRevenue" style="margin:0;">관리자 · 2027~2028 누적 매출(억)</label>
+        <input id="tgRevenue" type="number" min="0" step="1" value="${cur}" style="width:100px; padding:6px 8px;">
+        <button class="btn-secondary btn-sm" onclick="tgSaveRevenue()">반영</button>
+      </div>` : ''}
+  `;
+}
+
+function tgPlaceHTML(code) {
+  const p = TG_PLACES[code];
+  if (!p) { _tgView = null; return tgUpgradeHTML(); }
+  return `
+    ${tgHeader('후보지 미리보기')}
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">${TG_FLAGS[code]}<div><div style="font-size:20px; font-weight:800;">${p.name} <span style="font-size:13px; color:var(--muted);">· ${TG_TIERS[code]}억 달성 시</span></div><div style="font-size:14px; font-weight:700; color:#1d4ed8;">${p.copy}</div></div></div>
+    <div style="font-size:12px; font-weight:700; color:var(--muted); margin-top:8px;">건축 연수</div>
+    ${p.study.map(s => `<div style="font-size:13px; line-height:1.7; padding-left:10px;">· ${s}</div>`).join('')}
+    <div style="font-size:12px; font-weight:700; color:var(--muted); margin-top:10px;">휴양</div>
+    <div style="font-size:13px; line-height:1.7; padding-left:10px;">${p.rest}</div>
+    <div style="font-size:12px; color:var(--muted); border-top:1px solid var(--border); padding-top:8px; margin-top:12px;">${p.move}</div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="_tgView=null; renderTeamGoal()">← 목표로 돌아가기</button></div>
+  `;
+}
+
+async function tgSaveRevenue() {
+  const el = document.getElementById('tgRevenue');
+  const v = Math.max(0, Number(el ? el.value : 0) || 0);
+  try {
+    await dbUpsert('appSettings', 'key', { key: TG_REVENUE_KEY, value: v });
+    DB.appSettings[TG_REVENUE_KEY] = v;
+    save(DB);
+    showToast('누적 매출을 반영했어요', 'success');
+    renderTeamGoal();
+  } catch (err) { alert('저장 실패: ' + err.message); }
 }
 
 // 근속 포상 기준 안내 팝업
@@ -5545,6 +5917,13 @@ function applyTables(tables) {
       diesel: Number(f.diesel) || 0
     }));
   }
+  if (tables.teamGoals) {
+    DB.teamGoals = tables.teamGoals.map(g => ({ ...g, done: g.done === true || g.done === 'TRUE' || g.done === 'true', createdAt: Number(g.createdAt) || 0 }));
+  }
+  if (tables.appSettings) {
+    DB.appSettings = {};
+    tables.appSettings.forEach(s => { if (s.key) DB.appSettings[s.key] = s.value; });
+  }
   if (tables.tenureNotifications) {
     DB.tenureNotifications = {};
     tables.tenureNotifications.forEach(t => { if (t.key) DB.tenureNotifications[t.key] = t.sentAt; });
@@ -5558,7 +5937,7 @@ function applyTables(tables) {
 }
 
 // Phase 1: 대시보드에 필요한 핵심 테이블만 먼저 로드 (빠름)
-const ESSENTIAL_TABLES = ['requests', 'overtime', 'legacyLeave', 'vehicles', 'fuelPrices', 'fuelPriceDaily', 'tenureNotifications'];
+const ESSENTIAL_TABLES = ['requests', 'overtime', 'legacyLeave', 'vehicles', 'fuelPrices', 'fuelPriceDaily', 'tenureNotifications', 'teamGoals', 'appSettings'];
 // Phase 2: 나머지 테이블 (탭 진입 시 또는 백그라운드)
 const DEFERRED_TABLES = ['mileage', 'tollgate', 'cardUsage', 'welfare'];
 let _deferredLoaded = false;
