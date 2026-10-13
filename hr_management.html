@@ -996,10 +996,10 @@ async function checkTenureNotifications() {
   function tenureBenefits(years) {
     switch (years) {
       case 1:  return '🎉 입사 1주년을 축하합니다!';
-      case 3:  return '🥉 근속 3년 포상휴가 +2일이 부여됩니다!';
-      case 5:  return '🏆 근속 5년 포상휴가 +3일이 부여됩니다!';
-      case 7:  return '🌴 근속 7년 안식월! 유급휴가 20일(1달)이 부여됩니다. 한달살이 다녀오세요! 🧳';
-      case 10: return '👑✈️ 근속 10년 포상휴가 +5일 & 해외여행이 제공됩니다!';
+      case 3:  return '🥉 근속 3년 포상휴가 +2일 + 순금 반 돈(50만원 상당)이 주어집니다!';
+      case 5:  return '🏆 근속 5년 포상휴가 +3일 + 순금 한 돈(100만원 상당)이 주어집니다!';
+      case 7:  return '🌴 근속 7년 안식월! 연차와 별도로 유급휴가 20일이 부여됩니다. 한달살이 가능합니다 🧳';
+      case 10: return '👑✈️ 근속 10년 포상휴가 +5일 + 본인 +1명 해외여행(200만원 상당)이 제공됩니다!';
       default: return '';
     }
   }
@@ -1368,8 +1368,10 @@ function employeeDashboardHTML(emp) {
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#f1f5f9; border-radius:6px; font-size:12px; color:var(--muted); line-height:1.6;">
         ℹ️ 연차 일수 계산은 입사일 기준으로 1년 단위로 하며, 미 사용시 연차수당으로 지급해드립니다.<br>
-        🏆 <b>근속 포상휴가</b>: 3년차 🥉 +2일, 5년차 🏆 +3일, 7년차 🌴 안식월 +20일 (한달살이 보내드려요 🧳), 10년차 👑 +5일 (해외여행 ✈️). 그동안의 노고에 감사드리는 마음이에요.<br>
         <span style="color:#d97706;">💛 생일연차, 근속 포상휴가는 연차수당으로 전환 불가. 꼭 쉬고 노는데 쓰셔야 합니다! :)</span>
+        <span style="display:block; text-align:right; margin-top:6px;">
+          <a href="#" onclick="event.preventDefault(); showTenureRewardGuide('${emp.id}')" style="color:#b45309; font-weight:600; text-decoration:none;">🏆 근속 포상 기준 보기 ›</a>
+        </span>
       </p>
     </div>
 
@@ -1602,7 +1604,7 @@ function renderMileageSection(emp) {
       <p style="padding:10px 14px; background:${monthMaxPrice > 0 ? '#ecfdf5' : '#fef3c7'}; border-radius:6px; font-size:12px; color:${monthMaxPrice > 0 ? '#065f46' : '#92400e'}; line-height:1.6; margin-bottom:14px;">
         ${monthMaxPrice > 0
           ? `⛽ <b>${mileageMonth}</b> 적용 유가 (월 최고가): <b>${vehicle.fuelType} ${monthMaxPrice.toLocaleString()}원/L</b> · 금액 산식: <b>(거리 ÷ 연비) × 유가 × 1.1</b>`
-          : `⚠️ <b>${mileageMonth}</b> 유가 데이터가 없습니다. 관리자에게 유가 수집을 요청하세요.`
+          : `⚠️ <b>${mileageMonth}</b> 유가 데이터가 아직 없습니다. <button class="btn-sm btn-secondary" style="margin-left:6px;" onclick="fetchFuelPricesFromServer()">⛽ 유가 불러오기</button>`
         }
       </p>
 
@@ -1773,37 +1775,39 @@ function getMonthlyMaxFuelPrice(month, fuelType) {
   return Math.max(...prices);
 }
 
-// 서버에서 오피넷 유가 수집 트리거 (관리자가 수동 실행 가능)
-async function fetchFuelPricesFromServer() {
-  showLoader('오피넷 유가 수집 중...');
+// 서버에 오피넷 유가 수집 요청 (최근 7일치 저장 후 전체 일별 유가 반환)
+// silent=true: 로그인 시 자동 보충용 (로더·토스트 없음)
+let _fuelFetchTried = false;
+async function fetchFuelPricesFromServer(silent) {
+  if (!silent) showLoader('오피넷 유가 불러오는 중...');
   try {
-    const resp = await fetch(HARDCODED_DB_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'fetch_fuel_prices', idToken: DB.session?.idToken || '' })
-    });
-    const json = await resp.json();
-    if (!json.success) throw new Error(json.error || '수집 실패');
-    // 성공하면 fuelPriceDaily 갱신
-    const resp2 = await fetch(HARDCODED_DB_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'get_all', table: 'fuelPriceDaily', idToken: DB.session?.idToken || '' })
-    });
-    const json2 = await resp2.json();
-    if (json2.success && json2.data) {
-      DB.fuelPriceDaily = json2.data.map(f => ({
-        date: String(f.date), gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0
-      }));
-      save(DB);
+    const res = await dbCall('fetch_fuel_prices');
+    if (!res) return;
+    DB.fuelPriceDaily = (res.rows || []).map(f => ({
+      date: String(f.date), gasoline: Number(f.gasoline) || 0, diesel: Number(f.diesel) || 0
+    }));
+    save(DB);
+    if (!silent) {
+      hideLoader();
+      const last = (res.saved || []).slice(-1)[0];
+      showToast(last ? `유가 갱신 완료 (${last.date} 휘발유 ${last.gasoline.toLocaleString()}원 · 경유 ${last.diesel.toLocaleString()}원)` : '유가 갱신 완료', 'success');
     }
-    hideLoader();
-    showToast(`유가 수집 완료 (${json.data.date}: 휘발유 ${json.data.gasoline}원, 경유 ${json.data.diesel}원)`, 'success');
     renderApp();
   } catch (err) {
-    hideLoader();
-    showToast('유가 수집 실패: ' + err.message, 'error');
+    if (!silent) { hideLoader(); showToast('유가 불러오기 실패: ' + err.message, 'error'); }
+    else console.warn('[유가] 자동 갱신 실패:', err);
   }
+}
+
+// 이번 달 유가가 없거나 최근 2일 내 데이터가 없으면 세션당 1회 자동 보충
+function ensureFuelPricesFresh() {
+  if (_fuelFetchTried) return;
+  const dates = (DB.fuelPriceDaily || []).map(f => f.date).sort();
+  const latest = dates[dates.length - 1] || '';
+  const twoDaysAgo = new Date(Date.now() - 2 * 86400000 + 9 * 3600000).toISOString().slice(0, 10); // KST 기준
+  if (latest >= twoDaysAgo) return;
+  _fuelFetchTried = true;
+  fetchFuelPricesFromServer(true);
 }
 
 // 운행 기록의 유가 결정: 해당 건에 수동 입력된 유가가 있으면 사용, 없으면 월간 최고가 자동 적용
@@ -1839,7 +1843,7 @@ async function addMileage(empId) {
   if (!date || !distance) { alert('날짜와 거리를 입력해 주세요.'); return; }
   const vehicle = DB.vehicles[empId] || { fuelType: '휘발유', efficiency: 12 };
   const autoPrice = getMonthlyMaxFuelPrice(date.slice(0,7), vehicle.fuelType);
-  if (autoPrice <= 0) { alert('해당 월의 유가 데이터가 없습니다. 관리자에게 유가 수집을 요청하세요.'); return; }
+  if (autoPrice <= 0) { alert('해당 월의 유가 데이터가 없습니다. 노란 안내창의 [⛽ 유가 불러오기]를 먼저 눌러주세요.'); return; }
   const row = {
     id: 'm' + Date.now(),
     empId, date, distance: Number(distance), fuelPrice: 0, description,
@@ -5019,6 +5023,81 @@ function showModal(html) {
 }
 function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
+// 근속 포상 기준 안내 팝업
+const TENURE_REWARDS = [
+  { years: 3,  icon: '🥉', title: '포상휴가 +2일', gift: '🪙 순금 반 돈 (50만원 상당)', note: '잠깐 숨 고르는 시간', bg: '#fef9c3', bd: '#fde68a' },
+  { years: 5,  icon: '🏆', title: '포상휴가 +3일', gift: '🪙 순금 한 돈 (100만원 상당)', note: '함께 걸어온 5년, 고맙습니다', bg: '#fef3c7', bd: '#fcd34d' },
+  { years: 7,  icon: '🌴', title: '안식월 20일 · 연차와 별도 추가', gift: '', note: '그해 연차는 그대로, 20일이 더해집니다 · 한달살이 가능합니다 🧳', bg: '#fde68a', bd: '#f59e0b' },
+  { years: 10, icon: '👑', title: '포상휴가 +5일', gift: '✈️ 본인 +1명 해외여행 (200만원 상당)', note: '10년의 동료에게', bg: '#fcd34d', bd: '#d97706' },
+];
+
+function showTenureRewardGuide(empId) {
+  const emp = getEmployee(empId);
+  const join = emp && emp.joinDate ? new Date(emp.joinDate) : null;
+  const today = new Date();
+  const annivOf = (y) => { const d = new Date(join); d.setFullYear(d.getFullYear() + y); return d; };
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const cards = TENURE_REWARDS.map(r => {
+    const done = join && annivOf(r.years) <= today;
+    return `
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; margin-bottom:8px; border-radius:10px; background:${r.bg}; border:1px solid ${r.bd}; ${done ? 'opacity:0.75;' : ''}">
+        <div style="font-size:26px; line-height:1;">${r.icon}</div>
+        <div style="flex:1;">
+          <div style="font-size:12px; color:#92400e; font-weight:700;">근속 ${r.years}년</div>
+          <div style="font-size:14px; font-weight:700; color:#1f2937;">${r.title}${r.gift ? ` <span style="font-weight:700; color:#b45309;">+ ${r.gift}</span>` : ''}</div>
+          <div style="font-size:11px; color:#78350f;">${r.note}</div>
+        </div>
+        ${done ? '<div style="font-size:12px; font-weight:700; color:#059669;">✓ 지남</div>' : ''}
+      </div>`;
+  }).join('');
+
+  let mine = '';
+  if (join && !isNaN(join.getTime())) {
+    const next = TENURE_REWARDS.find(r => annivOf(r.years) > today);
+    if (next) {
+      const idx = TENURE_REWARDS.indexOf(next);
+      const from = idx > 0 ? annivOf(TENURE_REWARDS[idx - 1].years) : join;
+      const to = annivOf(next.years);
+      const left = Math.ceil((to - today) / 86400000);
+      const pct = Math.max(0, Math.min(100, Math.round((today - from) / (to - from) * 100)));
+      mine = `
+        <div style="margin-top:16px; padding:14px; border-radius:10px; background:#f1f5f9;">
+          <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px;">${emp.name}님의 다음 포상</div>
+          <div style="font-size:13px; line-height:1.6;">
+            근속 ${formatTenure(emp.joinDate).replace(/\s*\(.*\)$/, '')} → <b>${next.icon} ${next.years}년 포상까지 ${left.toLocaleString()}일</b>
+            <span style="color:var(--muted); font-size:11px;">(${ymd(to)})</span>
+          </div>
+          <div style="margin-top:8px; background:#e2e8f0; border-radius:99px; height:8px; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:linear-gradient(90deg,#fbbf24,#d97706);"></div>
+          </div>
+          <div style="text-align:right; font-size:11px; color:var(--muted); margin-top:3px;">${pct}%</div>
+        </div>`;
+    } else {
+      mine = `
+        <div style="margin-top:16px; padding:14px; border-radius:10px; background:#f1f5f9; text-align:center; font-size:14px; font-weight:700;">
+          ${emp.name}님은 모든 포상을 받으셨어요 👑
+        </div>`;
+    }
+  }
+
+  showModal(`
+    <h3 style="margin-bottom:4px;">🏆 사람사는집 근속 포상 기준</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">함께 쌓아온 시간에 감사하는 마음을 담았습니다.</p>
+    ${cards}
+    ${mine}
+    <div style="margin-top:16px; font-size:12px; color:var(--muted); line-height:1.8;">
+      <b style="color:var(--text);">알아두세요</b><br>
+      · <b style="color:#b45309;">모든 포상휴가는 연차와 별도로 추가 부여됩니다.</b> 안식월 20일도 연차에서 빠지지 않아요.<br>
+      &nbsp;&nbsp;(예: 연차 15일인 해에 근속 7년이 되면 → 15일 + 안식월 20일 = 총 35일)<br>
+      · 포상휴가는 해당 근속 주년이 되는 해에 한 번 부여됩니다.<br>
+      · 포상휴가는 연차수당으로 바꿀 수 없어요. 꼭 쉬는 데 써주세요 💛<br>
+      · 근속 주년 2개월 전에 메일로 미리 알려드립니다.
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" onclick="closeModal()">닫기</button></div>
+  `);
+}
+
 /* ============================================================
    LOADER / TOAST / SYNC HELPERS
    ============================================================ */
@@ -5098,6 +5177,8 @@ async function syncFromDB() {
   save(DB);
   // Phase 2: 나머지 백그라운드 로드 (UI 렌더 후 비동기)
   loadDeferredTables();
+  // 유가 데이터가 비었거나 오래됐으면 자동 보충 (백그라운드)
+  ensureFuelPricesFresh();
 }
 
 async function loadDeferredTables() {
