@@ -996,8 +996,8 @@ async function checkTenureNotifications() {
   function tenureBenefits(years) {
     switch (years) {
       case 1:  return '🎉 입사 1주년을 축하합니다!';
-      case 3:  return '🥉 근속 3년 포상휴가 +2일 + 순금 반 돈(50만원 상당)이 주어집니다!';
-      case 5:  return '🏆 근속 5년 포상휴가 +3일 + 순금 한 돈(100만원 상당)이 주어집니다!';
+      case 3:  return '🥉 근속 3년 포상휴가 +2일 + 순금 반 돈이 주어집니다!';
+      case 5:  return '🏆 근속 5년 포상휴가 +3일 + 순금 한 돈이 주어집니다!';
       case 7:  return '🌴 근속 7년 안식월! 연차와 별도로 유급휴가 20일이 부여됩니다. 한달살이 가능합니다 🧳';
       case 10: return '👑✈️ 근속 10년 포상휴가 +5일 + 본인 +1명 해외여행(200만원 상당)이 제공됩니다!';
       default: return '';
@@ -5025,8 +5025,8 @@ function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
 // 근속 포상 기준 안내 팝업
 const TENURE_REWARDS = [
-  { years: 3,  icon: '🥉', title: '포상휴가 +2일', gift: '🪙 순금 반 돈 (50만원 상당)', note: '잠깐 숨 고르는 시간', bg: '#fef9c3', bd: '#fde68a' },
-  { years: 5,  icon: '🏆', title: '포상휴가 +3일', gift: '🪙 순금 한 돈 (100만원 상당)', note: '함께 걸어온 5년, 고맙습니다', bg: '#fef3c7', bd: '#fcd34d' },
+  { years: 3,  icon: '🥉', title: '포상휴가 +2일', gift: '🪙 순금 반 돈', note: '잠깐 숨 고르는 시간', bg: '#fef9c3', bd: '#fde68a' },
+  { years: 5,  icon: '🏆', title: '포상휴가 +3일', gift: '🪙 순금 한 돈', note: '함께 걸어온 5년, 고맙습니다', bg: '#fef3c7', bd: '#fcd34d' },
   { years: 7,  icon: '🌴', title: '안식월 20일 · 연차와 별도 추가', gift: '', note: '그해 연차는 그대로, 20일이 더해집니다 · 한달살이 가능합니다 🧳', bg: '#fde68a', bd: '#f59e0b' },
   { years: 10, icon: '👑', title: '포상휴가 +5일', gift: '✈️ 본인 +1명 해외여행 (200만원 상당)', note: '10년의 동료에게', bg: '#fcd34d', bd: '#d97706' },
 ];
