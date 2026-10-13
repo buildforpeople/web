@@ -208,8 +208,17 @@
   /* ===== 고객관리 ===== */
   .badge { background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; padding: 0 5px; text-align: center; margin-left: 2px; }
   .cx-alert { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .cx-alert button { flex: 1 1 180px; text-align: left; border: 1px solid #E6B8B0; background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
-  .cx-alert b { font-size: 22px; margin-right: 6px; vertical-align: -2px; font-variant-numeric: tabular-nums; }
+  .cx-alert button { flex: 1 1 220px; text-align: left; border: 1px solid #E6B8B0; background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 12px 16px; font-weight: 700; }
+  .cx-alert button.p2 { border-color: #E3C58A; background: var(--amber-soft); color: var(--amber); }
+  .cx-alert b { font-size: 24px; margin-right: 6px; vertical-align: -2px; font-variant-numeric: tabular-nums; }
+  .cx-alert span { display: block; font-size: 12px; font-weight: 500; opacity: .85; margin-top: 2px; }
+  .cx-sub-alert { display: flex; gap: 8px; flex-wrap: wrap; margin: -6px 0 12px; }
+  .cx-sub-alert button { border: 0; background: none; color: var(--muted); font-size: 13px; padding: 2px 0; text-decoration: underline; text-underline-offset: 3px; }
+  .cx-sub-alert button + button::before { content: '·'; margin: 0 8px; text-decoration: none; display: inline-block; }
+  .cx-sub-alert b { color: var(--ink); }
+  .flag.amber { background: var(--amber); }
+  .flag.soft { background: var(--gray-soft); color: var(--muted); font-weight: 600; }
+  .cx-row.p2 { box-shadow: inset 4px 0 0 var(--amber); }
   .cx-ok { background: var(--green-soft); color: var(--green); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-weight: 600; font-size: 14px; }
   .chip.warn b { color: var(--red); }
   .cx-row.urgent { box-shadow: inset 4px 0 0 var(--red); }
@@ -2491,7 +2500,7 @@ function crActionForm(o, s, box) {
 }
 
 // ---------- 고객관리 ----------
-const CX = { items: [], meta: null, filter: '진행중', q: '', loaded: false };
+const CX = { items: [], meta: null, filter: '오늘 할 일', q: '', loaded: false };
 const CX_FIELDS = [
   ['landStatus', '고객 상황', 'land'], ['situation', '현재 상황 (문의 원문)', 'text'], ['location', '현장 소재지', 'text'],
   ['landArea', '대지 면적', 'text', '㎡'], ['wantArea', '희망 건축면적', 'text', '평'], ['floors', '희망 층수', 'text'],
@@ -2515,7 +2524,11 @@ function cxDue(o) {
   if (d === 0) return { cls: 'today', text: '오늘' };
   return { cls: '', text: `D-${d}` };
 }
-function cxUrgentCount() { return CX.items.filter(o => cxNoContact(o) || cxOver(o) || cxStale(o)).length; }
+// 1순위: 접수 후 아직 통화 못한 고객 / 2순위: 미팅 후 계약 결정 대기
+function cxP1(o) { return !cxClosed(o) && ['접수', '접수(메일답장완료)'].includes(o.stage) && !o.firstContactAt; }
+function cxP2(o) { return !cxClosed(o) && ['미팅완료/계약고려중', '견적중'].includes(o.stage); }
+function cxTodo(o) { return cxP1(o) || cxP2(o); }
+function cxUrgentCount() { return CX.items.filter(cxTodo).length; }
 function cxUnit(v, unit) { return v && unit && !String(v).includes(unit) && /^[\d.~\s-]+$/.test(v) ? v + unit : v; }
 function cxBadge() {
   const tab = document.querySelector('[data-tab="cx"]');
@@ -2554,7 +2567,8 @@ async function renderCxTab() {
 function cxRenderList() {
   const groups = cxGroups();
   const list = cxFilteredList();
-  const nNo = CX.items.filter(cxNoContact).length, nOver = CX.items.filter(cxOver).length, nStale = CX.items.filter(cxStale).length;
+  const nP1 = CX.items.filter(cxP1).length, nP2 = CX.items.filter(cxP2).length;
+  const nOver = CX.items.filter(cxOver).length, nStale = CX.items.filter(cxStale).length;
 
   $('main').innerHTML = `
     <div class="cr-bar">
@@ -2562,14 +2576,17 @@ function cxRenderList() {
       ${S.me.role === 'admin' ? '<button class="btn ghost" id="cxClean" type="button">자료 정리</button><button class="btn ghost" id="cxImport" type="button">메일 확인</button>' : ''}
       <button class="btn" id="cxNew" type="button">+ 고객 등록</button>
     </div>
-    ${nNo || nOver || nStale ? `<div class="cx-alert">
-      ${nNo ? `<button type="button" data-f="미연락"><b>${nNo}</b> 아직 연락 안 한 상담</button>` : ''}
-      ${nOver ? `<button type="button" data-f="기한 지남"><b>${nOver}</b> 연락 기한 지남</button>` : ''}
-      ${nStale ? `<button type="button" data-f="방치"><b>${nStale}</b> ${CX.meta.staleDays}일 이상 기록 없음</button>` : ''}
-    </div>` : `<div class="cx-ok">놓친 고객이 없습니다.</div>`}
+    ${nP1 || nP2 ? `<div class="cx-alert">
+      ${nP1 ? `<button type="button" class="p1" data-f="첫 통화"><b>${nP1}</b> 첫 통화 필요<span>접수 후 아직 통화 전</span></button>` : ''}
+      ${nP2 ? `<button type="button" class="p2" data-f="계약 결정"><b>${nP2}</b> 계약 결정 대기<span>미팅·견적 후 확답 필요</span></button>` : ''}
+    </div>` : `<div class="cx-ok">지금 꼭 연락할 고객이 없습니다.</div>`}
+    ${nOver || nStale ? `<div class="cx-sub-alert">
+      ${nOver ? `<button type="button" data-f="기한 지남">연락 기한 지남 <b>${nOver}</b></button>` : ''}
+      ${nStale ? `<button type="button" data-f="방치">${CX.meta.staleDays}일 이상 기록 없음 <b>${nStale}</b></button>` : ''}
+    </div>` : ''}
     <div class="f"><input type="text" id="cxQ" placeholder="이름·연락처·지역 검색" value="${esc(CX.q)}"></div>
     <div class="filters">
-      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '진행중' || k === '전체') ? `<button class="chip ${['미연락', '기한 지남', '방치'].includes(k) && n ? 'warn' : ''} ${k === '★ 별표' ? 'star-chip' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
+      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '오늘 할 일' || k === '진행중' || k === '전체') ? `<button class="chip ${['첫 통화', '계약 결정'].includes(k) && n ? 'warn' : ''} ${k === '★ 별표' ? 'star-chip' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
     </div>
     <section class="panel" id="cxRows">
       ${cxRowsHtml(list)}
@@ -2589,13 +2606,14 @@ function cxRenderList() {
 }
 
 function cxRowsHtml(list) {
-  if (!list.length) return `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`;
+  if (!list.length) return `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '오늘 할 일' ? '첫 통화와 계약 결정 대기 고객이 모두 처리되었습니다.' : CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`;
   return list.map(o => {
     const due = cxDue(o);
-    const flag = cxNoContact(o) ? `미연락 D+${cxDays(o)}` : cxOver(o) ? `기한 ${due.text}` : cxStale(o) ? '방치' : '';
-    return `<button class="cr-row cx-row ${flag ? 'urgent' : ''} ${o.star ? 'starred' : ''}" data-id="${esc(o.id)}">
+    const flag = cxP1(o) ? `첫 통화 D+${cxDays(o)}` : cxP2(o) ? '계약 결정 대기' : '';
+    const soft = !flag && cxOver(o) ? `기한 ${due.text}` : !flag && cxStale(o) ? '기록 없음' : '';
+    return `<button class="cr-row cx-row ${flag ? 'urgent' : ''} ${cxP2(o) ? 'p2' : ''} ${o.star ? 'starred' : ''}" data-id="${esc(o.id)}">
       <span class="cr-id">${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(2, 10).replace(/-/g, '.'))} (D+${cxDays(o)})</span>
-      <span class="cr-title">${o.star ? '<span class="star">★</span>' : ''}${esc(o.name)}${o.star ? `<span class="tag star-tag">${esc(o.star)}</span>` : ''}${flag ? `<span class="flag">${esc(flag)}</span>` : ''}${o.siteCode ? `<span class="tag">${esc(o.siteCode)}</span>` : ''}</span>
+      <span class="cr-title">${o.star ? '<span class="star">★</span>' : ''}${esc(o.name)}${o.star ? `<span class="tag star-tag">${esc(o.star)}</span>` : ''}${flag ? `<span class="flag ${cxP2(o) ? 'amber' : ''}">${esc(flag)}</span>` : ''}${soft ? `<span class="flag soft">${esc(soft)}</span>` : ''}${o.siteCode ? `<span class="tag">${esc(o.siteCode)}</span>` : ''}</span>
       <span class="cr-sub">${esc([o.location, o.landStatus, o.wantArea ? cxUnit(o.wantArea, '평') : '', o.budget].filter(Boolean).join(' · '))}</span>
       ${!cxClosed(o) ? `<span class="cr-sub cx-next ${due.cls}">다음: ${esc(o.nextAction || '미정')}${o.dueDate ? ` · ${esc(o.dueDate.slice(5).replace('-', '/'))} (${esc(due.text)})` : ''}${o.ownerName ? ' · ' + esc(o.ownerName) : ''}</span>`
         : ['반려', '이탈'].includes(o.stage) && o.rejectReasons ? `<span class="cr-sub">${esc(o.stage)} 사유: ${esc(o.rejectReasons)}</span>` : ''}
@@ -2609,15 +2627,17 @@ function cxBindRows() {
 
 function cxFilteredList() {
   const q = CX.q.trim().toLowerCase();
-  const rank = o => cxNoContact(o) ? 0 : cxOver(o) ? 1 : cxStale(o) ? 2 : cxClosed(o) ? 9 : 5;
+  const rank = o => cxP1(o) ? 0 : cxP2(o) ? 1 : cxOver(o) ? 3 : cxStale(o) ? 4 : cxClosed(o) ? 9 : 5;
   return CX.items.filter(cxGroups()[CX.filter]).filter(o => !q || [o.name, o.phone, o.location, o.id].join(' ').toLowerCase().includes(q))
     .sort((a, b) => rank(a) - rank(b) || String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999')) || String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 function cxGroups() {
   return {
+    '오늘 할 일': cxTodo,
+    '첫 통화': cxP1,
+    '계약 결정': cxP2,
     진행중: o => !cxClosed(o),
     '★ 별표': o => !!o.star,
-    미연락: cxNoContact,
     '기한 지남': cxOver,
     방치: cxStale,
     ...Object.fromEntries(CX.meta.stages.map(st => [st, o => o.stage === st])),
@@ -2750,7 +2770,7 @@ function cxNewForm() {
   body.querySelector('#xClose').onclick = closeSheet;
   body.querySelector('#xSave').onclick = e => submitting(e.target, async () => {
     const d = await api(Object.assign({ action: 'cx_create', source: segVal(body, 'src') }, cxReadFields(body)));
-    cxReplace(d.item); CX.filter = '진행중';
+    cxReplace(d.item); CX.filter = '오늘 할 일';
     closeSheet(); cxRenderList(); cxOpen(d.item.id);
   });
 }
@@ -2789,7 +2809,8 @@ function cxOpenInner(id) {
   const staffOpts = `<option value="">미지정</option>` + M.staff.map(s => `<option value="${esc(s.email)}" ${s.email === o.ownerEmail ? 'selected' : ''}>${esc(s.name)} (${esc(s.team)})</option>`).join('');
   const actOpts = [...new Set([...(o.nextAction && !M.actions.includes(o.nextAction) ? [o.nextAction] : []), ...M.actions])]
     .map(a => `<option ${a === o.nextAction ? 'selected' : ''}>${esc(a)}</option>`).join('');
-  const warn = cxNoContact(o) ? `접수 후 ${cxDays(o)}일째 연락 기록이 없습니다. 연락 후 바로 아래에 기록을 남겨주세요.`
+  const warn = cxP1(o) ? `접수 후 ${cxDays(o)}일째 통화 기록이 없습니다. 통화 후 바로 아래에 기록을 남겨주세요.`
+    : cxP2(o) ? `미팅·견적 후 계약 결정을 기다리는 고객입니다. 확답을 받거나 다음 연락 시점을 정해주세요.`
     : cxOver(o) ? `다음 연락 기한이 ${due.text}. 연락하고 기록을 남기거나 기한을 다시 정하세요.`
     : cxStale(o) ? `${M.staleDays}일 넘게 기록이 없습니다. 진행 상황을 확인해 주세요.` : '';
 
