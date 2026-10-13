@@ -972,6 +972,22 @@ async function checkTenureNotifications() {
   const url = HARDCODED_CALENDAR_URL;
   if (!url) return; // Apps Script 미설정 시 조용히 스킵
 
+  // empId → 이메일 역방향 매핑
+  const empIdToEmail = {};
+  Object.entries(EMAIL_WHITELIST).forEach(([email, id]) => { empIdToEmail[id] = email; });
+
+  // 근속 연차별 혜택 안내
+  function tenureBenefits(years) {
+    switch (years) {
+      case 1:  return '🎉 입사 1주년을 축하합니다!';
+      case 3:  return '🥉 근속 3년 포상휴가 +2일이 부여됩니다!';
+      case 5:  return '🏆 근속 5년 포상휴가 +3일이 부여됩니다!';
+      case 7:  return '🎖️ 근속 7주년을 축하합니다!';
+      case 10: return '👑✈️ 근속 10년 포상휴가 +5일 & 해외여행이 제공됩니다!';
+      default: return '';
+    }
+  }
+
   const today = new Date();
   if (!DB.tenureNotifications) DB.tenureNotifications = {};
   let newlyNotified = false;
@@ -985,49 +1001,87 @@ async function checkTenureNotifications() {
       const anniversary = new Date(joinDate);
       anniversary.setFullYear(anniversary.getFullYear() + years);
       const notifyDate = new Date(anniversary);
-      notifyDate.setMonth(notifyDate.getMonth() - 1);
+      notifyDate.setMonth(notifyDate.getMonth() - 2); // 2개월 전부터 알림
 
       const key = `${emp.id}_${years}`;
-      // 알림 기간: 1달 전 ~ 당일
+      // 알림 기간: 2달 전 ~ 당일
       if (today >= notifyDate && today < anniversary && !DB.tenureNotifications[key]) {
         try {
           const anniversaryISO = anniversary.toISOString().slice(0, 10);
-          const subject = `★근속자 포상 알림! ${emp.name} ${years}년이 곧 다가옵니다!`;
-          const body = `근속 ${years}년 도래 알림
+          const daysLeft = Math.ceil((anniversary - today) / (1000 * 60 * 60 * 24));
+          const benefits = tenureBenefits(years);
+
+          // ① 관리자에게 발송
+          const adminSubject = `★근속자 포상 알림! ${emp.name} ${years}년이 곧 다가옵니다!`;
+          const adminBody = `근속 ${years}년 도래 알림
 
 직원: ${emp.name} (${emp.dept} · ${emp.position})
 입사일: ${emp.joinDate}
 ${years}년 도래일: ${anniversaryISO}
-(약 1개월 뒤)
+(약 ${daysLeft}일 뒤)
+
+${benefits}
 
 포상 준비를 검토해 주세요.
 
 — 식구 앱에서 자동 발송`;
 
-          const res = await fetch(url, {
+          await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
-              action: 'send_card_statement', // 메일 발송 액션 재사용
+              action: 'send_card_statement',
               to: 'my.new.homeplace@gmail.com',
-              subject,
-              body,
+              subject: adminSubject,
+              body: adminBody,
               attachments: [],
               idToken: DB.session ? DB.session.idToken : null
             })
           });
-          const data = await res.json();
-          if (data.success) {
-            const sentAt = Date.now();
-            DB.tenureNotifications[key] = sentAt;
-            newlyNotified = true;
+
+          // ② 해당 직원 본인에게도 발송
+          const empEmail = empIdToEmail[emp.id];
+          if (empEmail && empEmail !== 'my.new.homeplace@gmail.com') {
+            const empSubject = `🎊 ${emp.name}님, 근속 ${years}년 기념일이 다가옵니다!`;
+            const empBody = `${emp.name}님, 축하드립니다! 🎉
+
+입사일: ${emp.joinDate}
+근속 ${years}년 도래일: ${anniversaryISO}
+(약 ${daysLeft}일 뒤)
+
+${benefits}
+
+앞으로도 함께 해주세요! 💪
+
+— 사람사는집 식구 앱에서 자동 발송`;
+
             try {
-              await dbUpsert('tenureNotifications', 'key', { key, sentAt });
-            } catch (e) {
-              console.warn('tenureNotifications DB 저장 실패:', e);
+              await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                  action: 'send_card_statement',
+                  to: empEmail,
+                  subject: empSubject,
+                  body: empBody,
+                  attachments: [],
+                  idToken: DB.session ? DB.session.idToken : null
+                })
+              });
+            } catch (empErr) {
+              console.warn(`[근속알림] ${emp.name} 본인 발송 실패:`, empErr);
             }
-            console.log(`[근속알림] ${emp.name} ${years}년 알림 발송 완료`);
           }
+
+          const sentAt = Date.now();
+          DB.tenureNotifications[key] = sentAt;
+          newlyNotified = true;
+          try {
+            await dbUpsert('tenureNotifications', 'key', { key, sentAt });
+          } catch (e) {
+            console.warn('tenureNotifications DB 저장 실패:', e);
+          }
+          console.log(`[근속알림] ${emp.name} ${years}년 알림 발송 완료 (관리자+본인)`);
         } catch (err) {
           console.warn(`[근속알림] ${emp.name} ${years}년 발송 실패:`, err);
         }
