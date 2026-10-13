@@ -2528,10 +2528,19 @@ function cxBadge() {
 }
 async function cxLoad() {
   const [meta, list] = await Promise.all([api({ action: 'cx_meta' }), api({ action: 'cx_list' })]);
-  CX.meta = meta; CX.items = list.items || []; CX.loaded = true;
+  CX.meta = meta; CX.items = (list.items || []).map(cxNorm); CX.loaded = true;
   cxBadge();
 }
-function cxReplace(item) { const i = CX.items.findIndex(x => x.id === item.id); if (i >= 0) CX.items[i] = item; else CX.items.unshift(item); cxBadge(); }
+// 서버가 첨부를 문자열로 보내도 안전하게 (옛 배포 대비)
+function cxNorm(o) {
+  if (!o) return o;
+  if (typeof o.attachments === 'string') { try { o.attachments = JSON.parse(o.attachments || '[]'); } catch (e) { o.attachments = []; } }
+  if (!Array.isArray(o.attachments)) o.attachments = [];
+  return o;
+}
+
+function cxReplace(item) {
+  item = cxNorm(item); const i = CX.items.findIndex(x => x.id === item.id); if (i >= 0) CX.items[i] = item; else CX.items.unshift(item); cxBadge(); }
 
 async function renderCxTab() {
   if (!CX.loaded) {
@@ -2618,9 +2627,10 @@ function cxGroups() {
 
 function cxFieldInput(f, v) {
   const [k, label, type] = f;
-  if (type === 'houseType') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, CX.meta.houseTypes, v)}</div>`;
-  if (type === 'struct') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, CX.meta.structs, v)}</div>`;
-  if (type === 'land') return `<div class="f"><label>${label}</label><select data-k="${k}"><option value="">선택</option>${CX.meta.landStatuses.map(x => `<option ${x === v ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
+  const arr = n => Array.isArray(CX.meta && CX.meta[n]) ? CX.meta[n] : [];
+  if (type === 'houseType') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, arr('houseTypes'), v)}</div>`;
+  if (type === 'struct') return `<div class="f"><span class="lb">${label}</span>${segHtml('e_' + k, arr('structs'), v)}</div>`;
+  if (type === 'land') return `<div class="f"><label>${label}</label><select data-k="${k}"><option value="">선택</option>${arr('landStatuses').map(x => `<option ${x === v ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
   if (type === 'area') return `<div class="f"><label>${label}</label><textarea data-k="${k}" rows="2">${esc(v)}</textarea></div>`;
   return `<div class="f"><label>${label}</label><input type="text" data-k="${k}" value="${esc(v)}"></div>`;
 }
@@ -2639,7 +2649,7 @@ function bindToggleSegs(root) {
 
 // ---- 첨부 자료 ----
 function cxFilesHtml(o) {
-  const list = o.attachments || [];
+  const list = Array.isArray(o.attachments) ? o.attachments : [];
   if (!list.length) return '<div class="hint">올린 자료가 없습니다. 상담 중 받은 도면·스케치·사진을 올려두면 미팅 때 함께 볼 수 있습니다.</div>';
   const canDel = f => S.me.role === 'admin' || f.by === S.me.name;
   return `<div class="thumbs">${list.map(f => `
@@ -2756,11 +2766,16 @@ function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padSta
 
 function cxOpen(id) {
   try { cxOpenInner(id); }
-  catch (e) { toast('상세를 여는 중 오류: ' + e.message); console.error('cxOpen', e); }
+  catch (e) {
+    const at = String(e.stack || '').split('\n')[1] || '';
+    const line = (at.match(/:(\d+):\d+/) || [])[1] || '?';
+    toast(`상세 오류 [${id} · ${line}행] ${e.message}`);
+    console.error('cxOpen', id, e);
+  }
 }
 
 function cxOpenInner(id) {
-  const o = CX.items.find(x => x.id === id);
+  const o = cxNorm(CX.items.find(x => x.id === id) || null);
   if (!o) return;
   const M = CX.meta || {};
   ['stages', 'actions', 'logKinds', 'sources', 'houseTypes', 'structs', 'staff', 'codeYears',
