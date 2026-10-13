@@ -739,12 +739,13 @@ function calcAnnualLeave(emp) {
   // 생일연차: 생일이 등록된 직원만 +1
   const birthday = emp.birthday ? 1 : 0;
   // 근속 포상휴가: 해당 연차 주년 해에만 부여 (비례 미적용, 전원 동일)
-  // 3년차: +2일 / 5년차: +3일 / 7년차: +20일 (안식월, 1달 유급휴가) / 10년차: +5일 (해외여행 포상)
+  // 1년차: +1일 / 3년차: +2일 / 5년차: +3일 / 7년차: +20일 (안식월) / 10년차: +10일 (포상휴가 5일 + 4박5일 해외여행 5일)
   let tenureBonus = 0;
-  if (years === 3) tenureBonus = 2;
+  if (years === 1) tenureBonus = 1; // 1년차: 포상휴가 1일 (마일스톤 포토북은 서프라이즈라 화면·메일에 표시하지 않음)
+  else if (years === 3) tenureBonus = 2;
   else if (years === 5) tenureBonus = 3;
   else if (years === 7) tenureBonus = 20;
-  else if (years === 10) tenureBonus = 5;
+  else if (years === 10) tenureBonus = 10; // 포상휴가 5일 + 해외여행 5일
   return { base, birthday, tenureBonus, total: base + birthday + tenureBonus, years, ratio };
 }
 
@@ -874,6 +875,15 @@ const WELFARE_CATEGORIES = {
     description: '직무 관련 전시회·박람회·도서 50% 지원 (연 최대 10만원)',
     supportRate: 0.5,
     annualLimit: 100000
+  },
+  health_checkup: {
+    name: '종합건강검진',
+    icon: '🩺',
+    description: '2년에 1회 종합건강검진비 전액 지원 (최대 40만원)',
+    supportRate: 1.0,
+    annualLimit: 400000,
+    limitOncePerYear: true,
+    biennial: true // 직전 연도에 승인된 이력이 있으면 올해는 신청 불가
   }
 };
 
@@ -899,10 +909,14 @@ function calcWelfareUsage(empId, year) {
     // 교육비는 한국패시브건축협회 실무자교육이 포함되면 한도가 90만원으로 상향
     const hasPassiveHouse = cat === 'education' &&
       [...catApproved, ...catPending].some(w => w.subcategory === 'passive_house');
-    const limit = hasPassiveHouse
+    // 격년 항목: 직전 연도에 승인 이력이 있으면 올해 한도 0
+    const biennialBlocked = !!WELFARE_CATEGORIES[cat].biennial &&
+      DB.welfare.some(w => w.empId === empId && w.year === year - 1 && w.category === cat && w.status === 'approved');
+    const limit = biennialBlocked ? 0 : hasPassiveHouse
       ? WELFARE_CATEGORIES[cat].passiveHouseLimit
       : WELFARE_CATEGORIES[cat].annualLimit;
     usage[cat] = {
+      biennialBlocked,
       used,
       pending: pendingAmount,
       limit,
@@ -961,6 +975,8 @@ function logout() {
   DB.session = null;
   save(DB);
   _dbLoadedThisSession = false;
+  ROLLING = { loaded: false, loading: false, failed: false, mine: [], all: [] }; // 다른 사람이 같은 기기로 로그인해도 이전 글이 보이지 않게
+  _rollingAutoShown = false;
   _deferredLoaded = false;
   document.getElementById('appView').classList.add('hidden');
   document.getElementById('loginView').classList.remove('hidden');
@@ -995,11 +1011,11 @@ async function checkTenureNotifications() {
   // 근속 연차별 혜택 안내
   function tenureBenefits(years) {
     switch (years) {
-      case 1:  return '🎉 입사 1주년을 축하합니다!';
+      case 1:  return '🌱 입사 1주년을 축하합니다! 포상휴가 +1일이 부여됩니다.';
       case 3:  return '🥉 근속 3년 포상휴가 +2일 + 순금 반 돈이 주어집니다!';
       case 5:  return '🏆 근속 5년 포상휴가 +3일 + 순금 한 돈이 주어집니다!';
-      case 7:  return '🌴 근속 7년 안식월! 연차와 별도로 유급휴가 20일이 부여됩니다. 한달살이 가능합니다 🧳';
-      case 10: return '👑✈️ 근속 10년 포상휴가 +5일 + 본인 +1명 해외여행(200만원 상당)이 제공됩니다!';
+      case 7:  return '🌴 근속 7년 안식월! 연차와 별도로 유급휴가 20일과 한달살이 체류비 100만원이 지원됩니다 🧳';
+      case 10: return '👑✈️ 근속 10년! 포상휴가 5일과 본인 포함 2인 4박5일 해외여행권(200만원 상당, 여행 기간 5일 별도), 총 10일이 주어집니다!';
       default: return '';
     }
   }
@@ -1152,6 +1168,7 @@ async function checkWelfareNotifications() {
     const usage = calcWelfareUsage(emp.id, year);
     const cats = Object.keys(WELFARE_CATEGORIES).filter(cat => {
       const c = WELFARE_CATEGORIES[cat];
+      if (usage[cat].biennialBlocked) return false; // 격년 항목 중 올해 대상 아님
       return !(c.restrictToPosition && emp.position !== c.restrictToPosition);
     });
     const totalRemain = cats.reduce((s, cat) => s + Math.max(0, usage[cat].remaining - usage[cat].pending), 0);
@@ -1344,6 +1361,7 @@ function employeeDashboardHTML(emp) {
     .sort((a,b) => b.createdAt - a.createdAt);
 
   return `
+    <div id="rollingBanner">${renderRollingBanner()}</div>
     <div class="card">
       <div class="greeting">
         <h2>${emp.name}님, 안녕하세요 👋</h2>
@@ -1363,7 +1381,7 @@ function employeeDashboardHTML(emp) {
         <div class="stat warning">
           <div class="stat-label">사용 / 잔여</div>
           <div class="stat-value">${used} / ${remaining}<span style="font-size:14px; color:var(--muted);">일</span></div>
-          <div class="stat-sub">${emp.birthday ? (bdayUsed ? '🎂 생일연차 사용 완료' : '🎂 생일연차 ' + bdayWindow.join('/') + '월 중 사용' + (emp.birthdayLunar ? ' (음력, 올해 양력 ' + (bdaySolarThisYear ? bdaySolarThisYear.slice(5).replace('-','/') : '?') + ')' : '')) : '🎂 생일연차: 생일 등록 필요'}${leave.tenureBonus > 0 ? `<br><span style="color:#d97706; font-weight:600;">${leave.years === 3 ? '🥉' : leave.years === 5 ? '🏆' : leave.years === 7 ? '🌴' : leave.years === 10 ? '👑✈️' : '🏆'} 근속 ${leave.years}년 ${leave.years === 7 ? '안식월' : '포상휴가'} ${leave.tenureBonus}일 ${leave.years === 7 ? '— 한달살이 다녀오세요! 🧳' : leave.years === 10 ? '— 해외여행 다녀오세요!' : '🎉'}</span>` : ''}</div>
+          <div class="stat-sub">${emp.birthday ? (bdayUsed ? '🎂 생일연차 사용 완료' : '🎂 생일연차 ' + bdayWindow.join('/') + '월 중 사용' + (emp.birthdayLunar ? ' (음력, 올해 양력 ' + (bdaySolarThisYear ? bdaySolarThisYear.slice(5).replace('-','/') : '?') + ')' : '')) : '🎂 생일연차: 생일 등록 필요'}${leave.tenureBonus > 0 ? `<br><span style="color:#d97706; font-weight:600;">${leave.years === 1 ? '🌱' : leave.years === 3 ? '🥉' : leave.years === 5 ? '🏆' : leave.years === 7 ? '🌴' : leave.years === 10 ? '👑✈️' : '🏆'} 근속 ${leave.years}년 ${leave.years === 7 ? '안식월' : leave.years === 10 ? '포상휴가+해외여행' : '포상휴가'} ${leave.tenureBonus}일 ${leave.years === 7 ? '— 한달살이 다녀오세요! 🧳' : leave.years === 10 ? '— 해외여행 다녀오세요!' : '🎉'}</span>` : ''}</div>
         </div>
       </div>
       <p style="margin-top:14px; padding:10px 14px; background:#f1f5f9; border-radius:6px; font-size:12px; color:var(--muted); line-height:1.6;">
@@ -2003,8 +2021,8 @@ function renderMyWelfareCard(emp) {
           const c = WELFARE_CATEGORIES[cat];
           const u = usage[cat];
           const pct = u.limit > 0 ? Math.min(100, (u.used / u.limit) * 100) : 0;
-          const disableReason = c.limitOncePerYear && u.approvedCount >= 1
-            ? '올해 사용 완료' : null;
+          const disableReason = u.biennialBlocked ? '격년 지원 · 내년 신청 가능'
+            : c.limitOncePerYear && (u.approvedCount + u.pendingCount) >= 1 ? '올해 사용 완료' : null;
           return `
             <div style="padding:14px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
@@ -3049,6 +3067,7 @@ function renderAdmin(emp) {
       <button class="tab ${adminTab==='welfare'?'active':''}" onclick="setAdminTab('welfare')">복지 지원 ${DB.welfare.filter(w => w.status === 'pending').length > 0 ? `<span class="badge badge-pending" style="margin-left:4px;">${DB.welfare.filter(w => w.status === 'pending').length}</span>` : ''}</button>
       <button class="tab ${adminTab==='contracts'?'active':''}" onclick="setAdminTab('contracts')">📋 계약 현황</button>
       <button class="tab ${adminTab==='severance'?'active':''}" onclick="setAdminTab('severance')">💰 퇴직금 시뮬</button>
+      ${isCEO() ? `<button class="tab ${adminTab==='rolling'?'active':''}" onclick="setAdminTab('rolling')">🌱 롤링페이퍼</button>` : ''}
       <button class="tab ${adminTab==='manage'?'active':''}" onclick="setAdminTab('manage')">직원 관리</button>
       <button class="tab ${adminTab==='backup'?'active':''}" onclick="setAdminTab('backup')">💾 백업/복원</button>
     </div>
@@ -3220,6 +3239,7 @@ function renderAdminBody() {
   else if (adminTab === 'contracts') body.innerHTML = renderContractsAdmin();
   else if (adminTab === 'severance') body.innerHTML = renderSeveranceAdmin();
   else if (adminTab === 'backup') body.innerHTML = renderBackupRestore();
+  else if (adminTab === 'rolling') { body.innerHTML = renderRollingAdmin(); loadRolling(true); }
 }
 
 function renderOvertimeStatus() {
@@ -3794,7 +3814,7 @@ function renderEmployeeStatus() {
                 <td>${bdayCell}</td>
                 <td>${e.joinDate}</td>
                 <td style="white-space:nowrap;">${formatTenure(e.joinDate)}</td>
-                <td>${total}일${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">${leave.years === 7 ? '🌴 안식월' : leave.years === 10 ? '👑✈️ 포상' : '🏆 포상'} ${leave.tenureBonus}일</span>` : ''}</td>
+                <td>${total}일${leave.tenureBonus > 0 ? `<br><span style="font-size:10px; color:#d97706;">${leave.years === 1 ? '🌱 포상' : leave.years === 7 ? '🌴 안식월' : leave.years === 10 ? '👑✈️ 포상' : '🏆 포상'} ${leave.tenureBonus}일</span>` : ''}</td>
                 <td style="color:var(--warning);">${used}일</td>
                 <td style="color:var(--success); font-weight:600;">${remain}일</td>
                 <td>
@@ -4037,7 +4057,7 @@ function openWelfareModal(category) {
 
     <div class="form-row">
       <label>내역 / 품목명</label>
-      <input type="text" id="wDesc" placeholder="${category === 'safety_shoes' ? '예: K2 세이프티 안전화 구입' : category === 'personal_equipment' ? '예: 마키타 충전드릴 DF332D' : category === 'education' ? '예: 목조건축 실무자 과정 (2026 상반기)' : '예: 건축박람회 KOBA 2026 티켓'}">
+      <input type="text" id="wDesc" placeholder="${category === 'safety_shoes' ? '예: K2 세이프티 안전화 구입' : category === 'personal_equipment' ? '예: 마키타 충전드릴 DF332D' : category === 'education' ? '예: 목조건축 실무자 과정 (2026 상반기)' : category === 'health_checkup' ? '예: ○○병원 종합건강검진' : '예: 건축박람회 KOBA 2026 티켓'}">
     </div>
 
     <div class="form-row">
@@ -4098,7 +4118,7 @@ function updateWelfarePreview(category) {
   const year = new Date().getFullYear();
   const emp = getEmployee(DB.session.empId);
   const usage = calcWelfareUsage(emp.id, year)[category];
-  const limit = (category === 'education' && sub === 'passive_house')
+  const limit = usage.biennialBlocked ? 0 : (category === 'education' && sub === 'passive_house')
     ? c.passiveHouseLimit : c.annualLimit;
   const availableRemaining = Math.max(0, limit - usage.used);
   const finalCompany = Math.min(rawCompany, availableRemaining);
@@ -4129,6 +4149,8 @@ async function submitWelfareRequest(category) {
   const year = new Date(date).getFullYear();
   const usage = calcWelfareUsage(DB.session.empId, year)[category];
   const c = WELFARE_CATEGORIES[category];
+  if (usage.biennialBlocked) { alert('종합건강검진은 2년에 1회 지원됩니다. 작년에 이미 지원받으셔서 내년에 신청 가능합니다.'); return; }
+  if (c.limitOncePerYear && (usage.approvedCount + usage.pendingCount) >= 1) { alert('이 항목은 연 1회만 신청할 수 있습니다.'); return; }
   const limit = (category === 'education' && sub === 'passive_house') ? c.passiveHouseLimit : c.annualLimit;
   const availableRemaining = Math.max(0, limit - usage.used);
   const companyAmount = Math.min(Math.round(total * c.supportRate), availableRemaining);
@@ -5023,12 +5045,383 @@ function showModal(html) {
 }
 function closeModal() { document.getElementById('modalRoot').innerHTML = ''; }
 
+/* ---------- 근속 롤링페이퍼 ---------- */
+// 근속 주년 60일 전 ~ 10일 전: 당사자를 뺀 동료에게 작성 안내 → 대표(admin)만 무기명 원문을 모아 봄
+const CEO_EMP_ID = 'admin';
+const ROLLING_OPEN_DAYS = 60;
+const ROLLING_CLOSE_DAYS = 10;
+let ROLLING = { loaded: false, loading: false, failed: false, mine: [], all: [] }; // 개인정보라 localStorage에 저장하지 않음
+let _rollingAutoShown = false;
+
+function isCEO() { return DB.session && DB.session.empId === CEO_EMP_ID; }
+
+function milestoneSubtitle(emp) {
+  if (emp.dept === '설계') return '내가 그린 집들';
+  if (emp.dept === '시공') return '내가 땀 흘린 현장들';
+  if (emp.dept === '행정') return '내가 아낀 살림';
+  return '함께한 시간들';
+}
+
+function ymdLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// daysLeft가 fromDays ~ toDays 사이인 근속 주년 목록
+function rollingTargets(fromDays, toDays) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const withEmail = new Set(Object.values(EMAIL_WHITELIST));
+  const out = [];
+  DB.employees.forEach(e => {
+    if (e.id === CEO_EMP_ID || !withEmail.has(e.id) || !e.joinDate) return;
+    const j = new Date(e.joinDate);
+    if (isNaN(j.getTime())) return;
+    TENURE_MILESTONES.forEach(y => {
+      const ann = new Date(j); ann.setFullYear(j.getFullYear() + y); ann.setHours(0,0,0,0);
+      const daysLeft = Math.round((ann - today) / 86400000);
+      if (daysLeft <= fromDays && daysLeft >= toDays) out.push({ emp: e, years: y, date: ymdLocal(ann), daysLeft });
+    });
+  });
+  return out.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+function myRollingTargets() {
+  const me = DB.session ? DB.session.empId : null;
+  return rollingTargets(ROLLING_OPEN_DAYS, ROLLING_CLOSE_DAYS).filter(t => t.emp.id !== me);
+}
+
+function myRollingNotes(targetId, years) {
+  return ROLLING.mine
+    .filter(n => n.kind !== 'self' && n.targetEmpId === targetId && Number(n.milestone) === years)
+    .sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
+}
+
+// 근속을 앞둔 본인: '나의 O년 돌아보기' (기여한 일·보람·연봉협상 참고) — 본인과 대표만 봄
+function mySelfTarget() {
+  const me = DB.session ? DB.session.empId : null;
+  return rollingTargets(ROLLING_OPEN_DAYS, 0).find(t => t.emp.id === me) || null;
+}
+
+function mySelfNotes(years) {
+  return ROLLING.mine
+    .filter(n => n.kind === 'self' && Number(n.milestone) === years)
+    .sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
+}
+
+async function loadRolling(force) {
+  if (ROLLING.loading || (ROLLING.loaded && !force)) return;
+  ROLLING.loading = true;
+  try {
+    const res = await dbCall('rolling_list');
+    if (res) { ROLLING.mine = res.mine || []; ROLLING.all = res.all || []; ROLLING.loaded = true; ROLLING.failed = false; }
+  } catch (e) {
+    ROLLING.failed = true;
+    console.warn('[롤링페이퍼] 불러오기 실패:', e);
+  }
+  ROLLING.loading = false;
+  refreshRollingUI();
+}
+
+function refreshRollingUI() {
+  const el = document.getElementById('rollingBanner');
+  if (el) el.innerHTML = renderRollingBanner();
+  const body = document.getElementById('adminBody');
+  if (body && adminTab === 'rolling' && isCEO()) body.innerHTML = renderRollingAdmin();
+  maybeAutoShowRolling();
+}
+
+function renderRollingBanner() {
+  if (!DB.session) return '';
+  const targets = myRollingTargets();
+  const self = mySelfTarget();
+  if (targets.length === 0 && !self) return '';
+  if (!ROLLING.loaded) { if (!ROLLING.failed) loadRolling(); return ''; } // 저장된 글을 불러온 뒤 표시
+  const selfCount = self ? mySelfNotes(self.years).length : 0;
+  const selfBanner = self ? `
+      <div class="card" style="background:#eff6ff; border:1px solid #bfdbfe; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div style="font-size:28px; line-height:1;">🌟</div>
+        <div style="flex:1; min-width:220px;">
+          <div style="font-weight:700; font-size:15px;">곧 근속 ${self.years}년이 됩니다 <span style="font-weight:400; font-size:12px; color:var(--muted);">(${self.date})</span></div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">지난 ${self.years}년 동안 내가 해결했거나 기여한 일을 정리해 보세요. 연봉협상 때 함께 보는 자료가 됩니다.<br>내가 정리한 항목 ${selfCount}개</div>
+        </div>
+        <button class="btn-primary btn-sm" onclick="openSelfModal(${self.years})">${selfCount > 0 ? '더 쓰기 · 고치기' : '정리하기'}</button>
+      </div>` : '';
+  return selfBanner + targets.map(t => {
+    const mineCount = myRollingNotes(t.emp.id, t.years).length;
+    const deadline = new Date(t.date); deadline.setDate(deadline.getDate() - ROLLING_CLOSE_DAYS);
+    return `
+      <div class="card" style="background:#f7fee7; border:1px solid #bef264; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div style="font-size:28px; line-height:1;">🌱</div>
+        <div style="flex:1; min-width:220px;">
+          <div style="font-weight:700; font-size:15px;">${t.emp.name}님이 곧 근속 ${t.years}년이 됩니다 <span style="font-weight:400; font-size:12px; color:var(--muted);">(${t.date})</span></div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6;">롤링페이퍼에 한마디 남겨 주세요. 이름 없이 모아서 ${t.emp.name}님께 전해 드려요. ${t.emp.name}님에게는 비밀이에요!<br>마감 ${ymdLocal(deadline)} · 내가 남긴 글 ${mineCount}개</div>
+        </div>
+        <button class="btn-primary btn-sm" onclick="openRollingModal('${t.emp.id}', ${t.years})">${mineCount > 0 ? '더 쓰기 · 고치기' : '한마디 쓰기'}</button>
+      </div>`;
+  }).join('');
+}
+
+function maybeAutoShowRolling() {
+  if (_rollingAutoShown || !ROLLING.loaded || !DB.session) return;
+  _rollingAutoShown = true; // 로그인 후 한 번만
+  const modalRoot = document.getElementById('modalRoot');
+  if (modalRoot && modalRoot.innerHTML.trim()) return; // 다른 창이 열려 있으면 띄우지 않음
+  const self = mySelfTarget();
+  if (self && mySelfNotes(self.years).length === 0) { openSelfModal(self.years); return; }
+  const t = myRollingTargets().find(x => myRollingNotes(x.emp.id, x.years).length === 0);
+  if (t) openRollingModal(t.emp.id, t.years);
+}
+
+function openRollingModal(targetId, years) {
+  const t = getEmployee(targetId);
+  if (!t) return;
+  const mine = myRollingNotes(targetId, years);
+  showModal(`
+    <h3 style="margin-bottom:6px;">🌱 ${t.name}님 근속 ${years}년 롤링페이퍼</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">${t.name}님 몰래 모아서 전할 글입니다. 다른 분들께도 비밀로 해 주세요.</p>
+    <div style="padding:12px 14px; background:#f7fee7; border-radius:8px; font-size:13px; line-height:1.75; margin-bottom:16px;">
+      <b>이런 주제로 써 주세요</b><br>
+      · ${t.name}님 덕분에 가능했던 장면<br>
+      · 보며 배우거나 영감을 받은 점<br>
+      · 내년에 기대하는 것
+      <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.6;">메모하듯 짧게 써도 괜찮아요. 이름은 남지 않고, ${t.name}님에게는 이 창이 보이지 않습니다. 생각날 때마다 더 남기거나 고칠 수 있어요.</div>
+    </div>
+    ${mine.length > 0 ? `
+      <div style="font-size:12px; font-weight:700; margin-bottom:8px;">내가 남긴 글 (${mine.length})</div>
+      ${mine.map(n => `
+        <div style="padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;">
+          <textarea id="rn_${n.id}" rows="3" style="font-size:13px;">${escapeHtml(n.content)}</textarea>
+          <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
+            <button class="btn-sm btn-ghost" onclick="deleteRollingNote('${n.id}','${targetId}',${years})">삭제</button>
+            <button class="btn-sm btn-secondary" onclick="saveRollingNote('${targetId}',${years},'${n.id}')">수정 저장</button>
+          </div>
+        </div>`).join('')}
+    ` : ''}
+    <div class="form-row" style="margin-top:6px;">
+      <label>${mine.length > 0 ? '한마디 더 남기기' : '한마디 남기기'}</label>
+      <textarea id="rnNew" rows="4" style="font-size:13px;" placeholder="예: 일을 책임감 있게 잘 함. 회사 일을 자기 일처럼 열정 있게 함."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">닫기</button>
+      <button class="btn-primary" onclick="saveRollingNote('${targetId}',${years})">저장</button>
+    </div>
+  `);
+}
+
+async function saveRollingNote(targetId, years, noteId) {
+  const el = document.getElementById(noteId ? 'rn_' + noteId : 'rnNew');
+  const content = (el ? el.value : '').trim();
+  if (!content) { alert('내용을 입력해 주세요.'); return; }
+  if (content.length > 1000) { alert('1,000자 이내로 써 주세요.'); return; }
+  showLoader('저장 중...');
+  try {
+    const res = await dbCall('rolling_save', { id: noteId || null, targetEmpId: targetId, milestone: years, content });
+    hideLoader();
+    if (!res) return;
+    ROLLING.mine = res.mine || ROLLING.mine;
+    if (res.all) ROLLING.all = res.all;
+    showToast('저장했어요', 'success');
+    openRollingModal(targetId, years);
+    refreshRollingUI();
+  } catch (err) {
+    hideLoader();
+    alert('저장 실패: ' + err.message);
+  }
+}
+
+async function deleteRollingNote(noteId, targetId, years) {
+  if (!confirm('이 글을 삭제할까요?')) return;
+  showLoader('삭제 중...');
+  try {
+    const res = await dbCall('rolling_delete', { id: noteId });
+    hideLoader();
+    if (!res) return;
+    ROLLING.mine = res.mine || ROLLING.mine.filter(n => n.id !== noteId);
+    if (res.all) ROLLING.all = res.all;
+    showToast('삭제했어요', 'success');
+    openRollingModal(targetId, years);
+    refreshRollingUI();
+  } catch (err) {
+    hideLoader();
+    alert('삭제 실패: ' + err.message);
+  }
+}
+
+function openSelfModal(years) {
+  const me = getEmployee(DB.session.empId);
+  if (!me) return;
+  const mine = mySelfNotes(years);
+  showModal(`
+    <h3 style="margin-bottom:6px;">🌟 나의 ${years}년 돌아보기</h3>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:14px;">곧 근속 ${years}년이 됩니다. 그동안 해 온 일을 스스로 정리해 두는 자리예요.</p>
+    <div style="padding:12px 14px; background:#eff6ff; border-radius:8px; font-size:13px; line-height:1.75; margin-bottom:16px;">
+      <b>이런 것들을 적어 보세요</b><br>
+      · 내가 해결했거나 기여한 일 (현장, 프로젝트, 개선한 업무)<br>
+      · 가장 보람을 느꼈던 순간<br>
+      · 연봉협상 때 꼭 이야기하고 싶은 성과
+      <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.6;">적은 내용은 대표님께 공유되어 연봉협상 때 함께 봅니다. 다른 직원에게는 보이지 않아요. 생각날 때마다 더 쓰거나 고칠 수 있어요.</div>
+    </div>
+    ${mine.length > 0 ? `
+      <div style="font-size:12px; font-weight:700; margin-bottom:8px;">내가 정리한 항목 (${mine.length})</div>
+      ${mine.map(n => `
+        <div style="padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;">
+          <textarea id="sn_${n.id}" rows="3" style="font-size:13px;">${escapeHtml(n.content)}</textarea>
+          <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
+            <button class="btn-sm btn-ghost" onclick="deleteSelfNote('${n.id}',${years})">삭제</button>
+            <button class="btn-sm btn-secondary" onclick="saveSelfNote(${years},'${n.id}')">수정 저장</button>
+          </div>
+        </div>`).join('')}
+    ` : ''}
+    <div class="form-row" style="margin-top:6px;">
+      <label>${mine.length > 0 ? '항목 더 추가하기' : '항목 추가하기'}</label>
+      <textarea id="snNew" rows="4" style="font-size:13px;" placeholder="예: OO현장 창호 하자를 시공사와 협의해 2주 만에 해결함"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">닫기</button>
+      <button class="btn-primary" onclick="saveSelfNote(${years})">저장</button>
+    </div>
+  `);
+}
+
+async function saveSelfNote(years, noteId) {
+  const el = document.getElementById(noteId ? 'sn_' + noteId : 'snNew');
+  const content = (el ? el.value : '').trim();
+  if (!content) { alert('내용을 입력해 주세요.'); return; }
+  if (content.length > 1000) { alert('1,000자 이내로 써 주세요.'); return; }
+  showLoader('저장 중...');
+  try {
+    const res = await dbCall('rolling_save', { id: noteId || null, kind: 'self', targetEmpId: DB.session.empId, milestone: years, content });
+    hideLoader();
+    if (!res) return;
+    ROLLING.mine = res.mine || ROLLING.mine;
+    if (res.all) ROLLING.all = res.all;
+    showToast('저장했어요', 'success');
+    openSelfModal(years);
+    refreshRollingUI();
+  } catch (err) {
+    hideLoader();
+    alert('저장 실패: ' + err.message);
+  }
+}
+
+async function deleteSelfNote(noteId, years) {
+  if (!confirm('이 항목을 삭제할까요?')) return;
+  showLoader('삭제 중...');
+  try {
+    const res = await dbCall('rolling_delete', { id: noteId });
+    hideLoader();
+    if (!res) return;
+    ROLLING.mine = res.mine || ROLLING.mine.filter(n => n.id !== noteId);
+    if (res.all) ROLLING.all = res.all;
+    showToast('삭제했어요', 'success');
+    openSelfModal(years);
+    refreshRollingUI();
+  } catch (err) {
+    hideLoader();
+    alert('삭제 실패: ' + err.message);
+  }
+}
+
+// 대표 전용: 대상자별 무기명 원문 모아보기 (같은 사람이 쓴 글은 '식구 A'처럼 묶음)
+function rollingGroups() {
+  const groups = {};
+  rollingTargets(ROLLING_OPEN_DAYS, -60).forEach(t => {
+    groups[t.emp.id + '_' + t.years] = { emp: t.emp, years: t.years, date: t.date, daysLeft: t.daysLeft, notes: [] };
+  });
+  ROLLING.all.forEach(n => {
+    const key = n.targetEmpId + '_' + n.milestone;
+    if (!groups[key]) {
+      const e = getEmployee(n.targetEmpId);
+      if (!e) return;
+      groups[key] = { emp: e, years: Number(n.milestone), date: '', daysLeft: null, notes: [] };
+    }
+    groups[key].notes.push(n);
+  });
+  return Object.values(groups).sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999));
+}
+
+function groupNotesByWriter(notes) {
+  const byWriter = {};
+  notes.filter(n => n.kind !== 'self').sort((a, b) => Number(a.createdAt) - Number(b.createdAt)).forEach(n => {
+    const w = n.writer || '?';
+    (byWriter[w] = byWriter[w] || []).push(n);
+  });
+  return Object.keys(byWriter).sort().map(w => ({ writer: w, notes: byWriter[w] }));
+}
+
+function renderRollingAdmin() {
+  if (!isCEO()) return '';
+  if (!ROLLING.loaded) return `<div class="card"><p style="color:var(--muted); text-align:center; padding:30px 0;">${ROLLING.failed ? '롤링페이퍼를 불러오지 못했습니다. 식구 DB Apps Script가 최신 버전으로 배포됐는지 확인해 주세요.' : '불러오는 중...'}</p></div>`;
+  const groups = rollingGroups();
+  return `
+    <div class="card">
+      <div class="card-title">🌱 근속 롤링페이퍼</div>
+      <p style="font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:16px;">
+        근속 주년 ${ROLLING_OPEN_DAYS}일 전부터 ${ROLLING_CLOSE_DAYS}일 전까지 동료들이 남긴 글을 모았습니다. 쓴 사람 이름은 저장되지 않고, 같은 사람이 쓴 글끼리만 '식구 A'처럼 묶어 보여 줍니다.<br>
+        [📋 원문 복사]를 눌러 Claude에게 붙여넣으면, 쓴 사람 말투를 살린 초안을 만들어 드립니다.
+      </p>
+      ${groups.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:20px 0;">진행 중인 롤링페이퍼가 없습니다.</p>' : groups.map(g => {
+        const writers = groupNotesByWriter(g.notes);
+        const peerCount = g.notes.filter(n => n.kind !== 'self').length;
+        const selfNotes = g.notes.filter(n => n.kind === 'self').sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
+        const dLabel = g.daysLeft === null ? '' : g.daysLeft > 0 ? `D-${g.daysLeft}` : g.daysLeft === 0 ? 'D-day' : `D+${-g.daysLeft}`;
+        return `
+          <div style="border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+              <div>
+                <b>${g.emp.name}</b> · 근속 ${g.years}년 ${g.date ? `<span style="font-size:12px; color:var(--muted);">${g.date} (${dLabel})</span>` : ''}<br>
+                <span style="font-size:12px; color:var(--muted);">『나의 ${g.years}년 마일스톤 — ${milestoneSubtitle(g.emp)}』 · 동료 ${writers.length}명 · 글 ${peerCount}개</span>
+              </div>
+              ${peerCount > 0 ? `<button class="btn-sm btn-secondary" onclick="copyRollingNotes('${g.emp.id}', ${g.years})">📋 원문 복사</button>` : ''}
+            </div>
+            ${selfNotes.length > 0 ? `
+              <div style="margin-top:12px; padding:10px 12px; background:#eff6ff; border-radius:8px;">
+                <div style="font-size:12px; font-weight:700; color:#1e40af;">🌟 ${g.emp.name}님이 직접 정리한 기여 (연봉협상 참고 · ${selfNotes.length}개)</div>
+                ${selfNotes.map(n => `<div style="font-size:13px; line-height:1.7; white-space:pre-wrap; padding:4px 0 0 10px;">· ${escapeHtml(n.content)}</div>`).join('')}
+              </div>` : ''}
+            ${writers.length === 0 ? '<p style="font-size:12px; color:var(--muted); margin-top:10px;">아직 동료들이 남긴 글이 없습니다.</p>' : writers.map(w => `
+              <div style="margin-top:12px;">
+                <div style="font-size:12px; font-weight:700; color:#3f6212;">식구 ${w.writer}</div>
+                ${w.notes.map(n => `<div style="font-size:13px; line-height:1.7; white-space:pre-wrap; padding:4px 0 4px 10px;">${escapeHtml(n.content)}</div>`).join('')}
+              </div>`).join('')}
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function copyRollingNotes(targetId, years) {
+  const g = rollingGroups().find(x => x.emp.id === targetId && x.years === years);
+  if (!g) return;
+  const writers = groupNotesByWriter(g.notes);
+  const text = [
+    `『나의 ${years}년 마일스톤 — ${milestoneSubtitle(g.emp)}』 ${g.emp.name}님 (${g.emp.dept} · ${g.emp.position}) 롤링페이퍼 원문`,
+    '아래 원문을 동료 한 명당 한마디씩, 쓴 사람 말투를 살려 2~3문장 대화체 초안으로 풀어 주세요.',
+    '',
+    ...writers.map(w => `식구 ${w.writer}\n` + w.notes.map(n => '- ' + n.content.replace(/\n+/g, ' ')).join('\n') + '\n')
+  ].join('\n');
+  const done = () => showToast('원문을 복사했어요. Claude에게 붙여넣어 주세요.', 'success');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { alert(text); }
+  document.body.removeChild(ta);
+}
+
 // 근속 포상 기준 안내 팝업
 const TENURE_REWARDS = [
-  { years: 3,  icon: '🥉', title: '포상휴가 +2일', gift: '🪙 순금 반 돈', note: '잠깐 숨 고르는 시간', bg: '#fef9c3', bd: '#fde68a' },
+  { years: 1,  icon: '🌱', title: '포상휴가 +1일', gift: '', note: '함께한 첫 1년, 고맙습니다', bg: '#f7fee7', bd: '#d9f99d' },
+  { years: 3, icon: '🥉', title: '포상휴가 +2일', gift: '🪙 순금 반 돈', note: '잠깐 숨 고르는 시간', bg: '#fef9c3', bd: '#fde68a' },
   { years: 5,  icon: '🏆', title: '포상휴가 +3일', gift: '🪙 순금 한 돈', note: '함께 걸어온 5년, 고맙습니다', bg: '#fef3c7', bd: '#fcd34d' },
-  { years: 7,  icon: '🌴', title: '안식월 20일 · 연차와 별도 추가', gift: '', note: '그해 연차는 그대로, 20일이 더해집니다 · 한달살이 가능합니다 🧳', bg: '#fde68a', bd: '#f59e0b' },
-  { years: 10, icon: '👑', title: '포상휴가 +5일', gift: '✈️ 본인 +1명 해외여행 (200만원 상당)', note: '10년의 동료에게', bg: '#fcd34d', bd: '#d97706' },
+  { years: 7,  icon: '🌴', title: '안식월 20일 · 연차와 별도 추가', gift: '🏡 한달살이 체류비 100만원', note: '그해 연차는 그대로, 20일이 더해집니다 · 한달살이 다녀오세요 🧳', bg: '#fde68a', bd: '#f59e0b' },
+  { years: 10, icon: '👑', title: '포상휴가 +5일', gift: '✈️ 본인 포함 2인 4박5일 해외여행권 (200만원 상당)', note: '여행 기간 5일은 별도 부여 · 포상휴가와 합쳐 총 10일', bg: '#fcd34d', bd: '#d97706' },
 ];
 
 function showTenureRewardGuide(empId) {
