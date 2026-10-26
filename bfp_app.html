@@ -64,6 +64,55 @@
   .dyk-list b { display: block; }
   .dyk-list small { color: var(--muted); font-size: 13px; }
   .ca-all { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+  .ca-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line); margin: 4px 0 0; }
+  .ca-tabs::-webkit-scrollbar { display: none; }
+  .ca-tab { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; background: none; border: 1px solid transparent; border-bottom: 0;
+    border-radius: 8px 8px 0 0; padding: 7px 14px 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .ca-tab b { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+  .ca-tab[aria-pressed="true"] { background: var(--surface); border-color: var(--line); color: var(--ink); font-weight: 700; margin-bottom: -1px; }
+  .ca-sumline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 10px 2px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .ca-sumline b { font-size: 15px; }
+  .ca-sumline .tag { margin: 0 5px 0 0; }
+  .ca-sumline .warn { color: var(--red); font-weight: 600; }
+  .ca-gridwrap { padding: 0; overflow-x: auto; }
+  .ca-grid { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13.5px; table-layout: fixed; }
+  .ca-grid th { position: sticky; top: 0; background: #FBFAF0; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600;
+    padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .ca-grid th.d { width: 74px; } .ca-grid th.k { width: 108px; } .ca-grid th.r { width: 104px; } .ca-grid th.s { width: 150px; }
+  .ca-grid th.t { width: 112px; } .ca-grid th.st0 { width: 130px; } .ca-grid th.w { width: 64px; } .ca-grid th.c { width: 66px; }
+  .ca-grid td { padding: 0; border-bottom: 1px solid #EEECDD; height: 32px; vertical-align: middle; }
+  .ca-grid td + td { border-left: 1px solid #F3F1E4; }
+  .ca-grid td.d { padding: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ca-grid td.store, .ca-grid td.who { padding: 0 8px; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ca-grid td.c { text-align: center; }
+  .ca-grid td.r { text-align: right; }
+  .ca-grid input, .ca-grid select { width: 100%; height: 32px; border: 0; background: transparent; font: inherit; color: inherit; padding: 0 8px; border-radius: 0; }
+  .ca-grid select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 20px; }
+  .ca-grid select:hover, .ca-grid select:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 7px center; }
+  .ca-grid input:hover { box-shadow: inset 0 -1px 0 var(--line); }
+  .ca-grid input:focus, .ca-grid select:focus { outline: 2px solid var(--green); outline-offset: -2px; background: #fff; }
+  .ca-grid tbody tr:hover td { background: #FAF9F1; }
+  .ca-grid .amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; display: block; padding: 0 8px; }
+  .ca-grid .amt.minus { color: var(--red); }
+  .ca-grid .need { color: var(--red); font-weight: 600; }
+  .ca-grid select.need { background: #FDF1EE; }
+  .ca-grid .saving { background: #FFF8DA !important; }
+  .ca-grid .saved { background: #E7F3E1 !important; transition: background .6s; }
+  .ca-grid .err { background: #FBE3DE !important; }
+  .ca-grid tr.moved td { opacity: .5; }
+  .ca-moved { display: block; font-size: 10px; color: var(--muted); padding: 0 8px; margin-top: -6px; }
+  .ca-clip { background: none; border: 1px dashed var(--line); border-radius: 6px; font-size: 12px; padding: 2px 8px; cursor: pointer; color: var(--muted); }
+  .ca-clip.need { border-color: rgba(192,57,43,.5); color: var(--red); font-weight: 700; }
+  .ca-help { margin: 8px 2px 0; }
+  .ca-print-title { display: none; }
+  @media print {
+    .ca-tabs, .ca-help, .cr-bar, .ca-month { display: none !important; }
+    .ca-print-title { display: block; font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+    .ca-grid { min-width: 0; } .ca-grid th.st0, .ca-grid td.store, .ca-grid th.c, .ca-grid td.c { display: none; }
+    .ca-grid select, .ca-grid input { -webkit-appearance: none; appearance: none; }
+  }
   .ca-sheet { padding: 0; margin-bottom: 14px; overflow: hidden; }
   .ca-sheet-h { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px 8px; border-bottom: 1px solid var(--line); }
   .ca-sheet-h h4 { margin: 0; flex: 1; }
@@ -2169,73 +2218,62 @@ function stQtyForm() {
 }
 
 // ---------- 법인카드 ----------
-const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '확인대기', canAll: false, loaded: false, sel: {}, view: 'list', sum: null, docLimit: 100000 };
+const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '전체', canAll: false, loaded: false, sel: {}, view: 'sheet', siteTab: '*', sum: null, docLimit: 100000 };
 
 async function renderCardTab() {
   if (!CA.loaded || CA.reload) {
     $('main').innerHTML = '<div class="loading">카드 내역을 불러오는 중...</div>';
     try {
-      const d = await api({ action: 'ca_list', month: CA.month, status: '' });
+      const d = await api({ action: 'ca_list', month: '', status: '' });
       Object.assign(CA, { items: d.items, kinds: d.kinds, trades: d.trades || [], cards: d.cards, months: d.months, canAll: d.canAll, docLimit: d.docLimit || 100000, loaded: true, reload: false });
-      if (!CA.month) CA.month = d.months[0] || today().slice(0, 7);
+      if (!CA.month) CA.month = '*';   // 기본은 전체 기간
     } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
     if (S.tab !== 'card') return;
   }
-  if (CA.view === 'sum' && CA.canAll) return caRenderSum();
-  const rows = CA.items.filter(o => String(o.paidAt).slice(0, 7) === CA.month);
-  const wait = rows.filter(o => o.status === '확인대기');
-  const done = rows.filter(o => o.status === '확정');
-  const list = CA.filter === '전체' ? rows : rows.filter(o => o.status === CA.filter);
+  if (CA.view !== 'list') return caRenderSheet();
+  const rows = CA.items.filter(caInPeriod);
+  const noSite = rows.filter(o => !o.siteCode);
+  const lacks = rows.filter(caLacks);
+  const FILTERS = { '전체': rows, '현장 미지정': noSite, '증빙 미비': lacks };
+  if (!FILTERS[CA.filter]) CA.filter = '전체';
+  const list = FILTERS[CA.filter];
   const sum = a => a.reduce((t, o) => t + (Number(o.amount) || 0), 0);
   const selIds = Object.keys(CA.sel).filter(k => CA.sel[k]);
 
   $('main').innerHTML = `
     <div class="cr-bar"><h2>법인카드</h2>
-      <select id="caMonth" class="ca-month">${CA.months.map(m => `<option ${m === CA.month ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
-      ${CA.canAll ? `<button class="btn ghost" type="button" id="caSum">현장별 정리</button>
-      <button class="btn ghost" type="button" id="caPaste">이용내역 불러오기</button>` : ''}
+      ${caPeriodSelect()}
+      <button class="btn ghost" type="button" id="caSum">시트로 보기</button>
+      ${CA.canAll ? `<button class="btn ghost" type="button" id="caPaste">이용내역 불러오기</button>` : ''}
       <button class="btn ghost" type="button" id="caAdd">+ 직접 입력</button></div>
 
     <div class="ov-cards">
-      <button type="button" class="panel ov-card ov-click" data-f="확인대기"><span class="cr-id">확인 대기</span>
-        <b class="${wait.length ? 'warn' : ''}">${wait.length}건</b><span class="cr-sub">${won(sum(wait))}</span></button>
-      <button type="button" class="panel ov-card ov-click" data-f="확정"><span class="cr-id">확정</span>
-        <b>${done.length}건</b><span class="cr-sub">${won(sum(done))}</span></button>
-      <section class="panel ov-card"><span class="cr-id">${esc(CA.month)} 합계</span>
-        <b>${won(sum(rows.filter(o => o.status !== '제외')))}</b><span class="cr-sub">${rows.length}건</span></section>
+      <button type="button" class="panel ov-card ov-click" data-f="전체"><span class="cr-id">${esc(caPeriodLabel())} 합계</span>
+        <b>${won(sum(rows))}</b><span class="cr-sub">${rows.length}건</span></button>
+      <button type="button" class="panel ov-card ov-click" data-f="현장 미지정"><span class="cr-id">현장 미지정</span>
+        <b class="${noSite.length ? 'warn' : ''}">${noSite.length}건</b><span class="cr-sub">${won(sum(noSite))}</span></button>
+      <button type="button" class="panel ov-card ov-click" data-f="증빙 미비"><span class="cr-id">10만원 이상 증빙·공종 미비</span>
+        <b class="${lacks.length ? 'warn' : ''}">${lacks.length}건</b><span class="cr-sub">${won(sum(lacks))}</span></button>
     </div>
 
-    ${CA.canAll && done.length ? `<section class="panel ov-block"><h4>현장별 · 분류별 (확정분)</h4>
-      <div class="ca-sum">${(() => {
-        const bySite = {}, byKind = {};
-        done.forEach(o => { bySite[o.siteCode || '미지정'] = (bySite[o.siteCode || '미지정'] || 0) + o.amount; byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + o.amount; });
-        const line = (obj, cls) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
-          `<div class="ca-sum-row"><span class="${cls}">${esc(k)}</span><b>${won(v)}</b></div>`).join('');
-        return `<div>${line(bySite, 'code')}</div><div>${line(byKind, 'tag')}</div>`;
-      })()}</div></section>` : ''}
-
-    <div class="filters">${(CA.canAll ? ['확인대기', '검토대기', '확정', '전체'] : ['확인대기', '검토대기', '확정', '전체']).map(f => {
-      const n = f === '전체' ? rows.length : rows.filter(o => o.status === f).length;
-      return `<button class="chip ${f === '확인대기' && n ? 'warn' : ''}" data-f="${esc(f)}" aria-pressed="${CA.filter === f}">${esc(f)}<b>${n}</b></button>`;
+    <div class="filters">${Object.keys(FILTERS).map(f => {
+      const n = FILTERS[f].length;
+      return `<button class="chip ${f !== '전체' && n ? 'warn' : ''}" data-f="${esc(f)}" aria-pressed="${CA.filter === f}">${esc(f)}<b>${n}</b></button>`;
     }).join('')}</div>
 
     ${list.length ? `<div class="ca-all"><label><input type="checkbox" id="caAll" ${selIds.length && selIds.length === list.length ? 'checked' : ''}>
       화면에 보이는 ${list.length}건 모두 선택</label></div>` : ''}
 
     ${selIds.length ? `<div class="ca-bulk"><b>${selIds.length}건 선택</b>
-      <select id="caBulkSite"><option value="">현장 선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
+      <select id="caBulkSite"><option value="">현장 유지</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
       <select id="caBulkKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
       <select id="caBulkTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
-      <button class="btn ghost" type="button" id="caBulkSet">지정만</button>
-      <button class="btn" type="button" id="caBulkGo">지정 · ${CA.canAll ? '확정' : '입력완료'}</button>
+      <button class="btn" type="button" id="caBulkGo">지정</button>
       <button class="btn ghost" type="button" id="caBulkClear">해제</button>
       ${CA.canAll ? `<button class="btn ghost danger" type="button" id="caBulkDel">삭제</button>` : ''}</div>` : ''}
 
     <section class="panel">
-      ${list.length ? list.map(o => {
-        const st = o.status === '확정' ? '완료' : o.status === '제외' ? '반려' : '';
-        const site = S.sites.find(s => s.code === o.siteCode);
-        return `<div class="cr-row ca-row ${o.status === '확인대기' ? 'urgent' : ''}" data-id="${esc(o.id)}">
+      ${list.length ? list.map(o => `<div class="cr-row ca-row" data-id="${esc(o.id)}">
           <input type="checkbox" class="ca-chk" data-id="${esc(o.id)}" ${CA.sel[o.id] ? 'checked' : ''}>
           <span class="cr-title">${esc(o.store || '가맹점 미상')}<span class="ca-amt ${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</span></span>
           <span class="cr-sub"><span class="ca-when">${esc(String(o.paidAt).slice(5, 10).replace('-', '/'))}</span>
@@ -2245,17 +2283,16 @@ async function renderCardTab() {
             ${caBig(o) && !(o.files || []).length ? '<span class="tag warn-tag">증빙 필요</span>' : ''}
             ${o.siteCode ? `<span class="code">${esc(o.siteCode)}</span>` : '<span class="tag warn-tag">현장 없음</span>'}
             ${o.memo ? '<span class="ca-memo">' + esc(o.memo) + '</span>' : ''}${(o.files || []).length ? ' 📎' : ''}</span>
-          <span class="cr-right"><span class="st ${st}">${esc(o.status)}</span></span>
-        </div>`;
-      }).join('') : `<div class="empty"><h3>${CA.filter === '확인대기' ? '확인할 내역이 없습니다' : '내역이 없습니다'}</h3>
-        ${CA.filter === '확인대기' ? '카드 결제 문자가 오면 자동으로 여기에 쌓입니다.' : ''}</div>`}
+        </div>`).join('')
+        : `<div class="empty"><h3>${CA.filter === '전체' ? '내역이 없습니다' : '정리할 내역이 없습니다'}</h3>
+           ${CA.filter === '전체' ? '카드 결제 문자가 오면 자동으로 여기에 쌓입니다.' : ''}</div>`}
     </section>`;
 
   $('caMonth').onchange = e => { CA.month = e.target.value; CA.sel = {}; renderCardTab(); };
   $('caAdd').onclick = caAddForm;
   if ($('caPaste')) $('caPaste').onclick = caPasteForm;
-  if ($('caSum')) $('caSum').onclick = () => { CA.view = CA.view === 'sum' ? 'list' : 'sum'; renderCardTab(); };
-  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CA.filter = b.dataset.f; renderCardTab(); });
+  $('caSum').onclick = () => { CA.view = 'sheet'; CA.sel = {}; renderCardTab(); };
+  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CA.filter = b.dataset.f; CA.sel = {}; renderCardTab(); });
   $('main').querySelectorAll('.ca-row').forEach(b => b.onclick = e => { if (e.target.classList.contains('ca-chk')) return; caOpen(b.dataset.id); });
   $('main').querySelectorAll('.ca-chk').forEach(c => c.onchange = () => { CA.sel[c.dataset.id] = c.checked; renderCardTab(); });
   if ($('caBulkClear')) $('caBulkClear').onclick = () => { CA.sel = {}; renderCardTab(); };
@@ -2272,98 +2309,230 @@ async function renderCardTab() {
       renderCardTab(); toast(`${d.removed}건 지웠습니다`);
     });
   };
-  const caBulkRun = (btn, confirmIt) => submitting(btn, async () => {
-    const d = await api({ action: 'ca_bulk', ids: selIds, siteCode: $('caBulkSite').value,
-      kind: $('caBulkKind').value, trade: $('caBulkTrade').value, confirm: confirmIt, month: '' });
-    CA.items = d.items; CA.sel = {}; renderCardTab();
-    let msg = `${d.saved}건 저장`;
-    if (confirmIt) msg += ` · ${CA.canAll ? '확정' : '입력완료'} ${d.confirmed}건`;
-    if (d.missing) msg += ` · ${d.missing}건은 현장·분류가 비어 넘겼습니다`;
-    if (d.needDocs) msg += ` · 10만원 이상 ${d.needDocs}건은 공종·증빙이 없어 넘겼습니다`;
-    if (d.locked) msg += ` · 확정건 ${d.locked}건 제외`;
-    toast(msg);
-  });
-  if ($('caBulkSet')) $('caBulkSet').onclick = e => caBulkRun(e.target, false);
-  if ($('caBulkGo')) $('caBulkGo').onclick = e => caBulkRun(e.target, true);
+  if ($('caBulkGo')) $('caBulkGo').onclick = e => {
+    const site = $('caBulkSite').value, kind = $('caBulkKind').value, trade = $('caBulkTrade').value;
+    if (!site && !kind && !trade) { toast('바꿀 현장·분류·공종 중 하나를 고르세요'); return; }
+    submitting(e.target, async () => {
+      const d = await api({ action: 'ca_bulk', ids: selIds, siteCode: site, kind, trade, month: '' });
+      CA.items = d.items; CA.sel = {}; renderCardTab(); toast(`${d.saved}건 지정했습니다`);
+    });
+  };
 }
 
 function caBig(o) { return Math.abs(Number(o.amount) || 0) >= (CA.docLimit || 100000); }
+// 기간: '*' = 전체 기간, 'yyyy' = 그 해 전체, 'yyyy-MM' = 그 달
+function caInPeriod(o) {
+  const p = CA.month || '*';
+  if (p === '*') return true;
+  return String(o.paidAt).slice(0, p.length) === p;
+}
+function caPeriodLabel() {
+  const p = CA.month || '*';
+  if (p === '*') return '전체 기간';
+  if (/^\d{4}$/.test(p)) return p + '년';
+  return p.slice(0, 4) + '년 ' + Number(p.slice(5, 7)) + '월';
+}
+function caPeriodSelect() {
+  const months = CA.months || [];
+  const years = [...new Set(months.map(m => m.slice(0, 4)))];
+  const opt = (v, t) => `<option value="${esc(v)}" ${v === (CA.month || '*') ? 'selected' : ''}>${esc(t)}</option>`;
+  return `<select id="caMonth" class="ca-month" aria-label="기간">
+    ${opt('*', '전체 기간')}
+    ${years.length > 1 || years.length === 1 ? `<optgroup label="연도">${years.map(y => opt(y, y + '년 전체')).join('')}</optgroup>` : ''}
+    <optgroup label="월">${months.map(m => opt(m, m.slice(0, 4) + '년 ' + Number(m.slice(5, 7)) + '월')).join('')}</optgroup>
+  </select>`;
+}
+function caLacks(o) { return caBig(o) && (!o.trade || !(o.files || []).length); }
 
-function caRenderSum() {
-  const rows = CA.items.filter(o => String(o.paidAt).slice(0, 7) === CA.month && o.status !== '제외');
-  const groups = {};
-  rows.forEach(o => { (groups[o.siteCode || ''] = groups[o.siteCode || ''] || []).push(o); });
-  const sum = a => a.reduce((t, o) => t + (Number(o.amount) || 0), 0);
-  const codes = Object.keys(groups).sort((a, b) => (a === '' ? 1 : b === '' ? -1 : sum(groups[b]) - sum(groups[a])));
-  const total = sum(rows);
+// ---------- 시트 화면 (엑셀처럼 칸을 바로 고치면 저장) ----------
+function caDateCell(v) {
+  const t = String(v || '');
+  return (CA.month && CA.month.length === 7 ? t.slice(5, 10) : t.slice(2, 10)).replace(/-/g, '.');
+}
+function caSheetRows() {
+  const rows = CA.items.filter(caInPeriod);
+  return rows.slice().sort((a, b) => String(a.paidAt).localeCompare(String(b.paidAt)) || String(a.id).localeCompare(String(b.id)));
+}
+function caSheetSites(rows) {
+  const g = {};
+  rows.forEach(o => { const k = o.siteCode || ''; g[k] = (g[k] || 0) + (Number(o.amount) || 0); });
+  return g;
+}
 
-  const block = (code) => {
-    const items = groups[code].slice().sort((a, b) => String(a.paidAt).localeCompare(String(b.paidAt)));
-    const site = S.sites.find(x => x.code === code);
-    const byKind = {};
-    items.forEach(o => { byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + (Number(o.amount) || 0); });
-    return `<section class="panel ca-sheet">
-      <div class="ca-sheet-h">
-        <h4>${code ? esc(code) + ' ' + esc(site ? site.name : '') : '현장 미지정'}</h4>
-        <b>${won(sum(items))}</b><span class="cr-sub">${items.length}건</span>
-      </div>
-      <div class="ca-kinds">${Object.entries(byKind).sort((a, b) => b[1] - a[1])
-        .map(([k, v]) => `<span><span class="tag">${esc(k)}</span>${won(v)}</span>`).join('')}</div>
-      <table class="ca-tbl"><thead><tr><th>날짜</th><th>분류</th><th>지출내용</th><th class="r">금액</th></tr></thead>
-        <tbody>${items.map(o => `<tr data-id="${esc(o.id)}">
-          <td class="ca-when">${esc(String(o.paidAt).slice(5, 10).replace('-', '.'))}</td>
-          <td><span class="tag">${esc(o.kind || '미지정')}</span></td>
-          <td>${esc(o.memo || o.store || '')}${o.memo && o.store ? ` <span class="cr-sub">${esc(o.store)}</span>` : ''}</td>
-          <td class="r ${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</td></tr>`).join('')}
-          <tr class="ca-tot"><td colspan="3">합계</td><td class="r">${won(sum(items))}</td></tr></tbody></table>
-    </section>`;
-  };
+function caRowHtml(o) {
+  const big = caBig(o);
+  const nf = (o.files || []).length;
+  const siteOpts = `<option value="">— 미지정</option>` + S.sites.map(x =>
+    `<option value="${esc(x.code)}" ${x.code === o.siteCode ? 'selected' : ''}>${esc(x.code)} ${esc(x.name)}</option>`).join('');
+  const kindOpts = (o.kind ? '' : '<option value="" selected>— 선택</option>') + CA.kinds.map(k => `<option ${k === o.kind ? 'selected' : ''}>${esc(k)}</option>`).join('');
+  const tradeOpts = `<option value="">${big ? '필요' : '—'}</option>` + CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const moved = CA.siteTab !== '*' && (o.siteCode || '') !== CA.siteTab;
+  return `<tr data-id="${esc(o.id)}" class="${moved ? 'moved' : ''}">
+    <td class="d">${esc(caDateCell(o.paidAt))}</td>
+    <td><select data-f="kind" class="${o.kind ? '' : 'need'}">${kindOpts}</select></td>
+    <td class="memo"><input data-f="memo" value="${esc(o.memo || '')}" placeholder="${esc(o.store || '')}"></td>
+    <td class="r"><input data-f="amount" class="amt ${o.amount < 0 ? 'minus' : ''}" inputmode="numeric" value="${Number(o.amount || 0).toLocaleString()}"></td>
+    <td><select data-f="siteCode" class="${o.siteCode ? '' : 'need'}">${siteOpts}</select>${moved ? '<small class="ca-moved">이동됨</small>' : ''}</td>
+    <td><select data-f="trade" class="${big && !o.trade ? 'need' : ''}">${tradeOpts}</select></td>
+    <td class="store" title="${esc(o.store || '')}">${esc(o.store || '')}</td>
+    ${CA.canAll ? `<td class="who">${esc(o.owner || '미매칭')}</td>` : ''}
+    <td class="c"><button type="button" class="ca-clip ${big && !nf ? 'need' : ''}" data-act="open">${nf ? '📎' + nf : (big ? '필요' : '+')}</button></td>
+  </tr>`;
+}
+
+function caSheetSummary() {
+  const rows = caSheetRows();
+  const g = caSheetSites(rows);
+  const all = Object.values(g).reduce((a, b) => a + b, 0);
+  const codes = Object.keys(g).filter(k => k).sort((a, b) => g[b] - g[a]);
+  const tab = (key, label, amt) => `<button type="button" class="ca-tab" data-tab="${esc(key)}" aria-pressed="${CA.siteTab === key}">
+      <span>${label}</span><b>${won(amt)}</b></button>`;
+  $('caTabs').innerHTML = tab('*', '전체', all)
+    + codes.map(c => { const x = S.sites.find(y => y.code === c); return tab(c, esc(c) + (x ? ' ' + esc(x.name) : ''), g[c]); }).join('')
+    + (g[''] !== undefined ? tab('', '현장 미지정', g['']) : '');
+  $('caTabs').querySelectorAll('.ca-tab').forEach(b => b.onclick = () => { CA.siteTab = b.dataset.tab; caRenderSheet(); });
+
+  const vis = rows.filter(o => CA.siteTab === '*' || (o.siteCode || '') === CA.siteTab);
+  const byKind = {};
+  vis.forEach(o => { byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + (Number(o.amount) || 0); });
+  const needDocs = vis.filter(caLacks).length;
+  const tabSite = S.sites.find(x => x.code === CA.siteTab);
+  $('caPrintTitle').textContent = `법인카드 사용내역 · ${CA.siteTab === '*' ? '전체 현장' : CA.siteTab === '' ? '현장 미지정' : CA.siteTab + (tabSite ? ' ' + tabSite.name : '')} · ${caPeriodLabel()}`;
+  $('caSumLine').innerHTML = `<b>합계 ${won(vis.reduce((t, o) => t + (Number(o.amount) || 0), 0))}</b><span>${vis.length}건</span>
+    ${Object.entries(byKind).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span><span class="tag">${esc(k)}</span>${won(v)}</span>`).join('')}
+    ${needDocs ? `<span class="warn">10만원 이상 증빙·공종 미비 ${needDocs}건</span>` : ''}`;
+}
+
+function caRenderSheet() {
+  const rows = caSheetRows();
+  if (CA.siteTab !== '*' && !rows.some(o => (o.siteCode || '') === CA.siteTab)) CA.siteTab = '*';
+  const vis = rows.filter(o => CA.siteTab === '*' || (o.siteCode || '') === CA.siteTab);
 
   $('main').innerHTML = `
-    <div class="cr-bar"><h2>현장별 정리 <span class="cr-sub">${esc(CA.month)}</span></h2>
-      <select id="caMonth" class="ca-month">${CA.months.map(m => `<option ${m === CA.month ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
-      <button class="btn ghost" type="button" id="caPrint">인쇄</button>
-      <button class="btn ghost" type="button" id="caSum">목록 보기</button></div>
-    <div class="ov-cards">
-      <section class="panel ov-card"><span class="cr-id">${esc(CA.month)} 전체</span><b>${won(total)}</b><span class="cr-sub">${rows.length}건</span></section>
-      <section class="panel ov-card"><span class="cr-id">현장 미지정</span>
-        <b class="${groups[''] ? 'warn' : ''}">${won(groups[''] ? sum(groups['']) : 0)}</b>
-        <span class="cr-sub">${groups[''] ? groups[''].length + '건 — 현장을 지정해 주세요' : '없음'}</span></section>
-    </div>
-    ${codes.length ? codes.map(block).join('') : '<section class="panel empty"><h3>내역이 없습니다</h3></section>'}`;
+    <div class="cr-bar"><h2>법인카드</h2>
+      ${caPeriodSelect()}
+      <button class="btn ghost" type="button" id="caList">목록 보기</button>
+      ${CA.canAll ? `<button class="btn ghost" type="button" id="caPaste">이용내역 불러오기</button>` : ''}
+      <button class="btn ghost" type="button" id="caAdd">+ 직접 입력</button>
+      <button class="btn ghost" type="button" id="caPrint">인쇄</button></div>
+    <div class="ca-print-title" id="caPrintTitle"></div>
+    <div class="ca-tabs" id="caTabs"></div>
+    <div class="ca-sumline" id="caSumLine"></div>
+    <section class="panel ca-gridwrap">
+      ${vis.length ? `<table class="ca-grid">
+        <thead><tr><th class="d">날짜</th><th class="k">분류</th><th>지출내용</th><th class="r">금액</th>
+          <th class="s">현장</th><th class="t">공종</th><th class="st0">가맹점</th>${CA.canAll ? '<th class="w">사용자</th>' : ''}
+          <th class="c">증빙</th></tr></thead>
+        <tbody>${vis.map(caRowHtml).join('')}</tbody></table>`
+        : '<div class="empty"><h3>내역이 없습니다</h3>카드 문자가 오거나 이용내역을 불러오면 여기에 쌓입니다.</div>'}
+    </section>
+    <p class="hint ca-help">칸을 눌러 바로 고치면 저장됩니다. 지출내용·금액에서 <b>Enter</b>·<b>↑↓</b>로 위아래 칸 이동, <b>Esc</b>로 취소.
+      10만원 이상은 공종과 영수증·명세서를 꼭 남겨주세요 (빠지면 빨갛게 표시됩니다).</p>`;
 
+  caSheetSummary();
   $('caMonth').onchange = e => { CA.month = e.target.value; renderCardTab(); };
-  $('caSum').onclick = () => { CA.view = 'list'; renderCardTab(); };
+  $('caList').onclick = () => { CA.view = 'list'; renderCardTab(); };
+  if ($('caPaste')) $('caPaste').onclick = caPasteForm;
+  $('caAdd').onclick = caAddForm;
   $('caPrint').onclick = () => window.print();
-  $('main').querySelectorAll('.ca-tbl tbody tr[data-id]').forEach(tr => tr.onclick = () => caOpen(tr.dataset.id));
+  caBindRows($('main'));
+}
+
+function caBindRows(root) { root.querySelectorAll('.ca-grid tbody tr').forEach(caBindRow); }
+
+function caBindRow(tr) {
+  const id = tr.dataset.id;
+  tr.querySelectorAll('[data-f]').forEach(el => {
+    el.onchange = () => caCell(id, el.dataset.f, el.value, el);
+    if (el.tagName !== 'INPUT') return;
+    el.onfocus = () => { if (el.dataset.f === 'amount') el.value = String(el.value).replace(/,/g, ''); el.select(); };
+    el.onblur = () => { if (el.dataset.f === 'amount' && el.value) el.value = Number(String(el.value).replace(/[^\d-]/g, '') || 0).toLocaleString(); };
+    el.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const rows = Array.from(document.querySelectorAll('.ca-grid tbody tr'));
+        const next = rows[rows.indexOf(tr) + (e.key === 'ArrowUp' ? -1 : 1)];
+        const f = el.dataset.f;
+        el.blur();                                   // 바뀐 값이면 여기서 저장이 시작됩니다
+        const cell = next && document.querySelector(`.ca-grid tbody tr[data-id="${CSS.escape(next.dataset.id)}"] [data-f="${f}"]`);
+        if (cell) cell.focus();
+      } else if (e.key === 'Escape') {
+        const o = CA.items.find(x => x.id === id);
+        el.value = el.dataset.f === 'amount' ? Number(o.amount || 0).toLocaleString() : (o[el.dataset.f] || '');
+        el.blur();
+      }
+    };
+  });
+  tr.querySelectorAll('[data-act="open"]').forEach(b => b.onclick = () => caOpen(id));
+}
+
+async function caCell(id, field, value, el) {
+  const o = CA.items.find(x => x.id === id); if (!o) return;
+  const before = Object.assign({}, o);
+  let v = value;
+  if (field === 'amount') {
+    v = Number(String(value).replace(/[^\d-]/g, ''));
+    if (!v) { toast('금액을 숫자로 입력하세요'); el.value = Number(o.amount || 0).toLocaleString(); return; }
+    if (v === Number(o.amount)) return;
+  } else if (String(o[field] == null ? '' : o[field]) === String(v)) return;
+
+  o[field] = v;
+  el.classList.remove('saved', 'err'); el.classList.add('saving');
+  try {
+    const fields = {}; fields[field] = v;
+    const d = await api({ action: 'ca_save', id, lite: true, remember: field === 'kind', fields });
+    Object.assign(o, d.item);
+    caSwapRow(id, field, 'saved');
+  } catch (e) {
+    Object.assign(o, before);
+    caSwapRow(id, field, 'err');
+    toast(e.message);
+  }
+  caSheetSummary();
+}
+
+// 저장 결과로 그 줄만 다시 그리고, 보고 있던 칸으로 커서를 돌려놓습니다.
+function caSwapRow(id, field, flash) {
+  const old = document.querySelector(`.ca-grid tbody tr[data-id="${CSS.escape(id)}"]`);
+  const o = CA.items.find(x => x.id === id);
+  if (!old || !o) return;
+  const act = document.activeElement;
+  const focusF = act && old.contains(act) ? act.dataset.f : null;
+  const tmp = document.createElement('tbody'); tmp.innerHTML = caRowHtml(o);
+  const row = tmp.firstElementChild;
+  old.replaceWith(row);
+  caBindRow(row);
+  const cell = row.querySelector(`[data-f="${field}"]`) || row;
+  cell.classList.add(flash);
+  setTimeout(() => cell.classList.remove(flash), flash === 'err' ? 1600 : 900);
+  if (focusF) { const f = row.querySelector(`[data-f="${focusF}"]`); if (f) f.focus(); }
 }
 
 function caOpen(id) {
   const o = CA.items.find(x => x.id === id); if (!o) return;
   const files = o.files || [];
+  const big = caBig(o);
   const body = openSheet(esc(o.store || '가맹점 미상'), `${esc(String(o.paidAt).slice(0, 16))} · ${esc(o.owner || '')}${o.last4 ? ' ' + esc(o.last4) : ''}`, `
     <div class="card ca-head">
       <b class="${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</b>
       <span class="cr-sub">${esc(wonKorean(Math.abs(o.amount)))}</span>
-      <span class="st ${o.status === '확정' ? '완료' : ''}" style="margin-left:auto">${esc(o.status)}</span>
     </div>
     <div class="card">
       <div class="f"><label>현장</label><select id="cSite"><option value="">선택</option>${S.sites.map(s => `<option value="${esc(s.code)}" ${s.code === o.siteCode ? 'selected' : ''}>${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select></div>
       <div class="f"><span class="lb">분류</span>${segHtml('cKind', CA.kinds, o.kind || '기타')}</div>
-      <div class="f"><label>공종 <span class="hint">${caBig(o) ? '(10만원 이상 필수)' : '(선택)'}</span></label><select id="cTrade"><option value="">선택</option>${CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
-      <div class="f"><label>가맹점</label><input type="text" id="cStore" value="${esc(o.store)}"></div>
-      <div class="f"><label>내용 (시트에 들어갈 설명)</label><input type="text" id="cMemo" value="${esc(o.memo)}" placeholder="예: 데크자재_부소포함 일체"></div>
+      <div class="f"><label>공종 <span class="hint">${big ? '(10만원 이상 필요)' : '(선택)'}</span></label><select id="cTrade"><option value="">선택</option>${CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
+      <div class="f"><label>지출내용</label><input type="text" id="cMemo" value="${esc(o.memo)}" placeholder="예: 데크자재_부소포함 일체"></div>
+      <div class="cx-when"><div class="f"><label>가맹점</label><input type="text" id="cStore" value="${esc(o.store)}"></div>
+        <div class="f"><label>금액</label><input type="text" id="cAmt" inputmode="numeric" value="${Number(o.amount || 0).toLocaleString()}"></div></div>
       <label class="check"><input type="checkbox" id="cRemember" checked> <span>이 가맹점은 앞으로 <b id="cKindN">${esc(o.kind || '기타')}</b>로 자동 분류</span></label>
     </div>
-    <div class="card"><h4>영수증 · 명세서 ${caBig(o) ? '<span class="tag warn-tag">필수</span>' : '<span class="hint">(선택)</span>'}</h4>
+    <div class="card"><h4>영수증 · 명세서 ${big ? '<span class="tag warn-tag">10만원 이상 필요</span>' : '<span class="hint">(선택)</span>'}</h4>
       ${files.length ? `<div class="thumbs" id="cOld">${files.map(f => `<div class="thumb-wrap"><button type="button" class="thumb ${f.type && f.type.startsWith('image/') ? '' : 'doc'}" data-f="${esc(f.id)}"><span>${esc(f.name)}</span></button><button type="button" class="thumb-x" data-rm="${esc(f.id)}">×</button></div>`).join('')}</div>` : ''}
-      <div class="f" style="margin-top:10px"><input type="file" id="cFiles" multiple accept="image/*,.pdf" capture="environment"></div>
-      <div class="hint">${caBig(o) ? '10만원 이상이라 공종과 영수증·명세서 사진이 있어야 ' + (CA.canAll ? '확정' : '입력 완료') + '할 수 있습니다.' : '10만원 미만은 첨부하지 않아도 됩니다.'}</div></div>
+      <div class="f" style="margin-top:10px"><input type="file" id="cFiles" multiple accept="image/*,.pdf" capture="environment"></div></div>
     <div class="actions sticky">
       ${CA.canAll ? '<button class="btn danger" type="button" id="cDel">삭제</button>' : ''}
-      <button class="btn ghost" type="button" id="cSkip">제외</button>
-      <button class="btn ghost" type="button" id="cSave">임시 저장</button>
-      <button class="btn" type="button" id="cDone">${CA.canAll ? '확정' : '입력 완료'}</button></div>`);
+      <button class="btn ghost" type="button" id="cClose">닫기</button>
+      <button class="btn" type="button" id="cSave">저장</button></div>`);
   bindSegs(body, (n, v) => { if (n === 'cKind') $('cKindN').textContent = v; });
   const removed = [];
   const imgs = files.filter(f => !f.type || f.type.startsWith('image/')).map(f => f.id);
@@ -2372,23 +2541,16 @@ function caOpen(id) {
     b.onclick = () => lightbox(imgs, imgs.indexOf(b.dataset.f), fid => caFileUrl(o.id, fid, false));
   });
   body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
-  const send = async (status) => {
+  $('cClose').onclick = closeSheet;
+  $('cSave').onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'ca_save', id: o.id, remember: $('cRemember').checked, removeFiles: removed,
       files: await readFiles($('cFiles')), month: '',
       fields: { siteCode: $('cSite').value, kind: segVal(body, 'cKind'), trade: $('cTrade').value,
-        store: $('cStore').value, memo: $('cMemo').value, status } });
+        store: $('cStore').value, memo: $('cMemo').value, amount: $('cAmt').value } });
     CA.items = d.items; closeSheet(); renderCardTab();
-  };
-  $('cSave').onclick = e => submitting(e.target, async () => { await send(undefined); toast('저장했습니다'); });
-  $('cDone').onclick = e => {
-    if (caBig(o)) {
-      const left = files.filter(f => !removed.includes(f.id)).length + (($('cFiles').files || []).length);
-      if (!$('cTrade').value) { toast('10만원 이상은 공종을 선택해야 합니다'); $('cTrade').focus(); return; }
-      if (!left) { toast('10만원 이상은 영수증·명세서 사진을 첨부해야 합니다'); $('cFiles').focus(); return; }
-    }
-    submitting(e.target, async () => { await send('확정'); toast(CA.canAll ? '확정했습니다' : '회계 검토로 넘겼습니다'); });
-  };
-  $('cSkip').onclick = e => { if (confirm('이 건을 제외 처리할까요? (개인 사용·오입력 등)')) submitting(e.target, async () => { await send('제외'); toast('제외했습니다'); }); };
+    const x = CA.items.find(y => y.id === o.id);
+    toast(x && caLacks(x) ? '저장했습니다 · 10만원 이상이라 공종·영수증이 더 필요합니다' : '저장했습니다');
+  });
   if ($('cDel')) $('cDel').onclick = e => { if (confirm('이 내역을 완전히 삭제할까요?')) submitting(e.target, async () => {
     const d = await api({ action: 'ca_delete', id: o.id, month: '' }); CA.items = d.items; closeSheet(); renderCardTab(); toast('삭제했습니다');
   }); };
