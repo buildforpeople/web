@@ -63,6 +63,9 @@
   .dyk-list .ic { font-size: 22px; line-height: 1.2; flex: none; }
   .dyk-list b { display: block; }
   .dyk-list small { color: var(--muted); font-size: 13px; }
+  .ca-all { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+  .ca-all label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+  .btn.danger { color: var(--red); border-color: rgba(192,57,43,.35); }
   .tabs::-webkit-scrollbar { display: none; }
   .tab { flex: none; background: none; border: 0; color: rgba(255,255,255,.72); padding: 10px 14px 11px; font-weight: 600; border-radius: 8px 8px 0 0; display: flex; align-items: center; gap: 5px; text-decoration: none; font-size: 15px; }
   .tab[aria-selected="true"] { background: var(--bg); color: var(--ink); }
@@ -2181,11 +2184,15 @@ async function renderCardTab() {
       return `<button class="chip ${f === '확인대기' && n ? 'warn' : ''}" data-f="${esc(f)}" aria-pressed="${CA.filter === f}">${esc(f)}<b>${n}</b></button>`;
     }).join('')}</div>
 
+    <div class="ca-all"><label><input type="checkbox" id="caAll" ${selIds.length && selIds.length === list.filter(o => o.status === '확인대기').length ? 'checked' : ''}>
+      화면에 보이는 확인대기 ${list.filter(o => o.status === '확인대기').length}건 모두 선택</label></div>
+
     ${selIds.length ? `<div class="ca-bulk"><b>${selIds.length}건 선택</b>
       <select id="caBulkSite"><option value="">현장 선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
       <select id="caBulkKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
       <button class="btn" type="button" id="caBulkGo">지정 · 확정</button>
-      <button class="btn ghost" type="button" id="caBulkClear">해제</button></div>` : ''}
+      <button class="btn ghost" type="button" id="caBulkClear">해제</button>
+      ${CA.canAll ? `<button class="btn ghost danger" type="button" id="caBulkDel">삭제</button>` : ''}</div>` : ''}
 
     <section class="panel">
       ${list.length ? list.map(o => {
@@ -2211,6 +2218,19 @@ async function renderCardTab() {
   $('main').querySelectorAll('.ca-row').forEach(b => b.onclick = e => { if (e.target.classList.contains('ca-chk')) return; caOpen(b.dataset.id); });
   $('main').querySelectorAll('.ca-chk').forEach(c => c.onchange = () => { CA.sel[c.dataset.id] = c.checked; renderCardTab(); });
   if ($('caBulkClear')) $('caBulkClear').onclick = () => { CA.sel = {}; renderCardTab(); };
+  if ($('caAll')) $('caAll').onchange = e => {
+    CA.sel = {};
+    if (e.target.checked) list.filter(o => o.status === '확인대기').forEach(o => { CA.sel[o.id] = true; });
+    renderCardTab();
+  };
+  if ($('caBulkDel')) $('caBulkDel').onclick = e => {
+    if (!confirm(`선택한 ${selIds.length}건을 지웁니다. 되돌릴 수 없습니다.`)) return;
+    submitting(e.target, async () => {
+      const d = await api({ action: 'ca_bulk_delete', ids: selIds, month: '' });
+      CA.items = d.items; if (d.months) CA.months = d.months; CA.sel = {};
+      renderCardTab(); toast(`${d.removed}건 지웠습니다`);
+    });
+  };
   if ($('caBulkGo')) $('caBulkGo').onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'ca_bulk', ids: selIds, siteCode: $('caBulkSite').value, kind: $('caBulkKind').value, confirm: true, month: '' });
     CA.items = d.items; CA.sel = {}; renderCardTab(); toast(`${d.saved}건 처리했습니다`);
