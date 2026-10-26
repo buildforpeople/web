@@ -2156,6 +2156,7 @@ async function renderCardTab() {
   $('main').innerHTML = `
     <div class="cr-bar"><h2>법인카드</h2>
       <select id="caMonth" class="ca-month">${CA.months.map(m => `<option ${m === CA.month ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
+      <button class="btn ghost" type="button" id="caPaste">문자 붙여넣기</button>
       <button class="btn ghost" type="button" id="caAdd">+ 직접 입력</button></div>
 
     <div class="ov-cards">
@@ -2206,6 +2207,7 @@ async function renderCardTab() {
 
   $('caMonth').onchange = e => { CA.month = e.target.value; CA.sel = {}; renderCardTab(); };
   $('caAdd').onclick = caAddForm;
+  $('caPaste').onclick = caPasteForm;
   $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CA.filter = b.dataset.f; renderCardTab(); });
   $('main').querySelectorAll('.ca-row').forEach(b => b.onclick = e => { if (e.target.classList.contains('ca-chk')) return; caOpen(b.dataset.id); });
   $('main').querySelectorAll('.ca-chk').forEach(c => c.onchange = () => { CA.sel[c.dataset.id] = c.checked; renderCardTab(); });
@@ -2271,6 +2273,27 @@ async function caFileUrl(id, fid, thumb) {
   const bin = atob(d.data); const arr = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return CA_URL[k] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+}
+
+function caPasteForm() {
+  const body = openSheet('붙여넣기로 등록', '카드사 이용내역 표 · 승인 문자 모두 됩니다', `
+    <div class="card">
+      <p class="hint"><b>카드사 이용내역</b>을 엑셀·화면에서 복사해 그대로 붙여넣으면 됩니다 (날짜·가맹점·금액이 있으면 열 순서는 상관없습니다).
+        휴대폰 <b>승인 문자</b>를 모아 붙여넣어도 되고, 둘 다 여러 건을 한꺼번에 넣을 수 있습니다.
+        이미 들어간 건과 승인거절 문자는 알아서 걸러집니다.</p>
+      <div class="f"><label>문자 내용</label>
+        <textarea id="pTxt" rows="12" placeholder="2026-10-26&#9;0064&#9;동천철물건재&#9;27,500&#10;2026-10-25&#9;8754&#9;한솔철물&#9;238,000&#10;&#10;— 또는 —&#10;&#10;[Web발신]&#10;NH기업0064승인&#10;공용카드&#10;27,500원 체크&#10;10/26 12:50&#10;동천철물건재"></textarea></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="pClose">닫기</button><button class="btn" type="button" id="pGo">넣기</button></div>`);
+  $('pClose').onclick = closeSheet;
+  $('pGo').onclick = e => submitting(e.target, async () => {
+    const t = $('pTxt').value.trim();
+    if (!t) { toast('문자 내용을 붙여넣으세요'); return; }
+    const d = await api({ action: 'ca_paste', text: t, month: '' });
+    CA.items = d.items; if (d.months) CA.months = d.months;
+    closeSheet(); renderCardTab();
+    toast(`${d.mode || ''} ${d.added}건 등록 · 중복 ${d.dup}건 · 제외 ${d.skip}건`);
+  });
 }
 
 function caAddForm() {
