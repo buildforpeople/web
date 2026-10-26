@@ -78,6 +78,10 @@
   .ca-grid { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13.5px; table-layout: fixed; }
   .ca-grid th { position: sticky; top: 0; background: #FBFAF0; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600;
     padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .ca-grid th.ck { width: 34px; text-align: center; } .ca-grid td.ck { text-align: center; }
+  .ca-grid .ca-ck, #caCkAll { width: 15px; height: 15px; vertical-align: middle; cursor: pointer; }
+  .ca-grid tr.sel td { background: #EEF4E6; }
+  #caBulkBar .ca-bulk { margin: 0 0 10px; position: sticky; top: 0; z-index: 3; }
   .ca-grid th.d { width: 74px; } .ca-grid th.k { width: 108px; } .ca-grid th.r { width: 104px; } .ca-grid th.s { width: 150px; }
   .ca-grid th.t { width: 112px; } .ca-grid th.st0 { width: 130px; } .ca-grid th.w { width: 64px; } .ca-grid th.c { width: 66px; }
   .ca-grid td { padding: 0; border-bottom: 1px solid #EEECDD; height: 32px; vertical-align: middle; }
@@ -108,7 +112,8 @@
   .ca-help { margin: 8px 2px 0; }
   .ca-print-title { display: none; }
   @media print {
-    .ca-tabs, .ca-help, .cr-bar, .ca-month { display: none !important; }
+    .ca-tabs, .ca-help, .cr-bar, .ca-month, #caBulkBar { display: none !important; }
+    .ca-grid th.ck, .ca-grid td.ck { display: none; }
     .ca-print-title { display: block; font-size: 16px; font-weight: 700; margin: 0 0 6px; }
     .ca-grid { min-width: 0; } .ca-grid th.st0, .ca-grid td.store, .ca-grid th.c, .ca-grid td.c { display: none; }
     .ca-grid select, .ca-grid input { -webkit-appearance: none; appearance: none; }
@@ -2367,7 +2372,8 @@ function caRowHtml(o) {
   const kindOpts = (o.kind ? '' : '<option value="" selected>— 선택</option>') + CA.kinds.map(k => `<option ${k === o.kind ? 'selected' : ''}>${esc(k)}</option>`).join('');
   const tradeOpts = `<option value="">${big ? '필요' : '—'}</option>` + CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('');
   const moved = CA.siteTab !== '*' && (o.siteCode || '') !== CA.siteTab;
-  return `<tr data-id="${esc(o.id)}" class="${moved ? 'moved' : ''}">
+  return `<tr data-id="${esc(o.id)}" class="${moved ? 'moved' : ''} ${CA.sel[o.id] ? 'sel' : ''}">
+    <td class="ck"><input type="checkbox" class="ca-ck" ${CA.sel[o.id] ? 'checked' : ''} aria-label="선택"></td>
     <td class="d">${esc(caDateCell(o.paidAt))}</td>
     <td><select data-f="kind" class="${o.kind ? '' : 'need'}">${kindOpts}</select></td>
     <td class="memo"><input data-f="memo" value="${esc(o.memo || '')}" placeholder="${esc(o.store || '')}"></td>
@@ -2390,7 +2396,7 @@ function caSheetSummary() {
   $('caTabs').innerHTML = tab('*', '전체', all)
     + codes.map(c => { const x = S.sites.find(y => y.code === c); return tab(c, esc(c) + (x ? ' ' + esc(x.name) : ''), g[c]); }).join('')
     + (g[''] !== undefined ? tab('', '현장 미지정', g['']) : '');
-  $('caTabs').querySelectorAll('.ca-tab').forEach(b => b.onclick = () => { CA.siteTab = b.dataset.tab; caRenderSheet(); });
+  $('caTabs').querySelectorAll('.ca-tab').forEach(b => b.onclick = () => { CA.siteTab = b.dataset.tab; CA.sel = {}; caRenderSheet(); });
 
   const vis = rows.filter(o => CA.siteTab === '*' || (o.siteCode || '') === CA.siteTab);
   const byKind = {};
@@ -2418,9 +2424,10 @@ function caRenderSheet() {
     <div class="ca-print-title" id="caPrintTitle"></div>
     <div class="ca-tabs" id="caTabs"></div>
     <div class="ca-sumline" id="caSumLine"></div>
+    <div id="caBulkBar"></div>
     <section class="panel ca-gridwrap">
       ${vis.length ? `<table class="ca-grid">
-        <thead><tr><th class="d">날짜</th><th class="k">분류</th><th>지출내용</th><th class="r">금액</th>
+        <thead><tr><th class="ck"><input type="checkbox" id="caCkAll" aria-label="모두 선택"></th><th class="d">날짜</th><th class="k">분류</th><th>지출내용</th><th class="r">금액</th>
           <th class="s">현장</th><th class="t">공종</th><th class="st0">가맹점</th>${CA.canAll ? '<th class="w">사용자</th>' : ''}
           <th class="c">증빙</th></tr></thead>
         <tbody>${vis.map(caRowHtml).join('')}</tbody></table>`
@@ -2430,12 +2437,85 @@ function caRenderSheet() {
       10만원 이상은 공종과 영수증·명세서를 꼭 남겨주세요 (빠지면 빨갛게 표시됩니다).</p>`;
 
   caSheetSummary();
-  $('caMonth').onchange = e => { CA.month = e.target.value; renderCardTab(); };
+  $('caMonth').onchange = e => { CA.month = e.target.value; CA.sel = {}; renderCardTab(); };
   $('caList').onclick = () => { CA.view = 'list'; renderCardTab(); };
   if ($('caPaste')) $('caPaste').onclick = caPasteForm;
   $('caAdd').onclick = caAddForm;
   $('caPrint').onclick = () => window.print();
   caBindRows($('main'));
+  caBindChecks();
+  caBulkBar();
+}
+
+// ---------- 여러 줄 한꺼번에 (체크 → 현장·분류·공종 지정) ----------
+let caLastCk = -1;
+function caVisibleIds() { return Array.from(document.querySelectorAll('#main .ca-grid tbody tr')).map(tr => tr.dataset.id); }
+function caBindChecks() {
+  const all = $('caCkAll');
+  if (all) all.onchange = () => {
+    const ids = caVisibleIds();
+    CA.sel = {};
+    if (all.checked) ids.forEach(id => { CA.sel[id] = true; });
+    caSyncChecks(); caBulkBar();
+  };
+  document.querySelectorAll('#main .ca-grid tbody tr').forEach(tr => caBindCheck(tr));
+  caSyncChecks();
+}
+function caBindCheck(tr) {
+  const ck = tr.querySelector('.ca-ck');
+  if (!ck) return;
+  ck.onclick = e => {
+    const ids = caVisibleIds();
+    const i = ids.indexOf(tr.dataset.id);
+    if (e.shiftKey && caLastCk >= 0) {            // Shift 누르고 클릭하면 사이 줄 모두
+      const [a, b] = [Math.min(caLastCk, i), Math.max(caLastCk, i)];
+      for (let k = a; k <= b; k++) CA.sel[ids[k]] = ck.checked;
+    } else CA.sel[tr.dataset.id] = ck.checked;
+    caLastCk = i;
+    caSyncChecks(); caBulkBar();
+  };
+}
+function caSyncChecks() {
+  const ids = caVisibleIds();
+  document.querySelectorAll('#main .ca-grid tbody tr').forEach(tr => {
+    const on = !!CA.sel[tr.dataset.id];
+    tr.classList.toggle('sel', on);
+    const ck = tr.querySelector('.ca-ck'); if (ck) ck.checked = on;
+  });
+  const n = ids.filter(id => CA.sel[id]).length;
+  const all = $('caCkAll');
+  if (all) { all.checked = n > 0 && n === ids.length; all.indeterminate = n > 0 && n < ids.length; }
+}
+function caBulkBar() {
+  const box = $('caBulkBar'); if (!box) return;
+  const ids = caVisibleIds().filter(id => CA.sel[id]);
+  if (!ids.length) { box.innerHTML = ''; return; }
+  const sum = ids.reduce((t, id) => t + (Number((CA.items.find(o => o.id === id) || {}).amount) || 0), 0);
+  box.innerHTML = `<div class="ca-bulk"><b>${ids.length}건 선택 · ${won(sum)}</b>
+    <select id="cbSite"><option value="">현장 유지</option>${S.sites.map(x => `<option value="${esc(x.code)}">${esc(x.code)} ${esc(x.name)}</option>`).join('')}</select>
+    <select id="cbKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
+    <select id="cbTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
+    <button class="btn" type="button" id="cbGo">한꺼번에 지정</button>
+    <button class="btn ghost" type="button" id="cbClear">선택 해제</button>
+    ${CA.canAll ? '<button class="btn ghost danger" type="button" id="cbDel">삭제</button>' : ''}</div>`;
+  $('cbClear').onclick = () => { CA.sel = {}; caSyncChecks(); caBulkBar(); };
+  $('cbGo').onclick = e => {
+    const site = $('cbSite').value, kind = $('cbKind').value, trade = $('cbTrade').value;
+    if (!site && !kind && !trade) { toast('바꿀 현장·분류·공종 중 하나를 고르세요'); return; }
+    submitting(e.target, async () => {
+      const d = await api({ action: 'ca_bulk', ids, siteCode: site, kind, trade, month: '' });
+      CA.items = d.items; CA.sel = {};
+      caRenderSheet(); toast(`${d.saved}건 지정했습니다`);
+    });
+  };
+  if ($('cbDel')) $('cbDel').onclick = e => {
+    if (!confirm(`선택한 ${ids.length}건을 지웁니다. 되돌릴 수 없습니다.`)) return;
+    submitting(e.target, async () => {
+      const d = await api({ action: 'ca_bulk_delete', ids, month: '' });
+      CA.items = d.items; if (d.months) CA.months = d.months; CA.sel = {};
+      caRenderSheet(); toast(`${d.removed}건 지웠습니다`);
+    });
+  };
 }
 
 function caBindRows(root) { root.querySelectorAll('.ca-grid tbody tr').forEach(caBindRow); }
@@ -2502,6 +2582,7 @@ function caSwapRow(id, field, flash) {
   const row = tmp.firstElementChild;
   old.replaceWith(row);
   caBindRow(row);
+  caBindCheck(row);
   const cell = row.querySelector(`[data-f="${field}"]`) || row;
   cell.classList.add(flash);
   setTimeout(() => cell.classList.remove(flash), flash === 'err' ? 1600 : 900);
