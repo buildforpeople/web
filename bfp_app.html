@@ -100,12 +100,13 @@
   .ca-grid tr.sel td { background: #EEF4E6; }
   #caBulkBar .ca-bulk { margin: 0 0 10px; position: sticky; top: 0; z-index: 3; }
   .ca-grid th.d { width: 74px; } .ca-grid th.k { width: 108px; } .ca-grid th.r { width: 104px; } .ca-grid th.s { width: 150px; }
-  .ca-grid th.t { width: 112px; } .ca-grid th.st0 { width: 130px; } .ca-grid th.w { width: 64px; } .ca-grid th.c { width: 66px; }
+  .ca-grid th.t { width: 112px; } .ca-grid th.st0 { width: 130px; } .ca-grid th.w { width: 108px; } .ca-grid th.c { width: 66px; }
   .ca-grid td { padding: 0; border-bottom: 1px solid #EEECDD; height: 32px; vertical-align: middle; }
   .ca-grid td + td { border-left: 1px solid #F3F1E4; }
   .ca-grid td.d { padding: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .ca-grid td.store, .ca-grid td.who { padding: 0 8px; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ca-grid td.c { text-align: center; }
+  .ca-grid td.who { padding: 0; } .ca-grid td.who select { font-size: 12.5px; }
   .ca-grid td.r { text-align: right; }
   .ca-grid input, .ca-grid select { width: 100%; height: 32px; border: 0; background: transparent; font: inherit; color: inherit; padding: 0 8px; border-radius: 0; }
   .ca-grid select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 20px; }
@@ -2482,9 +2483,17 @@ function caRowHtml(o) {
     <td><select data-f="siteCode" class="${o.siteCode ? '' : 'need'}">${siteOpts}</select>${moved ? '<small class="ca-moved">이동됨</small>' : ''}</td>
     <td><select data-f="trade" class="${big && !o.trade ? 'need' : ''}">${tradeOpts}</select></td>
     <td class="store" title="${esc(o.store || '')}">${esc(o.store || '')}</td>
-    ${CA.canAll ? `<td class="who">${esc(o.owner || '미매칭')}</td>` : ''}
+    <td class="who"><select data-f="card" class="${o.owner ? '' : 'need'}" title="${esc(o.owner || '미매칭')}${o.last4 ? ' · ' + esc(o.last4) : ''}">${caCardOpts(o)}</select></td>
     <td class="c"><button type="button" class="ca-clip ${big && !nf ? 'need' : ''}" data-act="open">${nf ? '📎' + nf : (big ? '필요' : '+')}</button></td>
   </tr>`;
+}
+
+function caCardOpts(o) {
+  const cur = String(o.last4 || '');
+  const known = CA.cards.some(c => String(c.last4) === cur);
+  return (o.owner && known ? '' : `<option value="" selected>${esc(o.owner || '미매칭')}</option>`)
+    + CA.cards.map(c => `<option value="${esc(c.last4)}" ${known && String(c.last4) === cur ? 'selected' : ''}>${esc(c.owner || c.alias || '')} ${esc(c.last4)}</option>`).join('')
+    + (o.owner ? '<option value="-">미매칭으로 돌리기</option>' : '');
 }
 
 function caSheetSummary() {
@@ -2537,7 +2546,7 @@ function caRenderSheet() {
       ${vis.length ? `<table class="ca-grid">
         <thead><tr><th class="ck"><input type="checkbox" id="caCkAll" aria-label="모두 선택"></th><th class="d">날짜</th>
           ${caTh('kind', 'k', '분류')}${caTh('memo', '', '지출내용')}<th class="r">금액</th>
-          ${caTh('siteCode', 's', '현장')}${caTh('trade', 't', '공종')}${caTh('store', 'st0', '가맹점')}${CA.canAll ? caTh('owner', 'w', '사용자') : ''}
+          ${caTh('siteCode', 's', '현장')}${caTh('trade', 't', '공종')}${caTh('store', 'st0', '가맹점')}${caTh('owner', 'w', '사용자')}
           ${caTh('docs', 'c', '증빙')}</tr></thead>
         <tbody>${vis.map(caRowHtml).join('')}</tbody></table>`
         : `<div class="empty"><h3>내역이 없습니다</h3>${caColActive().length ? '필터 조건에 맞는 내역이 없습니다.' : '카드 문자가 오거나 이용내역을 불러오면 여기에 쌓입니다.'}</div>`}
@@ -2613,15 +2622,16 @@ function caBulkBar() {
     <select id="cbSite"><option value="">현장 유지</option>${S.sites.map(x => `<option value="${esc(x.code)}">${esc(x.code)} ${esc(x.name)}</option>`).join('')}</select>
     <select id="cbKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
     <select id="cbTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
+    <select id="cbCard"><option value="">사용자 유지</option>${CA.cards.map(c => `<option value="${esc(c.last4)}">${esc(c.owner || c.alias || '')} ${esc(c.last4)}</option>`).join('')}<option value="-">미매칭으로 돌리기</option></select>
     <button class="btn" type="button" id="cbGo">한꺼번에 지정</button>
     <button class="btn ghost" type="button" id="cbClear">선택 해제</button>
     ${CA.canAll ? '<button class="btn ghost danger" type="button" id="cbDel">삭제</button>' : ''}</div>`;
   $('cbClear').onclick = () => { CA.sel = {}; caSyncChecks(); caBulkBar(); };
   $('cbGo').onclick = e => {
-    const site = $('cbSite').value, kind = $('cbKind').value, trade = $('cbTrade').value;
-    if (!site && !kind && !trade) { toast('바꿀 현장·분류·공종 중 하나를 고르세요'); return; }
+    const site = $('cbSite').value, kind = $('cbKind').value, trade = $('cbTrade').value, card = $('cbCard') ? $('cbCard').value : '';
+    if (!site && !kind && !trade && !card) { toast('바꿀 현장·분류·공종·사용자 중 하나를 고르세요'); return; }
     submitting(e.target, async () => {
-      const d = await api({ action: 'ca_bulk', ids, siteCode: site, kind, trade, month: '' });
+      const d = await api({ action: 'ca_bulk', ids, siteCode: site, kind, trade, card, month: '' });
       CA.items = d.items; CA.sel = {};
       caRenderSheet(); toast(`${d.saved}건 지정했습니다`);
     });
@@ -2672,9 +2682,14 @@ async function caCell(id, field, value, el) {
     v = Number(String(value).replace(/[^\d-]/g, ''));
     if (!v) { toast('금액을 숫자로 입력하세요'); el.value = Number(o.amount || 0).toLocaleString(); return; }
     if (v === Number(o.amount)) return;
+  } else if (field === 'card') {
+    if (v === '' || (String(o.last4 || '') === String(v) && o.owner)) return;
+    const me = CA.cards.find(c => String(c.last4) === String(v));
+    if (!CA.canAll && v !== '-' && me && S.me && me.owner !== S.me.name
+        && !confirm(`${me.owner} 소장님께 넘기면 내 화면에서 사라집니다. 넘길까요?`)) { caSwapRow(id, field, 'err'); return; }
   } else if (String(o[field] == null ? '' : o[field]) === String(v)) return;
 
-  o[field] = v;
+  if (field !== 'card') o[field] = v;
   el.classList.remove('saved', 'err'); el.classList.add('saving');
   try {
     const fields = {}; fields[field] = v;
