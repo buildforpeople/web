@@ -515,10 +515,15 @@
   }
   /* ===== 법인카드 ===== */
   .ca-month { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; font: inherit; }
-  .ca-row { position: relative; padding-left: 16px; cursor: pointer; }
-  .ca-chk { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; }
-  .ca-row:has(.ca-chk) { padding-left: 42px; }
-  .ca-row .cr-title { display: flex; align-items: baseline; gap: 10px; }
+  .ca-row { position: relative; padding: 7px 14px 7px 38px; cursor: pointer; gap: 1px 12px; align-items: center; }
+  .ca-chk { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; }
+  .ca-row .cr-title { display: flex; align-items: baseline; gap: 10px; font-size: 14px; }
+  .ca-row .cr-sub { font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 5px; line-height: 1.5; }
+  .ca-row .cr-sub .tag, .ca-row .cr-sub .code { margin-left: 0; font-size: 11px; padding: 0 5px; }
+  .ca-row .cr-right { grid-row: 1 / span 2; align-self: center; }
+  .ca-row .st { font-size: 11px; padding: 1px 7px; }
+  .ca-when { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .ca-who { color: var(--muted); }
   .ca-amt { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
   .ca-amt.minus, .ca-head b.minus { color: var(--red); }
   .ca-head { display: flex; align-items: baseline; gap: 10px; padding: 14px 16px; }
@@ -565,6 +570,8 @@
     .filters::-webkit-scrollbar { display: none; }
     .filters .chip { flex: none; }
     .cr-row { grid-template-columns: 1fr auto; padding: 13px 14px; gap: 3px 10px; }
+    .ca-row { padding: 7px 10px 7px 34px; }
+    .ca-row .cr-title, .ca-row .cr-sub { grid-column: 1; }
     .cr-right { grid-row: 1; grid-column: 2; align-self: start; }
     .cr-wait { display: none; }
     .cr-title, .cr-sub { grid-column: 1 / -1; }
@@ -2191,14 +2198,15 @@ async function renderCardTab() {
       return `<button class="chip ${f === '확인대기' && n ? 'warn' : ''}" data-f="${esc(f)}" aria-pressed="${CA.filter === f}">${esc(f)}<b>${n}</b></button>`;
     }).join('')}</div>
 
-    <div class="ca-all"><label><input type="checkbox" id="caAll" ${selIds.length && selIds.length === list.filter(o => o.status === '확인대기').length ? 'checked' : ''}>
-      화면에 보이는 확인대기 ${list.filter(o => o.status === '확인대기').length}건 모두 선택</label></div>
+    ${list.length ? `<div class="ca-all"><label><input type="checkbox" id="caAll" ${selIds.length && selIds.length === list.length ? 'checked' : ''}>
+      화면에 보이는 ${list.length}건 모두 선택</label></div>` : ''}
 
     ${selIds.length ? `<div class="ca-bulk"><b>${selIds.length}건 선택</b>
       <select id="caBulkSite"><option value="">현장 선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
       <select id="caBulkKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
       <select id="caBulkTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
-      <button class="btn" type="button" id="caBulkGo">지정 · 확정</button>
+      <button class="btn ghost" type="button" id="caBulkSet">지정만</button>
+      <button class="btn" type="button" id="caBulkGo">지정 · ${CA.canAll ? '확정' : '입력완료'}</button>
       <button class="btn ghost" type="button" id="caBulkClear">해제</button>
       ${CA.canAll ? `<button class="btn ghost danger" type="button" id="caBulkDel">삭제</button>` : ''}</div>` : ''}
 
@@ -2207,12 +2215,13 @@ async function renderCardTab() {
         const st = o.status === '확정' ? '완료' : o.status === '제외' ? '반려' : '';
         const site = S.sites.find(s => s.code === o.siteCode);
         return `<div class="cr-row ca-row ${o.status === '확인대기' ? 'urgent' : ''}" data-id="${esc(o.id)}">
-          ${o.status === '확인대기' ? `<input type="checkbox" class="ca-chk" data-id="${esc(o.id)}" ${CA.sel[o.id] ? 'checked' : ''}>` : ''}
-          <span class="cr-id">${esc(String(o.paidAt).slice(5, 16).replace('-', '/'))} · ${esc(o.owner || '미매칭')}${o.last4 ? ' ' + esc(o.last4) : ''}</span>
+          <input type="checkbox" class="ca-chk" data-id="${esc(o.id)}" ${CA.sel[o.id] ? 'checked' : ''}>
           <span class="cr-title">${esc(o.store || '가맹점 미상')}<span class="ca-amt ${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</span></span>
-          <span class="cr-sub">${o.kind ? `<span class="tag">${esc(o.kind)}</span>` : '<span class="tag warn-tag">분류 없음</span>'}
+          <span class="cr-sub"><span class="ca-when">${esc(String(o.paidAt).slice(5, 10).replace('-', '/'))}</span>
+            <span class="ca-who">${esc(o.owner || '미매칭')}</span>
+            ${o.kind ? `<span class="tag">${esc(o.kind)}</span>` : '<span class="tag warn-tag">분류 없음</span>'}
             ${o.trade ? `<span class="tag">${esc(o.trade)}</span>` : '<span class="tag warn-tag">공종 없음</span>'}
-            ${o.siteCode ? `<span class="code">${esc(o.siteCode)}</span> ${esc(site ? site.name : '')}` : '<span class="tag warn-tag">현장 없음</span>'}
+            ${o.siteCode ? `<span class="code">${esc(o.siteCode)}</span>` : '<span class="tag warn-tag">현장 없음</span>'}
             ${(o.files || []).length ? ' 📎' : ''}${o.memo ? ' · ' + esc(o.memo) : ''}</span>
           <span class="cr-right"><span class="st ${st}">${esc(o.status)}</span></span>
         </div>`;
@@ -2234,7 +2243,7 @@ async function renderCardTab() {
   if ($('caBulkClear')) $('caBulkClear').onclick = () => { CA.sel = {}; renderCardTab(); };
   if ($('caAll')) $('caAll').onchange = e => {
     CA.sel = {};
-    if (e.target.checked) list.filter(o => o.status === '확인대기').forEach(o => { CA.sel[o.id] = true; });
+    if (e.target.checked) list.forEach(o => { CA.sel[o.id] = true; });
     renderCardTab();
   };
   if ($('caBulkDel')) $('caBulkDel').onclick = e => {
@@ -2245,11 +2254,18 @@ async function renderCardTab() {
       renderCardTab(); toast(`${d.removed}건 지웠습니다`);
     });
   };
-  if ($('caBulkGo')) $('caBulkGo').onclick = e => submitting(e.target, async () => {
+  const caBulkRun = (btn, confirmIt) => submitting(btn, async () => {
     const d = await api({ action: 'ca_bulk', ids: selIds, siteCode: $('caBulkSite').value,
-      kind: $('caBulkKind').value, trade: $('caBulkTrade').value, confirm: true, month: '' });
-    CA.items = d.items; CA.sel = {}; renderCardTab(); toast(`${d.saved}건 처리했습니다`);
+      kind: $('caBulkKind').value, trade: $('caBulkTrade').value, confirm: confirmIt, month: '' });
+    CA.items = d.items; CA.sel = {}; renderCardTab();
+    let msg = `${d.saved}건 저장`;
+    if (confirmIt) msg += ` · ${CA.canAll ? '확정' : '입력완료'} ${d.confirmed}건`;
+    if (d.missing) msg += ` · ${d.missing}건은 현장·분류·공종이 비어 넘겼습니다`;
+    if (d.locked) msg += ` · 확정건 ${d.locked}건 제외`;
+    toast(msg);
   });
+  if ($('caBulkSet')) $('caBulkSet').onclick = e => caBulkRun(e.target, false);
+  if ($('caBulkGo')) $('caBulkGo').onclick = e => caBulkRun(e.target, true);
 }
 
 function caRenderSum() {
