@@ -1104,6 +1104,13 @@ function renderShell() {
   selectTab(S.tabs.includes(S.tab) ? S.tab : S.tabs[0]);
   if (S.tabs.includes('cx') && !CX.loaded) cxLoad().then(() => { if (S.tab === 'cx') cxRenderList(); }).catch(() => {});
   dykLoad();
+  // 자주 가는 화면은 로그인 직후 미리 받아 둔다 (현장관리 대시보드)
+  setTimeout(() => {
+    if (S.tab !== 'site' && S.tabs.includes('site') && S.siteCode && OV.site !== S.siteCode) {
+      const code = S.siteCode;
+      api({ action: 'ov_site', siteCode: code }).then(d => { if (OV.site !== code && S.siteCode === code) { OV.data = d; OV.site = code; } }).catch(() => {});
+    }
+  }, 600);
 }
 
 function selectTab(t) {
