@@ -186,6 +186,9 @@
   .timeline li { padding: 8px 0 8px 14px; border-left: 2px solid var(--line); position: relative; }
   .timeline li::before { content: ""; position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--green-2); }
   .timeline .t { font-size: 12px; color: var(--muted); }
+  .timeline .log-head { display: flex; align-items: center; gap: 8px; }
+  .log-x { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 17px; line-height: 1; padding: 0 4px; border-radius: 6px; cursor: pointer; opacity: .4; }
+  .log-x:hover { opacity: 1; color: var(--red); background: var(--red-soft); }
   .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 40; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; }
   .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
   .lb-stage { flex: 1; height: 100%; display: grid; place-items: center; min-width: 0; }
@@ -402,6 +405,124 @@
   .sc-opt { display: grid; grid-template-columns: 1fr 90px 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
   .sc-opt input[type=number] { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; width: 100%; }
   .sc-opt input:disabled { background: var(--gray-soft); }
+  /* ===== 성능 · Passport ===== */
+  .pf-card { padding: 18px 20px; margin-bottom: 12px; }
+  .pf-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .pf-head h3 { margin: 2px 0; font-size: 19px; }
+  .pf-head .btn { margin-left: auto; }
+  .pf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 14px; }
+  .pf-metric { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #FDFCF3; }
+  .pf-metric b { display: block; font-size: 28px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .pf-metric b small { font-size: 13px; font-weight: 600; margin-left: 4px; color: var(--muted); }
+  .pf-metric.best { background: var(--green-soft); border-color: #BFD3AC; }
+  .pf-metric.best b { color: var(--green); }
+  .pf-metric.good b { color: var(--green-2); }
+  .pf-metric.bad { background: var(--red-soft); border-color: #E6B8B0; }
+  .pf-metric.bad b { color: var(--red); }
+  .pf-bar { position: relative; height: 6px; background: var(--gray-soft); border-radius: 999px; margin-top: 8px; overflow: visible; }
+  .pf-bar i { display: block; height: 100%; border-radius: 999px; background: var(--green-2); }
+  .pf-bar.best i { background: var(--green); } .pf-bar.ok i { background: var(--amber); } .pf-bar.bad i { background: var(--red); }
+  .pf-bar em { position: absolute; top: -2px; width: 1px; height: 10px; background: rgba(0,0,0,.25); }
+  .pf-u { margin-top: 6px; }
+  .pf-u-row { display: grid; grid-template-columns: 90px 62px 1fr 120px; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .pf-u-row:first-child { border-top: 0; }
+  .pf-u-row.none { color: var(--muted); }
+  .pf-u-val { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+  .pf-u-row.pass .pf-u-val { color: var(--green); } .pf-u-row.over .pf-u-val { color: var(--red); }
+  .pf-u-bar { position: relative; height: 7px; background: var(--gray-soft); border-radius: 999px; }
+  .pf-u-bar i { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; background: var(--green-2); }
+  .pf-u-row.over .pf-u-bar i { background: var(--red); }
+  .pf-u-bar em { position: absolute; top: -3px; width: 2px; height: 13px; background: var(--ink); opacity: .5; }
+  .pf-u-note { font-size: 12px; color: var(--muted); text-align: right; }
+  .pf-layers { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .pf-layers th { background: var(--gray-soft); color: var(--muted); font-size: 11px; text-align: left; padding: 5px 8px; }
+  .pf-layers td { border-top: 1px solid var(--line); padding: 5px 8px; }
+  .pf-row { display: grid; grid-template-columns: 1fr 86px auto 28px; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .pf-row select, .pf-row input[type=number] { border: 1px solid var(--line); border-radius: 7px; padding: 7px 8px; width: 100%; background: #fff; }
+  .pf-row .pf-wood { font-size: 12px; white-space: nowrap; gap: 4px; }
+  .pf-x { border: 0; background: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+  .sum #pUOut { font-size: 20px; }
+  .sum #pUOut.warn { color: var(--red); } .sum #pUOut.ok { color: var(--green); }
+  .st.pf-best { background: var(--green-soft); color: var(--green); }
+  .st.pf-good { background: var(--green-soft); color: var(--green-2); }
+  .st.pf-ok { background: var(--amber-soft); color: var(--amber); }
+  .st.pf-bad { background: var(--red-soft); color: var(--red); }
+  .pf-months { display: flex; align-items: flex-end; gap: 3px; height: 110px; margin-top: 8px; }
+  .pf-m { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+  .pf-m-bars { display: flex; gap: 1px; align-items: flex-end; height: 90px; }
+  .pf-m-bars i { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; }
+  .pf-m-bars i.e { background: var(--green-2); } .pf-m-bars i.g { background: var(--amber); }
+  .pf-m-l { font-size: 10px; color: var(--muted); text-align: center; margin-top: 3px; }
+  .pf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .pf-table th { background: var(--gray-soft); color: var(--muted); font-size: 11px; text-align: left; padding: 7px 10px; white-space: nowrap; }
+  .pf-table td { border-top: 1px solid var(--line); padding: 7px 10px; white-space: nowrap; }
+  .table-scroll { overflow-x: auto; }
+  .pf-explain { margin: 0; padding-left: 18px; font-size: 14px; }
+  .pf-explain li { margin-bottom: 8px; }
+  @media (max-width: 760px) {
+    .pf-u-row { grid-template-columns: 70px 56px 1fr; }
+    .pf-u-note { grid-column: 1 / -1; text-align: left; }
+    .pf-row { grid-template-columns: 1fr 70px; }
+    .pf-row .pf-wood, .pf-x { grid-column: span 1; }
+  }
+  /* ===== 우리 집 이야기 ===== */
+  .st-hero { background: linear-gradient(160deg, #2D5016, #3E6B22); color: #fff; border-radius: 14px; padding: 30px 26px 24px; margin-bottom: 14px; }
+  .st-tag { font-size: 11px; letter-spacing: .18em; opacity: .7; font-weight: 700; }
+  .st-hero h2 { margin: 8px 0 6px; font-size: 26px; line-height: 1.3; }
+  .st-hero h2 span { font-size: 18px; font-weight: 500; opacity: .82; }
+  .st-hero p { margin: 0; font-size: 13px; opacity: .78; }
+  .st-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .st-actions .btn.ghost { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); color: #fff; }
+  .st-block { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; margin-bottom: 12px; }
+  .st-block.alt { background: #FDFCF2; }
+  .st-block h3 { margin: 0 0 14px; font-size: 17px; color: var(--green); display: flex; align-items: center; gap: 8px; }
+  .st-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 10px; margin-bottom: 14px; }
+  .st-big b { display: block; font-size: 32px; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .st-big b small { font-size: 14px; font-weight: 600; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+  .st-l { display: block; font-size: 13px; font-weight: 600; color: var(--green); margin-top: 3px; }
+  .st-s { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .st-est { font-size: 10px; font-weight: 700; background: var(--gray-soft); color: var(--muted); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: 2px; }
+  .st-txt { margin: 0 0 8px; font-size: 15px; line-height: 1.75; color: var(--ink); }
+  .st-txt b { color: var(--green); }
+  .st-bars { margin-top: 12px; }
+  .st-bar { display: grid; grid-template-columns: 110px 1fr 62px; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 6px; }
+  .st-bar i { display: block; height: 10px; border-radius: 999px; background: var(--green-2); }
+  .st-bar b { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .st-end { text-align: center; padding: 30px 20px; }
+  .st-end p { font-size: 16px; line-height: 1.9; margin: 0 0 12px; }
+  .st-sign { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+  .st-q { display: grid; grid-template-columns: 110px 1fr 40px; gap: 8px; align-items: center; margin-bottom: 7px; font-size: 14px; }
+  .st-q input { border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%; }
+  .st-q span { color: var(--muted); font-size: 13px; }
+  @media (max-width: 760px) {
+    .st-hero { padding: 24px 18px 20px; } .st-hero h2 { font-size: 22px; }
+    .st-block { padding: 18px 16px; } .st-big b { font-size: 27px; }
+    .st-bar { grid-template-columns: 84px 1fr 54px; }
+  }
+  @media print {
+    .top, .subnav, .st-actions, .site-mini, #sitePickWrap { display: none !important; }
+    body { background: #fff; } main { padding: 0; max-width: none; }
+    .st-hero { background: #2D5016 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .st-block { break-inside: avoid; border-color: #ddd; }
+  }
+  /* ===== 법인카드 ===== */
+  .ca-month { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; font: inherit; }
+  .ca-row { position: relative; padding-left: 16px; cursor: pointer; }
+  .ca-chk { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; }
+  .ca-row:has(.ca-chk) { padding-left: 42px; }
+  .ca-row .cr-title { display: flex; align-items: baseline; gap: 10px; }
+  .ca-amt { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+  .ca-amt.minus, .ca-head b.minus { color: var(--red); }
+  .ca-head { display: flex; align-items: baseline; gap: 10px; padding: 14px 16px; }
+  .ca-head b { font-size: 26px; font-variant-numeric: tabular-nums; }
+  .tag.warn-tag { background: var(--red-soft); color: var(--red); }
+  .ca-bulk { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--green-soft); border: 1px solid #C3D3B2; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
+  .ca-bulk select { border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; background: #fff; font: inherit; }
+  .ca-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+  .ca-sum-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .ca-sum-row:first-child { border-top: 0; }
+  .ca-sum-row b { margin-left: auto; font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) { .ca-sum { grid-template-columns: 1fr; } }
   .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--red); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; display: none; max-width: 90vw; z-index: 50; }
 
   @media (max-width: 760px) {
@@ -503,8 +624,8 @@
 const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', info: '현장정보', site: '현장관리', change: '변경요청', detail: '회사디테일' };
-const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'detail', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', info: '현장정보', site: '현장관리', change: '변경요청', card: '법인카드', detail: '회사디테일' };
+const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'card', 'detail', 'sikgu', 'master'];
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
 const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '' };
@@ -596,7 +717,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; PF.site = null; PF.d = null; ST.site = null; ST.d = null; renderTab(); };
 
   // 설계 → 현장관리 → 입금요청 → 변경요청 → 식구 순 (고객관리는 계약 전 단계라 맨 앞)
   $('tabs').innerHTML = TAB_ORDER.map(key => {
@@ -614,7 +735,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = t === 'cx' || t === 'all' || t === 'detail';
+  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card'].includes(t);
   renderTab();
 }
 
@@ -625,6 +746,7 @@ function renderTab() {
   if (S.tab === 'all') return renderAllTab();
   if (S.tab === 'info') return renderInfoTab();
   if (S.tab === 'detail') return renderDetailTab();
+  if (S.tab === 'card') return renderCardTab();
   if (S.tab === 'design') return renderDesignTab();
   if (S.tab === 'site') return renderSiteTab();
   if (S.tab === 'change') return renderChangeTab();
@@ -917,10 +1039,34 @@ async function renderAllTab() {
 // ---------- 현장 정보 (개요 + 선정 소재) ----------
 const SI = { site: null, items: [], groups: {}, statuses: [], canEdit: false, group: '전체' };
 
+const INFO_SECTIONS = ['개요·소재', '성능 · Passport', '우리 집 이야기'];
+let infoSec = INFO_SECTIONS[0];
+
 async function renderInfoTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
-  $('main').innerHTML = siteSummaryHtml(s) + '<div id="siBody" style="margin-top:14px"><div class="loading">선정 소재를 불러오는 중...</div></div>';
+  $('main').innerHTML = siteSummaryHtml(s) +
+    `<div class="subnav" style="margin-top:12px">${INFO_SECTIONS.map(t => `<button class="chip" data-sec="${esc(t)}" aria-pressed="${infoSec === t}">${esc(t)}</button>`).join('')}</div>
+     <div id="infoBody"><div class="loading">불러오는 중...</div></div>`;
+  $('main').querySelectorAll('[data-sec]').forEach(b => b.onclick = () => { infoSec = b.dataset.sec; renderInfoTab(); });
+
+  if (infoSec === '우리 집 이야기') {
+    const el = $('infoBody');
+    try { await stLoad(s.code); } catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (S.tab !== 'info' || S.siteCode !== s.code || infoSec !== '우리 집 이야기') return;
+    stRender(el);
+    return;
+  }
+
+  if (infoSec === '성능 · Passport') {
+    const el = $('infoBody'); el.id = 'pfSection';
+    try { await pfLoad(s.code); } catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (S.tab !== 'info' || S.siteCode !== s.code || infoSec !== '성능 · Passport') return;
+    pfRender(el);
+    return;
+  }
+
+  $('infoBody').innerHTML = '<div id="siBody"><div class="loading">선정 소재를 불러오는 중...</div></div>';
   if (SI.site !== s.code) {
     try {
       const d = await api({ action: 'si_list', siteCode: s.code });
@@ -1373,6 +1519,778 @@ function scPrint() {
     <table><tr><th>단계</th><th>공종</th><th>소요</th><th>시작</th><th>종료</th><th>상태</th><th>담당</th><th>메모</th></tr>${rows}</table>
   </body></html>`);
   w.document.close();
+}
+
+// ---------- 주택 성능 · Passport ----------
+const PF = { site: null, d: null, loading: false, tab: '성능 요약' };
+const PF_U_LIMIT = { '지붕': 0.150, '외벽': 0.170, '최하층바닥': 0.220, '창호': 1.000, '현관문': 1.400 };
+
+function pfAirGrade(v) {
+  v = Number(v);
+  if (!(v > 0)) return null;
+  return v <= 0.6 ? { t: '패시브하우스 기준 충족', c: 'best' } : v <= 1.0 ? { t: '매우 우수', c: 'good' }
+    : v <= 1.5 ? { t: '우수', c: 'good' } : v <= 3.0 ? { t: '양호', c: 'ok' }
+    : v <= 5.0 ? { t: '보통', c: 'ok' } : { t: '개선 필요', c: 'bad' };
+}
+function pfEnGrade(v) {
+  if (!(v > 0)) return null;
+  return v <= 90 ? { t: '패시브 수준', c: 'best' } : v <= 120 ? { t: '우수 (협회 인증 수준)', c: 'good' }
+    : v <= 180 ? { t: '양호', c: 'ok' } : v <= 260 ? { t: '보통 (일반 신축 수준)', c: 'ok' } : { t: '개선 여지', c: 'bad' };
+}
+const PF_GAS_KWH = 10.55, PF_LPG_KWH = 13.9, PF_PE = { elec: 2.75, gas: 1.10 };
+
+function pfEnergyStat(d) {
+  const rows = d.energy || [], area = Number(d.site.area) || 0;
+  if (!rows.length) return null;
+  let kwh = 0, cost = 0, elec = 0, gas = 0, solar = 0;
+  rows.forEach(r => {
+    const g = (Number(r.gasUse) || 0) * (r.gasUnit === 'kg' ? PF_LPG_KWH : r.gasUnit === 'kWh' ? 1 : PF_GAS_KWH);
+    elec += Number(r.elecKwh) || 0; gas += g; solar += Number(r.solarKwh) || 0;
+    kwh += (Number(r.elecKwh) || 0) * PF_PE.elec + g * PF_PE.gas;
+    cost += (Number(r.elecCost) || 0) + (Number(r.gasCost) || 0) + (Number(r.etcCost) || 0);
+  });
+  const m = rows.length, f = 12 / m;
+  return { months: m, full: m >= 12, elecYear: Math.round(elec * f), gasYear: Math.round(gas * f), solarYear: Math.round(solar * f),
+    costYear: Math.round(cost * f), costMonth: Math.round(cost / m),
+    primary: area > 0 ? Math.round(kwh * f / area) : 0, area };
+}
+
+async function pfLoad(code) {
+  if (PF.site === code || PF.loading) return;
+  PF.loading = true;
+  try { PF.d = await api({ action: 'pf_get', siteCode: code }); PF.site = code; }
+  finally { PF.loading = false; }
+}
+
+function pfRender(el) {
+  const d = PF.d; if (!d) return;
+  const tabs = d.isClient ? ['성능 요약', '에너지 사용'] : ['성능 요약', '외피 구성', '기밀 테스트', '에너지 사용'];
+  if (!tabs.includes(PF.tab)) PF.tab = '성능 요약';
+  el.innerHTML = `<div class="subnav">${tabs.map(t => `<button class="chip" data-pf="${esc(t)}" aria-pressed="${PF.tab === t}">${esc(t)}</button>`).join('')}</div>
+    <div id="pfBody"></div>`;
+  el.querySelectorAll('[data-pf]').forEach(b => b.onclick = () => { PF.tab = b.dataset.pf; pfRender(el); });
+  const body = $('pfBody');
+  if (PF.tab === '성능 요약') pfSummary(body);
+  else if (PF.tab === '외피 구성') pfEnvList(body);
+  else if (PF.tab === '기밀 테스트') pfAirList(body);
+  else pfEnergyList(body);
+}
+
+// ---- 성능 요약 (Passport) ----
+function pfSummary(el) {
+  const d = PF.d, s = d.site;
+  const air = (d.air || [])[0];
+  const ag = air ? pfAirGrade(air.ach50) : null;
+  const st = pfEnergyStat(d);
+  const eg = st ? pfEnGrade(st.primary) : null;
+  const envBy = {}; (d.env || []).forEach(e => envBy[e.part] = e);
+  const parts = ['지붕', '외벽', '최하층바닥', '창호', '현관문'];
+  const hasAny = (d.env || []).length || air || st;
+
+  el.innerHTML = `
+    <section class="panel pf-card">
+      <div class="pf-head">
+        <div><span class="cr-id">PERFORMANCE PASSPORT</span><h3>${esc(s.name)}</h3>
+          <span class="cr-sub">${esc(s.code)}${s.endDate ? ' · 준공 ' + esc(s.endDate) : ''}${s.area ? ' · 연면적 ' + s.area + '㎡ (' + Math.round(s.area / 3.3058) + '평)' : ''}${s.struct ? ' · ' + esc(s.struct) : ''}</span></div>
+        <button class="btn ghost" type="button" id="pfPrint">🖨 Passport 인쇄</button>
+      </div>
+      ${!hasAny ? '<div class="empty" style="padding:24px 0"><h3>아직 기록된 성능 데이터가 없습니다</h3>외피 구성·기밀 테스트·에너지 사용을 입력하면 이곳에 요약됩니다.</div>' : `
+      <div class="pf-grid">
+        <div class="pf-metric ${ag ? ag.c : ''}">
+          <span class="cr-id">기밀 성능 (ACH50)</span>
+          <b>${air ? Number(air.ach50).toFixed(2) : '—'}<small>회/h</small></b>
+          <span class="cr-sub">${ag ? esc(ag.t) : '미측정'}${air ? ' · ' + esc(air.date) + ' ' + esc(air.stage) : ''}</span>
+          ${air ? pfBar(Math.min(100, (air.ach50 / 3) * 100), ag.c, ['0.6', '1.5', '3.0']) : ''}
+        </div>
+        <div class="pf-metric ${eg ? eg.c : ''}">
+          <span class="cr-id">연간 1차에너지 소요량</span>
+          <b>${st && st.primary ? st.primary : '—'}<small>kWh/㎡·yr</small></b>
+          <span class="cr-sub">${eg ? esc(eg.t) : '데이터 부족'}${st ? ` · ${st.months}개월 기록${st.full ? '' : ' (연환산)'}` : ''}</span>
+          ${st && st.primary ? pfBar(Math.min(100, st.primary / 260 * 100), eg.c, ['90', '120', '260']) : ''}
+        </div>
+        <div class="pf-metric">
+          <span class="cr-id">월 평균 에너지 비용</span>
+          <b>${st ? Math.round(st.costMonth / 1000).toLocaleString('ko-KR') : '—'}<small>천원</small></b>
+          <span class="cr-sub">${st ? '연 ' + Math.round(st.costYear / 10000).toLocaleString('ko-KR') + '만원' : '기록 없음'}${st && st.solarYear ? ' · 태양광 ' + st.solarYear.toLocaleString('ko-KR') + 'kWh' : ''}</span>
+        </div>
+      </div>
+
+      <h4 style="margin-top:18px">외피 열관류율 (U값, W/㎡·K)</h4>
+      <div class="pf-u">${parts.map(p => {
+        const e = envBy[p], u = e ? Number(e.uValue) : null, lim = PF_U_LIMIT[p];
+        const pass = u !== null && u <= lim;
+        return `<div class="pf-u-row ${u === null ? 'none' : pass ? 'pass' : 'over'}" ${e ? `data-env="${esc(e.id)}"` : ''}>
+          <span class="pf-u-part">${esc(p)}</span>
+          <span class="pf-u-val">${u !== null ? u.toFixed(3) : '—'}</span>
+          <span class="pf-u-bar">${u !== null ? `<i style="width:${Math.min(100, u / (lim * 1.6) * 100)}%"></i><em style="left:${100 / 1.6}%"></em>` : ''}</span>
+          <span class="pf-u-note">${u === null ? '미입력' : pass ? `기준 ${lim} 충족` : `기준 ${lim} 초과`}</span>
+        </div>`;
+      }).join('')}</div>
+      <div class="hint">기준은 건축물 에너지절약설계기준(중부2 주거) 값입니다. 숫자가 낮을수록 단열 성능이 좋습니다.</div>
+      `}
+    </section>
+
+    ${d.isClient ? `<section class="panel ov-block"><h4>이 숫자가 뜻하는 것</h4>
+      <ul class="pf-explain">
+        <li><b>ACH50</b> — 집 전체가 1시간에 몇 번 공기를 바꿔 새는지 보여주는 값입니다. 숫자가 작을수록 틈이 적어 겨울에 따뜻하고 여름에 시원합니다. 일반 신축은 3~5, 패시브하우스는 0.6 이하입니다.</li>
+        <li><b>1차에너지 소요량</b> — 1년 동안 1㎡를 쓰는 데 들어간 에너지입니다. 일반 신축은 200 안팎, 좋은 집은 120 이하입니다.</li>
+        <li><b>U값</b> — 벽·지붕·창으로 열이 얼마나 빠져나가는지입니다. 작을수록 좋습니다.</li>
+      </ul></section>` : ''}`;
+
+  $('pfPrint').onclick = pfPrint;
+  el.querySelectorAll('[data-env]').forEach(r => r.onclick = () => { PF.tab = '외피 구성'; pfRender($('pfSection') || el.parentNode); });
+}
+
+function pfBar(pct, cls, marks) {
+  return `<div class="pf-bar ${cls || ''}"><i style="width:${pct}%"></i>${(marks || []).map((m, i) => `<em style="left:${[23, 50, 100][i]}%" data-m="${esc(m)}"></em>`).join('')}</div>`;
+}
+
+// ---- 외피 구성 ----
+function pfEnvList(el) {
+  const d = PF.d, list = d.env || [];
+  el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">외피 구성</h2>
+      ${d.canEdit ? '<button class="btn" type="button" id="pfEnvNew">+ 부위 추가</button>' : ''}</div>
+    ${list.length ? list.map(e => {
+      const lim = PF_U_LIMIT[e.part], u = Number(e.uValue), layers = e.layers || [];
+      return `<section class="panel ov-block pf-env" data-id="${esc(e.id)}">
+        <div class="pf-head"><div><span class="cr-id">${esc(e.part)}${e.woodRatio ? ' · 목재 비율 ' + Math.round(e.woodRatio * 100) + '%' : ''}</span>
+          <h4 style="margin:2px 0">U = ${u.toFixed(3)} <span class="st ${u <= lim ? '완료' : '반려'}">${u <= lim ? '기준 충족' : '기준 초과'}</span></h4></div>
+          ${d.canEdit ? `<span style="margin-left:auto"><button class="btn ghost" type="button" data-edit="${esc(e.id)}">수정</button></span>` : ''}</div>
+        ${layers.length ? `<table class="pf-layers"><tr><th>층 (실내 → 실외)</th><th>두께</th><th>λ</th><th>R</th></tr>
+          ${layers.map(l => { const t = (Number(l.thick) || 0) / 1000, k = Number(l.k) || 0, r = k > 0 ? t / k : (Number(l.r) || 0);
+            return `<tr><td>${esc(l.name)}${l.inWood ? ' <span class="tag">구조재 사이</span>' : ''}</td><td>${l.thick ? l.thick + 'mm' : '—'}</td><td>${k ? k.toFixed(3) : '—'}</td><td>${r ? r.toFixed(3) : '—'}</td></tr>`;
+          }).join('')}</table>` : '<div class="hint">U값 직접 입력</div>'}
+        ${e.note ? `<div class="hint" style="margin-top:8px">${esc(e.note)}</div>` : ''}
+      </section>`;
+    }).join('') : `<section class="panel empty"><h3>등록된 외피 구성이 없습니다</h3>${d.canEdit ? '[+ 부위 추가]로 지붕·외벽·바닥·창호를 입력하면 U값이 자동 계산됩니다.' : ''}</section>`}`;
+  if ($('pfEnvNew')) $('pfEnvNew').onclick = () => pfEnvForm(null);
+  el.querySelectorAll('[data-edit]').forEach(b => b.onclick = e => { e.stopPropagation(); pfEnvForm((PF.d.env || []).find(x => x.id === b.dataset.edit)); });
+}
+
+function pfEnvForm(o) {
+  const d = PF.d;
+  const parts = d.parts.map(p => p.key);
+  const part0 = o ? o.part : '외벽';
+  const mats = d.materials;
+  const body = openSheet(o ? '외피 구성 수정' : '외피 구성 추가', esc(d.site.code + ' ' + d.site.name), `
+    <div class="card">
+      <div class="f"><span class="lb">부위</span>${segHtml('pPart', parts, part0)}</div>
+      <div id="pDirect" hidden>
+        <div class="f"><label>열관류율 U (W/㎡·K)</label><input type="number" id="pU" step="0.001" inputmode="decimal" value="${esc(o ? o.uValue : '')}" placeholder="예: 0.85"><div class="hint">창호·현관문은 제조사 성적서의 U값을 그대로 입력합니다.</div></div>
+      </div>
+      <div id="pLayers">
+        <div class="f"><label>구성 층 <span class="hint">실내 → 실외 순서</span></label><div id="pRows"></div>
+          <button class="btn ghost" type="button" id="pAdd" style="margin-top:8px">+ 층 추가</button></div>
+        <div class="f"><label>구조재(스터드) 비율 <b id="pWrV">${o ? Math.round((o.woodRatio || 0) * 100) : 18}</b>%</label>
+          <input type="range" id="pWr" min="0" max="35" step="1" value="${o ? Math.round((o.woodRatio || 0) * 100) : 18}" style="width:100%">
+          <div class="hint">목구조 벽체는 보통 15~20%. 0으로 두면 열교를 무시한 값이 나옵니다.</div></div>
+        <div class="sum"><span>계산된 U값</span> <b id="pUOut">—</b> <span class="hint" id="pUNote"></span></div>
+      </div>
+      <div class="f"><label>메모</label><input type="text" id="pNote" value="${esc(o ? o.note : '')}" placeholder="예: 가등급 글라스울, 외단열 연속"></div>
+    </div>
+    <div class="actions sticky">${o && d.canEdit ? '<button class="btn danger" type="button" id="pDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="pClose">닫기</button><button class="btn" type="button" id="pSave">저장</button></div>`);
+
+  const matOpts = v => `<option value="">자재 선택</option>` + mats.map(m => `<option value="${esc(m.name)}" ${m.name === v ? 'selected' : ''}>${esc(m.name)}${m.k ? ` (λ ${m.k})` : ''}</option>`).join('');
+  const addRow = (l) => {
+    const div = document.createElement('div');
+    div.className = 'pf-row';
+    div.innerHTML = `<select class="pMat">${matOpts(l ? l.name : '')}</select>
+      <input type="number" class="pTh" placeholder="mm" inputmode="numeric" value="${l && l.thick ? esc(l.thick) : ''}">
+      <label class="check pf-wood"><input type="checkbox" class="pIn" ${l && l.inWood ? 'checked' : ''}> 구조재 사이</label>
+      <button type="button" class="pf-x">×</button>`;
+    $('pRows').appendChild(div);
+    div.querySelector('.pf-x').onclick = () => { div.remove(); calc(); };
+    div.querySelectorAll('select,input').forEach(x => { x.onchange = calc; x.oninput = calc; });
+  };
+  const collect = () => [...$('pRows').querySelectorAll('.pf-row')].map(r => {
+    const name = r.querySelector('.pMat').value;
+    const m = mats.find(x => x.name === name) || {};
+    return name ? { name, thick: Number(r.querySelector('.pTh').value) || 0, k: m.k || 0, r: m.r || 0, inWood: r.querySelector('.pIn').checked ? 1 : 0 } : null;
+  }).filter(Boolean);
+  const RS = { '지붕': [0.10, 0.043], '외벽': [0.11, 0.043], '최하층바닥': [0.086, 0.043] };
+  const calc = () => {
+    const part = segVal(body, 'pPart');
+    $('pWrV').textContent = $('pWr').value;
+    const rs = RS[part]; if (!rs) return;
+    const wr = Number($('pWr').value) / 100;
+    let rI = rs[0] + rs[1], rW = rs[0] + rs[1];
+    collect().forEach(l => {
+      const t = l.thick / 1000, k = l.k;
+      const r = k > 0 ? t / k : (l.r || 0);
+      rI += r; rW += (l.inWood && k > 0) ? t / 0.13 : r;
+    });
+    const u = rI > 0 ? (wr > 0 ? (1 - wr) / rI + wr / rW : 1 / rI) : 0;
+    const lim = PF_U_LIMIT[part];
+    $('pUOut').textContent = u ? u.toFixed(3) : '—';
+    $('pUNote').textContent = u ? (u <= lim ? `기준 ${lim} 충족` : `기준 ${lim} 초과`) : '';
+    $('pUOut').className = u && u <= lim ? 'ok' : 'warn';
+  };
+  const onPart = () => {
+    const part = segVal(body, 'pPart');
+    const direct = ['창호', '현관문'].includes(part);
+    $('pDirect').hidden = !direct; $('pLayers').hidden = direct;
+    if (!direct) calc();
+  };
+  bindSegs(body, onPart);
+  (o && o.layers && o.layers.length ? o.layers : [null, null]).forEach(addRow);
+  $('pAdd').onclick = () => addRow(null);
+  $('pWr').oninput = calc;
+  onPart();
+  $('pClose').onclick = closeSheet;
+  if ($('pDel')) $('pDel').onclick = e => { if (confirm(`${o.part} 구성을 삭제할까요?`)) submitting(e.target, async () => {
+    const r = await api({ action: 'pf_delete', kind: 'env', id: o.id, siteCode: d.site.code });
+    PF.d.env = r.env; closeSheet(); renderInfoTab(); toast('삭제했습니다');
+  }); };
+  $('pSave').onclick = e => submitting(e.target, async () => {
+    const part = segVal(body, 'pPart');
+    const r = await api({ action: 'pf_env_save', siteCode: d.site.code, id: o ? o.id : '', fields: {
+      part, note: $('pNote').value, woodRatio: Number($('pWr').value) / 100,
+      uValue: $('pU').value, layers: ['창호', '현관문'].includes(part) ? [] : collect() } });
+    PF.d.env = r.env; closeSheet(); renderInfoTab(); toast('저장했습니다');
+  });
+}
+
+// ---- 기밀 테스트 ----
+function pfAirList(el) {
+  const d = PF.d, list = d.air || [];
+  el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">기밀 테스트</h2>
+      ${d.canEdit ? '<button class="btn" type="button" id="pfAirNew">+ 측정 기록</button>' : ''}</div>
+    ${list.length ? `<section class="panel">${list.map(a => { const g = pfAirGrade(a.ach50);
+      return `<button class="cr-row" data-air="${esc(a.id)}">
+        <span class="cr-id">${esc(a.date)} · ${esc(a.stage)}${a.agency ? ' · ' + esc(a.agency) : ''}</span>
+        <span class="cr-title">ACH50 ${Number(a.ach50).toFixed(2)} 회/h</span>
+        ${a.note ? `<span class="cr-sub">${esc(a.note)}</span>` : ''}
+        <span class="cr-right"><span class="st pf-${g.c}">${esc(g.t)}</span>${(a.files || []).length ? `<span class="cr-wait">첨부 ${(a.files || []).length}</span>` : ''}</span>
+      </button>`; }).join('')}</section>` : `<section class="panel empty"><h3>측정 기록이 없습니다</h3>${d.canEdit ? '중간(골조) 단계와 준공 시 두 번 측정하면 추이를 볼 수 있습니다.' : ''}</section>`}`;
+  if ($('pfAirNew')) $('pfAirNew').onclick = () => pfAirForm(null);
+  el.querySelectorAll('[data-air]').forEach(b => b.onclick = () => pfAirOpen(b.dataset.air));
+}
+
+function pfAirOpen(id) {
+  const d = PF.d, a = (d.air || []).find(x => x.id === id); if (!a) return;
+  const g = pfAirGrade(a.ach50);
+  const files = a.files || [];
+  const body = openSheet(`ACH50 ${Number(a.ach50).toFixed(2)}`, `${esc(a.date)} · ${esc(a.stage)}`, `
+    <div class="card"><dl class="kv">
+      <dt>측정값</dt><dd><b>${Number(a.ach50).toFixed(2)}</b> 회/h · ${esc(g.t)}</dd>
+      <dt>측정일</dt><dd>${esc(a.date)}</dd><dt>구분</dt><dd>${esc(a.stage)}</dd>
+      <dt>측정기관</dt><dd>${esc(a.agency || '—')}</dd>
+      <dt>실내 체적</dt><dd>${a.volume ? esc(a.volume) + ' ㎥' : '—'}</dd>
+      ${a.note ? `<dt>메모</dt><dd class="content">${esc(a.note)}</dd>` : ''}
+      <dt>기록</dt><dd>${esc(a.by)} · ${esc(a.updatedAt)}</dd>
+    </dl></div>
+    ${files.length ? `<div class="card"><h4>성적서·사진</h4><div class="thumbs">${files.map(f => `<button type="button" class="thumb ${f.type && f.type.startsWith('image/') ? '' : 'doc'}" data-f="${esc(f.id)}"><span>${esc(f.name)}</span></button>`).join('')}</div></div>` : ''}
+    ${d.canEdit ? '<div class="actions"><button class="btn ghost" type="button" id="aEdit">수정</button></div>' : ''}`);
+  const imgs = files.filter(f => !f.type || f.type.startsWith('image/')).map(f => f.id);
+  body.querySelectorAll('[data-f]').forEach(b => {
+    pfFileUrl(a.id, b.dataset.f, true).then(u => { if (u.url) b.style.backgroundImage = `url("${u.url}")`; }).catch(() => {});
+    b.onclick = () => lightbox(imgs, imgs.indexOf(b.dataset.f), fid => pfFileUrl(a.id, fid, false));
+  });
+  if ($('aEdit')) $('aEdit').onclick = () => pfAirForm(a);
+}
+
+const PF_URL = {};
+async function pfFileUrl(id, fid, thumb) {
+  const k = (thumb ? 't' : 'f') + fid;
+  if (PF_URL[k]) return PF_URL[k];
+  const d = await api({ action: 'pf_file', siteCode: PF.site, id, fileId: fid, thumb: !!thumb });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return PF_URL[k] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+}
+
+function pfAirForm(a) {
+  const d = PF.d;
+  const body = openSheet(a ? '기밀 측정 수정' : '기밀 측정 기록', esc(d.site.code + ' ' + d.site.name), `
+    <div class="card">
+      <div class="cx-when"><div class="f"><label>측정일</label><input type="date" id="aDate" value="${esc(a ? a.date : today())}"></div>
+        <div class="f"><label>ACH50 (회/h)</label><input type="number" id="aAch" step="0.01" inputmode="decimal" value="${esc(a ? a.ach50 : '')}" placeholder="예: 0.42"></div></div>
+      <div class="f"><span class="lb">구분</span>${segHtml('aStage', d.stages, a ? a.stage : '준공')}</div>
+      <div class="cx-when"><div class="f"><label>측정기관</label><input type="text" id="aAgency" value="${esc(a ? a.agency : '')}" placeholder="예: 한국패시브건축협회"></div>
+        <div class="f"><label>실내 체적 (㎥)</label><input type="number" id="aVol" step="0.1" inputmode="decimal" value="${esc(a ? a.volume : '')}"></div></div>
+      <div class="f"><label>메모</label><textarea id="aNote" rows="2" placeholder="누기 부위, 보완 조치 등">${esc(a ? a.note : '')}</textarea></div>
+    </div>
+    <div class="card"><h4>성적서·사진</h4>
+      ${a && (a.files || []).length ? `<div class="hint" id="aOld">${a.files.map(f => `<span class="tag" style="margin:0 6px 6px 0;display:inline-block">${esc(f.name)} <button type="button" data-rm="${esc(f.id)}" style="border:0;background:none;cursor:pointer">×</button></span>`).join('')}</div>` : ''}
+      <div class="f" style="margin-top:10px"><input type="file" id="aFiles" multiple accept="image/*,.pdf"></div></div>
+    <div class="actions sticky">${a ? '<button class="btn danger" type="button" id="aDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="aClose">닫기</button><button class="btn" type="button" id="aSave">저장</button></div>`);
+  bindSegs(body);
+  const removed = [];
+  body.querySelectorAll('#aOld [data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.parentNode.remove(); });
+  $('aClose').onclick = closeSheet;
+  if ($('aDel')) $('aDel').onclick = e => { if (confirm('이 측정 기록을 삭제할까요?')) submitting(e.target, async () => {
+    const r = await api({ action: 'pf_delete', kind: 'air', id: a.id, siteCode: d.site.code });
+    PF.d.air = r.air; closeSheet(); renderInfoTab(); toast('삭제했습니다');
+  }); };
+  $('aSave').onclick = e => submitting(e.target, async () => {
+    const r = await api({ action: 'pf_air_save', siteCode: d.site.code, id: a ? a.id : '', removeFiles: removed,
+      files: await readFiles($('aFiles')),
+      fields: { date: $('aDate').value, ach50: $('aAch').value, stage: segVal(body, 'aStage'),
+        agency: $('aAgency').value, volume: $('aVol').value, note: $('aNote').value } });
+    PF.d.air = r.air; closeSheet(); renderInfoTab(); toast('저장했습니다');
+  });
+}
+
+// ---- 에너지 사용 ----
+function pfEnergyList(el) {
+  const d = PF.d, rows = d.energy || [], st = pfEnergyStat(d);
+  const maxE = Math.max(1, ...rows.map(r => Number(r.elecKwh) || 0));
+  const maxG = Math.max(1, ...rows.map(r => (Number(r.gasUse) || 0) * (r.gasUnit === 'kg' ? PF_LPG_KWH : r.gasUnit === 'kWh' ? 1 : PF_GAS_KWH)));
+  const mx = Math.max(maxE, maxG);
+  const last = rows.slice(-24);
+  el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">에너지 사용</h2>
+      ${d.canEdit ? '<button class="btn ghost" type="button" id="pfBulk">여러 달 입력</button><button class="btn" type="button" id="pfEnNew">+ 월 기록</button>' : ''}</div>
+    ${st ? `<div class="ov-cards">
+      <section class="panel ov-card"><span class="cr-id">월 평균 비용</span><b>${Math.round(st.costMonth).toLocaleString('ko-KR')}<small style="font-size:14px">원</small></b><span class="cr-sub">${st.months}개월 평균</span></section>
+      <section class="panel ov-card"><span class="cr-id">연간 전기</span><b>${st.elecYear.toLocaleString('ko-KR')}<small style="font-size:14px">kWh</small></b><span class="cr-sub">${st.full ? '실적' : '연환산'}${st.solarYear ? ' · 발전 ' + st.solarYear.toLocaleString('ko-KR') : ''}</span></section>
+      <section class="panel ov-card"><span class="cr-id">연간 가스</span><b>${Math.round(st.gasYear).toLocaleString('ko-KR')}<small style="font-size:14px">kWh</small></b><span class="cr-sub">난방·온수</span></section>
+      <section class="panel ov-card"><span class="cr-id">1차에너지</span><b>${st.primary || '—'}<small style="font-size:14px">kWh/㎡</small></b><span class="cr-sub">${st.primary ? esc(pfEnGrade(st.primary).t) : '연면적 필요'}</span></section>
+    </div>` : ''}
+    ${last.length ? `<section class="panel ov-block"><h4>월별 사용량 <span class="hint">전기 ■ 가스 ■</span></h4>
+      <div class="pf-months">${last.map(r => {
+        const g = (Number(r.gasUse) || 0) * (r.gasUnit === 'kg' ? PF_LPG_KWH : r.gasUnit === 'kWh' ? 1 : PF_GAS_KWH);
+        const e2 = Number(r.elecKwh) || 0;
+        return `<div class="pf-m" title="${esc(r.ym)} 전기 ${e2}kWh · 가스 ${Math.round(g)}kWh">
+          <span class="pf-m-bars"><i class="e" style="height:${e2 / mx * 100}%"></i><i class="g" style="height:${g / mx * 100}%"></i></span>
+          <span class="pf-m-l">${esc(r.ym.slice(5))}</span></div>`;
+      }).join('')}</div>
+      <div class="hint">${esc(last[0].ym)} ~ ${esc(last[last.length - 1].ym)}</div></section>` : ''}
+    <section class="panel">
+      ${rows.length ? `<div class="table-scroll"><table class="pf-table"><tr><th>연월</th><th>전기</th><th>전기요금</th><th>가스</th><th>가스요금</th><th>발전</th><th>합계</th>${d.canEdit ? '<th></th>' : ''}</tr>
+        ${rows.slice().reverse().map(r => `<tr>
+          <td>${esc(r.ym)}</td><td>${(Number(r.elecKwh) || 0).toLocaleString('ko-KR')} kWh</td><td>${(Number(r.elecCost) || 0).toLocaleString('ko-KR')}</td>
+          <td>${(Number(r.gasUse) || 0).toLocaleString('ko-KR')} ${esc(r.gasUnit || '㎥')}</td><td>${(Number(r.gasCost) || 0).toLocaleString('ko-KR')}</td>
+          <td>${r.solarKwh ? (Number(r.solarKwh)).toLocaleString('ko-KR') + ' kWh' : '—'}</td>
+          <td><b>${((Number(r.elecCost) || 0) + (Number(r.gasCost) || 0) + (Number(r.etcCost) || 0)).toLocaleString('ko-KR')}원</b></td>
+          ${d.canEdit ? `<td><button type="button" class="linkish" data-en="${esc(r.id)}" style="margin:0">수정</button></td>` : ''}
+        </tr>`).join('')}</table></div>` : `<div class="empty"><h3>에너지 기록이 없습니다</h3>${d.canEdit ? '매월 전기·가스 요금을 입력하면 연간 성능이 자동 계산됩니다.' : '건축주님의 월 사용량을 입력하면 이곳에 표시됩니다.'}</div>`}
+    </section>`;
+  if ($('pfEnNew')) $('pfEnNew').onclick = () => pfEnergyForm(null);
+  if ($('pfBulk')) $('pfBulk').onclick = pfBulkForm;
+  el.querySelectorAll('[data-en]').forEach(b => b.onclick = () => pfEnergyForm(rows.find(x => x.id === b.dataset.en)));
+}
+
+function pfEnergyForm(r) {
+  const d = PF.d;
+  const ym = r ? r.ym : (() => { const t = new Date(); t.setMonth(t.getMonth() - 1); return t.toISOString().slice(0, 7); })();
+  const body = openSheet(r ? `${r.ym} 수정` : '월 에너지 기록', esc(d.site.code + ' ' + d.site.name), `
+    <div class="card">
+      <div class="f"><label>연월</label><input type="month" id="eYm" value="${esc(ym)}" ${r ? 'disabled' : ''}></div>
+      <div class="cx-when"><div class="f"><label>전기 사용량 (kWh)</label><input type="number" id="eKwh" inputmode="decimal" value="${esc(r ? r.elecKwh : '')}"></div>
+        <div class="f"><label>전기 요금 (원)</label><input type="number" id="eCost" inputmode="numeric" value="${esc(r ? r.elecCost : '')}"></div></div>
+      <div class="cx-when"><div class="f"><label>가스 사용량</label><input type="number" id="gUse" inputmode="decimal" value="${esc(r ? r.gasUse : '')}"></div>
+        <div class="f"><span class="lb">단위</span>${segHtml('gUnit', ['㎥', 'kg', 'kWh'], r ? (r.gasUnit || '㎥') : '㎥')}</div></div>
+      <div class="cx-when"><div class="f"><label>가스 요금 (원)</label><input type="number" id="gCost" inputmode="numeric" value="${esc(r ? r.gasCost : '')}"></div>
+        <div class="f"><label>기타 요금 (원)</label><input type="number" id="eEtc" inputmode="numeric" value="${esc(r ? r.etcCost : '')}" placeholder="지역난방 등"></div></div>
+      <div class="cx-when"><div class="f"><label>태양광 발전 (kWh)</label><input type="number" id="sKwh" inputmode="decimal" value="${esc(r ? r.solarKwh : '')}"></div>
+        <div class="f"><label>자가 소비 (kWh)</label><input type="number" id="sSelf" inputmode="decimal" value="${esc(r ? r.selfKwh : '')}"></div></div>
+      <div class="f"><label>메모</label><input type="text" id="eNote" value="${esc(r ? r.note : '')}" placeholder="예: 혹한기, 장기 외출"></div>
+    </div>
+    <div class="actions sticky">${r ? '<button class="btn danger" type="button" id="eDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="eClose">닫기</button><button class="btn" type="button" id="eSave">저장</button></div>`);
+  bindSegs(body);
+  $('eClose').onclick = closeSheet;
+  if ($('eDel')) $('eDel').onclick = e => { if (confirm(`${r.ym} 기록을 삭제할까요?`)) submitting(e.target, async () => {
+    const x = await api({ action: 'pf_delete', kind: 'energy', id: r.id, siteCode: d.site.code });
+    PF.d.energy = x.energy; closeSheet(); renderInfoTab(); toast('삭제했습니다');
+  }); };
+  $('eSave').onclick = e => submitting(e.target, async () => {
+    const x = await api({ action: 'pf_energy_save', siteCode: d.site.code, fields: {
+      ym: $('eYm').value, elecKwh: $('eKwh').value, elecCost: $('eCost').value,
+      gasUse: $('gUse').value, gasUnit: segVal(body, 'gUnit'), gasCost: $('gCost').value,
+      solarKwh: $('sKwh').value, selfKwh: $('sSelf').value, etcCost: $('eEtc').value, note: $('eNote').value } });
+    PF.d.energy = x.energy; closeSheet(); renderInfoTab(); toast('저장했습니다');
+  });
+}
+
+function pfBulkForm() {
+  const d = PF.d;
+  const body = openSheet('여러 달 한 번에 입력', esc(d.site.code + ' ' + d.site.name), `
+    <div class="card">
+      <div class="hint">한 줄에 한 달씩 붙여넣으세요. 엑셀에서 복사해도 됩니다.<br>
+        순서: <b>연월 · 전기kWh · 전기요금 · 가스사용 · 가스요금 · 발전kWh(선택)</b></div>
+      <div class="f" style="margin-top:10px"><textarea id="bTxt" rows="10" placeholder="2026-01  412  68500  98  112000
+2026-02  388  63200  86  101000
+2026-03  350  58000  54  67000"></textarea></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="bClose">닫기</button><button class="btn" type="button" id="bSave">불러오기</button></div>`);
+  $('bClose').onclick = closeSheet;
+  $('bSave').onclick = e => submitting(e.target, async () => {
+    const r = await api({ action: 'pf_energy_bulk', siteCode: d.site.code, text: $('bTxt').value });
+    PF.d.energy = r.energy; closeSheet(); renderInfoTab();
+    toast(r.errors.length ? `${r.saved}개월 저장 · ${r.errors.length}줄 실패` : `${r.saved}개월 저장했습니다`);
+    if (r.errors.length) alert('처리하지 못한 줄:\n' + r.errors.join('\n'));
+  });
+}
+
+// ---- Passport 인쇄 ----
+function pfPrint() {
+  const d = PF.d, s = d.site, air = (d.air || [])[0], st = pfEnergyStat(d);
+  const ag = air ? pfAirGrade(air.ach50) : null, eg = st ? pfEnGrade(st.primary) : null;
+  const envBy = {}; (d.env || []).forEach(e => envBy[e.part] = e);
+  const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+  const row = (k, v, sub) => `<tr><th>${k}</th><td><b>${v}</b>${sub ? ` <span class="s">${sub}</span>` : ''}</td></tr>`;
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>Performance Passport ${esc(s.code)}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;color:#1E261B;padding:28px;font-size:13px;max-width:820px;margin:0 auto}
+    .hd{border-top:4px solid #00509D;padding-top:12px;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px}
+    .hd h1{font-size:22px;margin:0;color:#283618}.lb{font-size:11px;letter-spacing:.16em;color:#00509D;font-weight:700}
+    .sub{color:#697164;font-size:12px;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:18px}
+    h2{font-size:14px;color:#2D5016;margin:20px 0 8px;border-left:4px solid #606C38;padding-left:8px}
+    table{width:100%;border-collapse:collapse;margin-bottom:6px}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}
+    th{background:#FEFAE0;color:#283618;width:190px;font-weight:600}td b{font-size:15px}.s{color:#697164;font-size:12px;font-weight:400}
+    .big{display:flex;gap:12px;margin-bottom:14px}.big div{flex:1;border:1px solid #ddd;border-radius:8px;padding:12px 14px;background:#FEFAE0}
+    .big span{font-size:11px;color:#697164;display:block}.big b{font-size:24px;color:#283618;display:block;margin:2px 0}
+    .big em{font-style:normal;font-size:12px;color:#606C38;font-weight:600}
+    .ft{margin-top:24px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#888;display:flex;justify-content:space-between}
+    button{margin-bottom:14px;padding:9px 22px;background:#283618;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
+  </style></head><body><button onclick="window.print()">인쇄</button>
+    <div class="hd"><div><div class="lb">PERFORMANCE PASSPORT</div><h1>${esc(s.name)}</h1></div>
+      <div style="text-align:right;font-size:12px;color:#697164">(주)사람사는집종합건설<br>발행일 ${today()}</div></div>
+    <div class="sub">${esc(s.code)}${s.endDate ? ' · 준공 ' + esc(s.endDate) : ''}${s.area ? ' · 연면적 ' + s.area + '㎡ (' + Math.round(s.area / 3.3058) + '평)' : ''}${s.struct ? ' · ' + esc(s.struct) : ''}${s.type ? ' · ' + esc(s.type) : ''}</div>
+
+    <div class="big">
+      <div><span>기밀 성능 ACH50</span><b>${air ? Number(air.ach50).toFixed(2) : '—'}</b><em>${ag ? esc(ag.t) : '미측정'}</em></div>
+      <div><span>연간 1차에너지</span><b>${st && st.primary ? st.primary : '—'}</b><em>${eg ? esc(eg.t) : '데이터 부족'}</em></div>
+      <div><span>월 평균 에너지 비용</span><b>${st ? Math.round(st.costMonth).toLocaleString('ko-KR') : '—'}</b><em>원 / 월</em></div>
+    </div>
+
+    <h2>외피 성능 (열관류율 U, W/㎡·K)</h2>
+    <table>${['지붕', '외벽', '최하층바닥', '창호', '현관문'].map(p => {
+      const e = envBy[p], u = e ? Number(e.uValue) : null, lim = PF_U_LIMIT[p];
+      const layers = e && e.layers && e.layers.length ? e.layers.map(l => l.name + (l.thick ? ' ' + l.thick + 'mm' : '')).join(' / ') : '';
+      return row(p, u !== null ? u.toFixed(3) : '—', u !== null ? (u <= lim ? `기준 ${lim} 충족` : `기준 ${lim} 초과`) + (layers ? ' · ' + layers : '') : '미입력');
+    }).join('')}</table>
+
+    ${(d.air || []).length ? `<h2>기밀 측정 이력</h2><table><tr><th>측정일</th><td><b>구분 / ACH50 / 측정기관</b></td></tr>
+      ${d.air.map(a => `<tr><th>${esc(a.date)}</th><td><b>${esc(a.stage)} · ${Number(a.ach50).toFixed(2)} 회/h</b> <span class="s">${esc(a.agency || '')}</span></td></tr>`).join('')}</table>` : ''}
+
+    ${st ? `<h2>에너지 사용 실적</h2><table>
+      ${row('기록 기간', `${esc(d.energy[0].ym)} ~ ${esc(d.energy[d.energy.length - 1].ym)}`, `${st.months}개월`)}
+      ${row('연간 전기', st.elecYear.toLocaleString('ko-KR') + ' kWh', st.full ? '실적' : '연환산')}
+      ${row('연간 가스', Math.round(st.gasYear).toLocaleString('ko-KR') + ' kWh', '난방·온수')}
+      ${st.solarYear ? row('태양광 발전', st.solarYear.toLocaleString('ko-KR') + ' kWh', '') : ''}
+      ${row('연간 에너지 비용', Math.round(st.costYear).toLocaleString('ko-KR') + ' 원', '월 평균 ' + Math.round(st.costMonth).toLocaleString('ko-KR') + '원')}
+      ${st.primary ? row('1차에너지 소요량', st.primary + ' kWh/㎡·yr', eg.t) : ''}
+    </table>` : ''}
+
+    <div class="ft"><span>본 자료는 실제 측정값과 건축주 제공 사용량을 근거로 작성되었습니다.</span><span>Build Trust, Life Blooms</span></div>
+  </body></html>`);
+  w.document.close();
+}
+
+// ---------- 우리 집 이야기 ----------
+const ST = { site: null, d: null, loading: false };
+
+async function stLoad(code) {
+  if (ST.site === code || ST.loading) return;
+  ST.loading = true;
+  try { ST.d = await api({ action: 'st_get', siteCode: code }); ST.site = code; }
+  finally { ST.loading = false; }
+}
+
+const stN = (v, d) => {
+  const n = Number(v) || 0;
+  return d ? n.toLocaleString('ko-KR', { maximumFractionDigits: d }) : Math.round(n).toLocaleString('ko-KR');
+};
+
+function stRender(el) {
+  const d = ST.d; if (!d) return;
+  const st = d.story, s = st.site, m = st.mat, p = st.people, t = st.time, c = st.carbon, pf = st.perf;
+  const big = (num, unit, label, sub) => `<div class="st-big"><b>${num}<small>${unit || ''}</small></b><span class="st-l">${label}</span>${sub ? `<span class="st-s">${sub}</span>` : ''}</div>`;
+  const real = o => o && o.real ? '' : '<span class="st-est">추정</span>';
+
+  el.innerHTML = `
+    <section class="st-hero">
+      <span class="st-tag">OUR HOUSE STORY</span>
+      <h2>${esc(s.name)}<br><span>이 집이 지어지기까지</span></h2>
+      <p>${s.startDate ? esc(s.startDate.replace(/-/g, '.')) : ''}${s.endDate ? ' ~ ' + esc(s.endDate.replace(/-/g, '.')) : ' ~ 공사 중'}${s.struct ? ' · ' + esc(s.struct) + '구조' : ''}</p>
+      <div class="st-actions">
+        <button class="btn ghost" type="button" id="stPrint">🖨 인쇄 · PDF로 저장</button>
+        ${d.canEdit ? '<button class="btn ghost" type="button" id="stEdit">자재 물량 입력</button>' : ''}
+      </div>
+    </section>
+
+    <section class="st-block">
+      <h3>이 집의 크기</h3>
+      <div class="st-row">
+        ${big(stN(st.size.py), '평', '연면적', `${stN(st.size.area, 1)}㎡`)}
+        ${st.size.tennis ? big(stN(st.size.tennis, 1), '면', '테니스 코트로 치면', '바닥을 모두 펼쳤을 때') : ''}
+        ${s.floors ? big(s.floors, '층', '지상 층수', st.size.foot ? `한 층 ${stN(st.size.foot, 1)}㎡` : '') : ''}
+      </div>
+      <p class="st-txt">바닥을 모두 이어 붙이면 ${stN(st.size.area, 1)}㎡, 우리가 흔히 말하는 <b>${stN(st.size.py)}평</b>입니다.
+        시내버스 ${stN(st.size.bus, 1)}대를 나란히 세운 정도의 넓이예요.</p>
+    </section>
+
+    <section class="st-block alt">
+      <h3>이 집을 이룬 것들 ${d.story.estimated ? '<span class="st-est">일부 추정값</span>' : ''}</h3>
+      <div class="st-row">
+        ${m.wood.v ? big(stN(m.wood.v, 1), '㎥', `나무 ${real(m.wood)}`, `30년 자란 나무 약 ${stN(m.trees)}그루`) : ''}
+        ${m.concrete.v ? big(stN(m.concrete.v), '㎥', `콘크리트 ${real(m.concrete)}`, `레미콘 ${stN(m.mixer, 1)}대 분량`) : ''}
+        ${m.rebar.v ? big(stN(m.rebar.v, 1), '톤', `철근 ${real(m.rebar)}`, `승용차 ${stN(m.car, 1)}대 무게`) : ''}
+        ${m.insul.v ? big(stN(m.insul.v, 1), '㎥', `단열재 ${real(m.insul)}`, `200mm 두께로 ${stN(m.insulBlanket)}㎡`) : ''}
+        ${m.windowN.v ? big(stN(m.windowN.v), '개', `창과 문 ${real(m.windowN)}`, m.windowA.v ? `유리 면적 ${stN(m.windowA.v, 1)}㎡` : '') : ''}
+        ${st.extra.materials ? big(stN(st.extra.materials), '가지', '고르고 정한 마감재', '외장재부터 수전까지') : ''}
+      </div>
+      <p class="st-txt">집 한 채에는 생각보다 많은 것이 들어갑니다. 나무 ${stN(m.wood.v, 1)}㎥는 30년 동안 자란 나무 약 <b>${stN(m.trees)}그루</b>에 해당하고,
+        콘크리트 ${stN(m.concrete.v)}㎥는 레미콘 트럭 <b>${stN(m.mixer, 1)}대</b>가 쉬지 않고 들어와야 하는 양입니다.</p>
+    </section>
+
+    ${p.total ? `<section class="st-block">
+      <h3>이 집을 지은 사람들</h3>
+      <div class="st-row">
+        ${big(stN(p.total), '명', '현장에 다녀간 사람', p.days ? `${stN(p.days)}일 동안` : '')}
+        ${p.trades ? big(stN(p.trades), '개', '손을 보탠 공종', p.topTrades.length ? p.topTrades.slice(0, 3).map(x => x.name).join(' · ') : '') : ''}
+        ${p.busiest ? big(stN(p.busiest.n), '명', '가장 북적였던 날', esc(p.busiest.date.replace(/-/g, '.'))) : ''}
+        ${p.photos ? big(stN(p.photos), '장', '남긴 현장 사진', p.reports ? `보고 ${stN(p.reports)}건` : '') : ''}
+      </div>
+      <p class="st-txt">터를 다진 사람, 기둥을 세운 사람, 단열재를 한 장씩 끼워 넣은 사람, 마지막에 손잡이를 단 사람.
+        모두 <b>${stN(p.total)}명</b>의 손을 거쳐 이 집이 되었습니다.
+        ${p.topTrades.length ? `그중 ${esc(p.topTrades[0].name)}에 가장 많은 ${stN(p.topTrades[0].n)}명이 함께했습니다.` : ''}</p>
+      ${p.topTrades.length ? `<div class="st-bars">${p.topTrades.map(x => `<div class="st-bar"><span>${esc(x.name)}</span>
+        <i style="width:${Math.max(6, x.n / p.topTrades[0].n * 100)}%"></i><b>${stN(x.n)}명</b></div>`).join('')}</div>` : ''}
+    </section>` : ''}
+
+    ${t.days ? `<section class="st-block alt">
+      <h3>이 집이 지어진 시간</h3>
+      <div class="st-row">
+        ${big(stN(t.days), '일', '터파기부터 오늘까지', `약 ${stN(t.months, 1)}개월`)}
+        ${t.seasons.length ? big(t.seasons.length, '계절', '집이 지나온 계절', t.seasons.join(' → ')) : ''}
+        ${t.rainy ? big(stN(t.rainy), '일', '비·눈이 내린 날', '그날도 현장은 돌아갔습니다') : ''}
+      </div>
+      <p class="st-txt">${s.startDate ? esc(s.startDate.replace(/-/g, '년 ').replace('-', '월 ') + '일') : ''}에 첫 삽을 떴습니다.
+        ${t.seasons.length > 1 ? `${t.seasons.join(', ')}을 지나는 동안` : '그 뒤로'} ${stN(t.days)}일,
+        ${t.rainy ? `비와 눈이 ${stN(t.rainy)}일 내렸지만 ` : ''}집은 하루씩 모양을 갖춰 갔습니다.</p>
+    </section>` : ''}
+
+    ${c.stored ? `<section class="st-block">
+      <h3>이 집이 품은 탄소</h3>
+      <div class="st-row">
+        ${big(stN(c.stored, 1), '톤', '나무가 가둬 둔 CO₂', `소나무 ${stN(c.pines)}그루가 30년간 흡수한 양`)}
+        ${c.emitted ? big(stN(c.emitted, 1), '톤', '콘크리트·철근이 낸 CO₂', '기초와 구조에서') : ''}
+      </div>
+      <p class="st-txt">나무는 자라면서 공기 중의 이산화탄소를 빨아들여 몸에 저장합니다. 그 나무로 지은 집은 사는 동안 탄소를 계속 붙잡아 둡니다.
+        이 집의 목재가 품고 있는 <b>${stN(c.stored, 1)}톤</b>은 소나무 ${stN(c.pines)}그루가 30년 동안 모은 양입니다.</p>
+    </section>` : ''}
+
+    ${pf ? `<section class="st-block alt">
+      <h3>이 집의 성능</h3>
+      <div class="st-row">
+        ${pf.ach50 ? big(pf.ach50.toFixed(2), '회/h', '기밀 성능 (ACH50)', pf.ach50 <= 0.6 ? '패시브하우스 기준 충족' : pf.ach50 <= 1.5 ? '매우 우수' : '양호') : ''}
+        ${pf.primary ? big(stN(pf.primary), 'kWh/㎡', '연간 1차에너지', `일반 신축의 약 ${Math.round(pf.primary / 210 * 100)}%`) : ''}
+        ${pf.saveKwhYear ? big(stN(pf.saveKwhYear), 'kWh', '해마다 덜 쓰는 에너지', `소나무 ${stN(pf.savePines)}그루 몫`) : ''}
+      </div>
+      ${pf.ach50 ? `<p class="st-txt"><b>ACH50 ${pf.ach50.toFixed(2)}회</b>는, 초속 9m쯤 되는 센 바람이 집을 사방에서 밀어붙일 때
+        집 안 공기가 한 시간에 ${pf.ach50.toFixed(2)}번 바뀐다는 뜻입니다. 일반 아파트가 2~3회,
+        틈이 많은 오래된 집은 5회를 넘기기도 합니다. 숫자가 작을수록 틈이 적어, 겨울에 외풍이 없고 난방비가 덜 듭니다.
+        ${pf.ach50 <= 0.6 ? '이 집은 <b>세계 패시브하우스 기준인 0.6회</b>를 넘지 않았습니다.' : ''}</p>` : ''}
+      ${pf.saveKwhYear ? `<p class="st-txt">같은 크기의 일반 신축과 비교하면 해마다 <b>${stN(pf.saveKwhYear)}kWh</b>를 덜 씁니다.
+        이산화탄소로 바꾸면 연 ${stN(pf.saveCo2Year, 1)}톤, 소나무 ${stN(pf.savePines)}그루를 매년 심는 것과 같습니다.</p>` : ''}
+    </section>` : ''}
+
+    <section class="st-end">
+      <p>이 집은 ${s.startDate ? esc(s.startDate.slice(0, 4)) + '년, ' : ''}${p.total ? stN(p.total) + '명의 손과 ' : ''}${t.days ? stN(t.days) + '일의 시간으로 ' : ''}지어졌습니다.<br>
+        오래도록 잘 지내시길 바랍니다.</p>
+      <span class="st-sign">(주)사람사는집종합건설 · Build Trust, Life Blooms</span>
+    </section>`;
+
+  $('stPrint').onclick = () => window.print();
+  if ($('stEdit')) $('stEdit').onclick = stQtyForm;
+}
+
+function stQtyForm() {
+  const d = ST.d, q = d.qty || {}, m = d.story.mat;
+  const row = (k, label, unit, est, ph) => `<div class="st-q">
+    <label>${label}</label>
+    <input type="number" id="q_${k}" step="0.1" inputmode="decimal" value="${q[k] === '' || q[k] === undefined ? '' : esc(q[k])}" placeholder="${ph || ('추정 ' + (Math.round(est * 10) / 10))}">
+    <span>${unit}</span></div>`;
+  const body = openSheet('자재 물량 입력', esc(d.story.site.code + ' ' + d.story.site.name), `
+    <div class="card">
+      <div class="hint">비워 두면 연면적·구조로 계산한 <b>추정값</b>이 쓰입니다. 실제 발주량을 넣으면 그 값으로 바뀌고 "추정" 표시가 사라집니다.</div>
+      <div style="margin-top:12px">
+        ${row('wood', '목재', '㎥', m.wood.v)}
+        ${row('concrete', '콘크리트', '㎥', m.concrete.v)}
+        ${row('rebar', '철근', '톤', m.rebar.v)}
+        ${row('insul', '단열재', '㎥', m.insul.v)}
+        ${row('windowN', '창·문 개수', '개', m.windowN.v)}
+        ${row('windowA', '창호 면적', '㎡', m.windowA.v)}
+        ${row('roofA', '지붕 면적', '㎡', m.roofA.v)}
+        ${row('wallA', '외벽 면적', '㎡', m.wallA.v)}
+        ${row('tile', '타일', '㎡', 0, '선택')}
+      </div>
+      <div class="f" style="margin-top:12px"><label>그 밖에 기록하고 싶은 것</label><input type="text" id="q_etc" value="${esc(q.etc || '')}" placeholder="예: 못 42,000개 · 실란트 86통"></div>
+      <div class="f"><label>메모</label><input type="text" id="q_note" value="${esc(q.note || '')}" placeholder="산출 근거, 발주서 기준 등"></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="qClose">닫기</button><button class="btn" type="button" id="qSave">저장</button></div>`);
+  $('qClose').onclick = closeSheet;
+  $('qSave').onclick = e => submitting(e.target, async () => {
+    const f = {};
+    ['wood', 'concrete', 'rebar', 'insul', 'windowN', 'windowA', 'roofA', 'wallA', 'tile'].forEach(k => f[k] = $('q_' + k).value);
+    f.etc = $('q_etc').value; f.note = $('q_note').value;
+    const r = await api({ action: 'st_save', siteCode: d.story.site.code, fields: f });
+    ST.d.story = r.story; ST.d.qty = r.qty; closeSheet(); renderInfoTab(); toast('저장했습니다');
+  });
+}
+
+// ---------- 법인카드 ----------
+const CA = { items: [], kinds: [], cards: [], months: [], month: '', filter: '확인대기', canAll: false, loaded: false, sel: {} };
+
+async function renderCardTab() {
+  if (!CA.loaded || CA.reload) {
+    $('main').innerHTML = '<div class="loading">카드 내역을 불러오는 중...</div>';
+    try {
+      const d = await api({ action: 'ca_list', month: CA.month, status: '' });
+      Object.assign(CA, { items: d.items, kinds: d.kinds, cards: d.cards, months: d.months, canAll: d.canAll, loaded: true, reload: false });
+      if (!CA.month) CA.month = d.months[0] || today().slice(0, 7);
+    } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'card') return;
+  }
+  const rows = CA.items.filter(o => String(o.paidAt).slice(0, 7) === CA.month);
+  const wait = rows.filter(o => o.status === '확인대기');
+  const done = rows.filter(o => o.status === '확정');
+  const list = CA.filter === '전체' ? rows : rows.filter(o => o.status === CA.filter);
+  const sum = a => a.reduce((t, o) => t + (Number(o.amount) || 0), 0);
+  const selIds = Object.keys(CA.sel).filter(k => CA.sel[k]);
+
+  $('main').innerHTML = `
+    <div class="cr-bar"><h2>법인카드</h2>
+      <select id="caMonth" class="ca-month">${CA.months.map(m => `<option ${m === CA.month ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select>
+      <button class="btn ghost" type="button" id="caAdd">+ 직접 입력</button></div>
+
+    <div class="ov-cards">
+      <button type="button" class="panel ov-card ov-click" data-f="확인대기"><span class="cr-id">확인 대기</span>
+        <b class="${wait.length ? 'warn' : ''}">${wait.length}건</b><span class="cr-sub">${won(sum(wait))}</span></button>
+      <button type="button" class="panel ov-card ov-click" data-f="확정"><span class="cr-id">확정</span>
+        <b>${done.length}건</b><span class="cr-sub">${won(sum(done))}</span></button>
+      <section class="panel ov-card"><span class="cr-id">${esc(CA.month)} 합계</span>
+        <b>${won(sum(rows.filter(o => o.status !== '제외')))}</b><span class="cr-sub">${rows.length}건</span></section>
+    </div>
+
+    ${CA.canAll && done.length ? `<section class="panel ov-block"><h4>현장별 · 분류별 (확정분)</h4>
+      <div class="ca-sum">${(() => {
+        const bySite = {}, byKind = {};
+        done.forEach(o => { bySite[o.siteCode || '미지정'] = (bySite[o.siteCode || '미지정'] || 0) + o.amount; byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + o.amount; });
+        const line = (obj, cls) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, v]) =>
+          `<div class="ca-sum-row"><span class="${cls}">${esc(k)}</span><b>${won(v)}</b></div>`).join('');
+        return `<div>${line(bySite, 'code')}</div><div>${line(byKind, 'tag')}</div>`;
+      })()}</div></section>` : ''}
+
+    <div class="filters">${['확인대기', '확정', '전체'].map(f => {
+      const n = f === '전체' ? rows.length : rows.filter(o => o.status === f).length;
+      return `<button class="chip ${f === '확인대기' && n ? 'warn' : ''}" data-f="${esc(f)}" aria-pressed="${CA.filter === f}">${esc(f)}<b>${n}</b></button>`;
+    }).join('')}</div>
+
+    ${selIds.length ? `<div class="ca-bulk"><b>${selIds.length}건 선택</b>
+      <select id="caBulkSite"><option value="">현장 선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
+      <select id="caBulkKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
+      <button class="btn" type="button" id="caBulkGo">지정 · 확정</button>
+      <button class="btn ghost" type="button" id="caBulkClear">해제</button></div>` : ''}
+
+    <section class="panel">
+      ${list.length ? list.map(o => {
+        const st = o.status === '확정' ? '완료' : o.status === '제외' ? '반려' : '';
+        const site = S.sites.find(s => s.code === o.siteCode);
+        return `<div class="cr-row ca-row ${o.status === '확인대기' ? 'urgent' : ''}" data-id="${esc(o.id)}">
+          ${o.status === '확인대기' ? `<input type="checkbox" class="ca-chk" data-id="${esc(o.id)}" ${CA.sel[o.id] ? 'checked' : ''}>` : ''}
+          <span class="cr-id">${esc(String(o.paidAt).slice(5, 16).replace('-', '/'))} · ${esc(o.owner || '미매칭')}${o.last4 ? ' ' + esc(o.last4) : ''}</span>
+          <span class="cr-title">${esc(o.store || '가맹점 미상')}<span class="ca-amt ${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</span></span>
+          <span class="cr-sub">${o.kind ? `<span class="tag">${esc(o.kind)}</span>` : '<span class="tag warn-tag">분류 없음</span>'}
+            ${o.siteCode ? `<span class="code">${esc(o.siteCode)}</span> ${esc(site ? site.name : '')}` : '<span class="tag warn-tag">현장 없음</span>'}
+            ${(o.files || []).length ? ' 📎' : ''}${o.memo ? ' · ' + esc(o.memo) : ''}</span>
+          <span class="cr-right"><span class="st ${st}">${esc(o.status)}</span></span>
+        </div>`;
+      }).join('') : `<div class="empty"><h3>${CA.filter === '확인대기' ? '확인할 내역이 없습니다' : '내역이 없습니다'}</h3>
+        ${CA.filter === '확인대기' ? '카드 결제 문자가 오면 자동으로 여기에 쌓입니다.' : ''}</div>`}
+    </section>`;
+
+  $('caMonth').onchange = e => { CA.month = e.target.value; CA.sel = {}; renderCardTab(); };
+  $('caAdd').onclick = caAddForm;
+  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CA.filter = b.dataset.f; renderCardTab(); });
+  $('main').querySelectorAll('.ca-row').forEach(b => b.onclick = e => { if (e.target.classList.contains('ca-chk')) return; caOpen(b.dataset.id); });
+  $('main').querySelectorAll('.ca-chk').forEach(c => c.onchange = () => { CA.sel[c.dataset.id] = c.checked; renderCardTab(); });
+  if ($('caBulkClear')) $('caBulkClear').onclick = () => { CA.sel = {}; renderCardTab(); };
+  if ($('caBulkGo')) $('caBulkGo').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'ca_bulk', ids: selIds, siteCode: $('caBulkSite').value, kind: $('caBulkKind').value, confirm: true, month: '' });
+    CA.items = d.items; CA.sel = {}; renderCardTab(); toast(`${d.saved}건 처리했습니다`);
+  });
+}
+
+function caOpen(id) {
+  const o = CA.items.find(x => x.id === id); if (!o) return;
+  const files = o.files || [];
+  const body = openSheet(esc(o.store || '가맹점 미상'), `${esc(String(o.paidAt).slice(0, 16))} · ${esc(o.owner || '')}${o.last4 ? ' ' + esc(o.last4) : ''}`, `
+    <div class="card ca-head">
+      <b class="${o.amount < 0 ? 'minus' : ''}">${won(o.amount)}</b>
+      <span class="cr-sub">${esc(wonKorean(Math.abs(o.amount)))}</span>
+      <span class="st ${o.status === '확정' ? '완료' : ''}" style="margin-left:auto">${esc(o.status)}</span>
+    </div>
+    <div class="card">
+      <div class="f"><label>현장</label><select id="cSite"><option value="">선택</option>${S.sites.map(s => `<option value="${esc(s.code)}" ${s.code === o.siteCode ? 'selected' : ''}>${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="f"><span class="lb">분류</span>${segHtml('cKind', CA.kinds, o.kind || '기타')}</div>
+      <div class="f"><label>가맹점</label><input type="text" id="cStore" value="${esc(o.store)}"></div>
+      <div class="f"><label>내용 (시트에 들어갈 설명)</label><input type="text" id="cMemo" value="${esc(o.memo)}" placeholder="예: 데크자재_부소포함 일체"></div>
+      <label class="check"><input type="checkbox" id="cRemember" checked> <span>이 가맹점은 앞으로 <b id="cKindN">${esc(o.kind || '기타')}</b>로 자동 분류</span></label>
+    </div>
+    <div class="card"><h4>영수증</h4>
+      ${files.length ? `<div class="thumbs" id="cOld">${files.map(f => `<div class="thumb-wrap"><button type="button" class="thumb ${f.type && f.type.startsWith('image/') ? '' : 'doc'}" data-f="${esc(f.id)}"><span>${esc(f.name)}</span></button><button type="button" class="thumb-x" data-rm="${esc(f.id)}">×</button></div>`).join('')}</div>` : ''}
+      <div class="f" style="margin-top:10px"><input type="file" id="cFiles" multiple accept="image/*,.pdf" capture="environment"></div>
+      <div class="hint">10만원 이상은 영수증을 꼭 올려주세요.</div></div>
+    <div class="actions sticky">
+      ${CA.canAll ? '<button class="btn danger" type="button" id="cDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="cSkip">제외</button>
+      <button class="btn ghost" type="button" id="cSave">임시 저장</button>
+      <button class="btn" type="button" id="cDone">확정</button></div>`);
+  bindSegs(body, (n, v) => { if (n === 'cKind') $('cKindN').textContent = v; });
+  const removed = [];
+  const imgs = files.filter(f => !f.type || f.type.startsWith('image/')).map(f => f.id);
+  body.querySelectorAll('[data-f]').forEach(b => {
+    caFileUrl(o.id, b.dataset.f, true).then(u => { if (u.url) b.style.backgroundImage = `url("${u.url}")`; }).catch(() => {});
+    b.onclick = () => lightbox(imgs, imgs.indexOf(b.dataset.f), fid => caFileUrl(o.id, fid, false));
+  });
+  body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
+  const send = async (status) => {
+    const d = await api({ action: 'ca_save', id: o.id, remember: $('cRemember').checked, removeFiles: removed,
+      files: await readFiles($('cFiles')), month: '',
+      fields: { siteCode: $('cSite').value, kind: segVal(body, 'cKind'), store: $('cStore').value, memo: $('cMemo').value, status } });
+    CA.items = d.items; closeSheet(); renderCardTab();
+  };
+  $('cSave').onclick = e => submitting(e.target, async () => { await send(undefined); toast('저장했습니다'); });
+  $('cDone').onclick = e => submitting(e.target, async () => { await send('확정'); toast('확정했습니다'); });
+  $('cSkip').onclick = e => { if (confirm('이 건을 제외 처리할까요? (개인 사용·오입력 등)')) submitting(e.target, async () => { await send('제외'); toast('제외했습니다'); }); };
+  if ($('cDel')) $('cDel').onclick = e => { if (confirm('이 내역을 완전히 삭제할까요?')) submitting(e.target, async () => {
+    const d = await api({ action: 'ca_delete', id: o.id, month: '' }); CA.items = d.items; closeSheet(); renderCardTab(); toast('삭제했습니다');
+  }); };
+}
+
+const CA_URL = {};
+async function caFileUrl(id, fid, thumb) {
+  const k = (thumb ? 't' : 'f') + fid;
+  if (CA_URL[k]) return CA_URL[k];
+  const d = await api({ action: 'ca_file', id, fileId: fid, thumb: !!thumb });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return CA_URL[k] = { url: URL.createObjectURL(new Blob([arr], { type: d.type })), type: d.type, name: d.name };
+}
+
+function caAddForm() {
+  const body = openSheet('카드 사용 직접 입력', '문자가 오지 않은 결제', `
+    <div class="card">
+      <div class="cx-when"><div class="f"><label>결제일</label><input type="date" id="nDate" value="${today()}"></div>
+        <div class="f"><label>금액</label><input type="number" id="nAmt" inputmode="numeric" placeholder="원"></div></div>
+      <div class="f"><label>가맹점</label><input type="text" id="nStore"></div>
+      <div class="f"><label>현장</label><select id="nSite"><option value="">선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="f"><span class="lb">분류</span>${segHtml('nKind', CA.kinds, '부자재.철물')}</div>
+      <div class="f"><label>내용</label><input type="text" id="nMemo"></div>
+    </div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="nClose">닫기</button><button class="btn" type="button" id="nSave">저장</button></div>`);
+  bindSegs(body);
+  $('nClose').onclick = closeSheet;
+  $('nSave').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'ca_add', month: '', fields: { paidAt: $('nDate').value + ' 00:00', amount: $('nAmt').value,
+      store: $('nStore').value, siteCode: $('nSite').value, kind: segVal(body, 'nKind'), memo: $('nMemo').value } });
+    CA.items = d.items; closeSheet(); renderCardTab(); toast('등록했습니다');
+  });
 }
 
 // ---------- 현장보고 ----------
@@ -3068,12 +3986,18 @@ function cxOpenInner(id) {
   function loadLogs() {
     api({ action: 'cx_logs', id: o.id }).then(d => {
       const el = $('xLogs'); if (!el) return;
+      const canDel = d.canDeleteLog && S.me.role === 'admin';
       el.innerHTML = d.items.length ? d.items.map(l => {
-        const head = `<div class="log-head"><b class="log-date">${esc(l.at.slice(0, 16).replace(/-/g, '.'))}</b><span class="log-kind k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}">${esc(l.kind)}</span><span class="t">${esc(l.by)}</span></div>`;
+        const x = canDel ? `<button type="button" class="log-x" data-row="${l.row}" title="기록 삭제" aria-label="기록 삭제">×</button>` : '';
+        const head = `<div class="log-head"><b class="log-date">${esc(l.at.slice(0, 16).replace(/-/g, '.'))}</b><span class="log-kind k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}">${esc(l.kind)}</span><span class="t">${esc(l.by)}</span>${x}</div>`;
         return l.kind === 'AI 분석'
           ? `<li>${head}<details><summary>AI 분석 결과 보기</summary><div class="content" style="margin-top:6px">${esc(l.text)}</div></details></li>`
           : `<li class="k-${esc(l.kind.replace(/[^\w가-힣]/g, ''))}">${head}<div class="content">${esc(l.text)}</div></li>`;
       }).join('') : '<li class="t">기록 없음</li>';
+      el.querySelectorAll('.log-x').forEach(b => b.onclick = () => {
+        if (!confirm('이 상담 기록을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        submitting(b, async () => { await api({ action: 'cx_log_delete', id: o.id, row: b.dataset.row }); loadLogs(); toast('기록을 삭제했습니다'); });
+      });
     }).catch(() => {});
   }
   loadLogs();
