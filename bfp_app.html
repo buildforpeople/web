@@ -226,6 +226,7 @@
   .empty { padding: 48px 24px; text-align: center; color: var(--muted); }
   .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 17px; }
   .loading { padding: 80px 20px; text-align: center; color: var(--muted); }
+  .tab-badge { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; font-style: normal; text-align: center; vertical-align: 1px; }
   .fb-frame { display: block; width: 100%; border: 0; border-radius: 12px; background: var(--bg); min-height: 420px; }
 
   /* ===== 변경요청 ===== */
@@ -522,6 +523,47 @@
   .sc-bar.late { background: var(--red); }
   .sc-bar b { display: block; height: 100%; background: rgba(255,255,255,.45); border-radius: 3px; }
   .sc-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--heritage); z-index: 1; margin-left: 120px; }
+  /* 공정표 보기 1안: 전체공정 (일 단위 표) */
+  .sc-view { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; }
+  .sc-view button { border: 0; background: transparent; color: var(--muted); padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .sc-view button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .sc-wrap { overflow-x: auto; padding: 0; -webkit-overflow-scrolling: touch; }
+  .sc-grid { border-collapse: separate; border-spacing: 0; font-size: 11px; table-layout: fixed; }
+  .sc-grid th, .sc-grid td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 0; height: 24px; text-align: center; white-space: nowrap; }
+  .sc-grid th { background: var(--raise); color: var(--text); font-weight: 600; position: sticky; z-index: 2; }
+  .sc-grid thead tr:nth-child(1) th { top: 0; } .sc-grid thead tr:nth-child(2) th { top: 24px; } .sc-grid thead tr:nth-child(3) th { top: 48px; } .sc-grid thead tr:nth-child(4) th { top: 72px; }
+  .sc-grid .sc-h { width: 128px; min-width: 128px; text-align: left; padding: 0 8px; left: 0; z-index: 3; background: var(--raise); overflow: hidden; text-overflow: ellipsis; }
+  .sc-grid tbody .sc-h { position: sticky; background: var(--surface); font-weight: 600; cursor: pointer; }
+  .sc-grid tbody tr:hover .sc-h { background: var(--raise); }
+  .sc-grid .sc-d { width: 24px; min-width: 24px; }
+  .sc-grid .sc-we { background: #2A2A28; color: var(--muted); }
+  .sc-grid th.sc-we { background: #333331; }
+  .sc-grid .sc-sun { color: #E07B6A; } .sc-grid .sc-sat { color: #7FA7D8; }
+  .sc-grid th.sc-tdy { box-shadow: inset 0 0 0 2px var(--heritage); }
+  .sc-grid td.sc-tdy { background: rgba(4,102,200,.18); }
+  .sc-grid .sc-ph { background: var(--raise); color: var(--muted); font-size: 10px; text-align: left; padding: 0 8px; height: 18px; }
+  .sc-grid .sc-ph td, .sc-grid .sc-ph th { height: 18px; }
+  .sc-grid td.sc-span { position: relative; text-align: left; cursor: pointer; }
+  .sc-grid td.sc-span i { display: block; margin: 5px 2px; height: 14px; border-radius: 3px; background: var(--green-2); }
+  .sc-grid td.sc-span i.done { background: var(--gray); } .sc-grid td.sc-span i.doing { background: var(--amber); } .sc-grid td.sc-span i.late { background: var(--red); }
+  .sc-grid td.sc-span i b { display: block; height: 100%; background: rgba(255,255,255,.4); border-radius: 3px; }
+  .sc-grid td.sc-span em { position: absolute; left: 4px; top: 0; line-height: 24px; font-style: normal; font-size: 10.5px; color: #fff; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px #000, 0 0 2px #000; }
+  .sc-legend { display: flex; gap: 14px; padding: 8px 14px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+  .sc-legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; background: var(--green-2); }
+  /* 공정표 보기 2안: 월별 (달력) */
+  .sc-cal-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .sc-cal-top h3 { margin: 0; font-size: 16px; }
+  .sc-cal-top .nav button { border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); border-radius: 6px; padding: 5px 10px; margin-left: 6px; font-size: 13px; }
+  .sc-cal { display: grid; grid-template-columns: repeat(7, 1fr); border-left: 1px solid var(--line); }
+  .sc-cal .dow { padding: 6px 0; text-align: center; font-size: 11px; color: var(--muted); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--raise); }
+  .sc-week { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(7, 1fr); position: relative; min-height: 84px; }
+  .sc-day { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 4px 6px; font-size: 11px; color: var(--muted); min-width: 0; }
+  .sc-day.out { color: var(--line-strong); background: #232321; } .sc-day.we { background: #2A2A28; } .sc-day.sun { color: #E07B6A; } .sc-day.sat { color: #7FA7D8; }
+  .sc-day.tdy b { display: inline-block; background: var(--heritage); color: #fff; border-radius: 999px; min-width: 18px; height: 18px; line-height: 18px; text-align: center; }
+  .sc-chip { position: absolute; height: 18px; line-height: 18px; font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--green-2); color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; box-sizing: border-box; }
+  .sc-chip.done { background: var(--gray); } .sc-chip.doing { background: var(--amber); color: #1a1a1a; } .sc-chip.late { background: var(--red); }
+  .sc-chip.cont { border-top-left-radius: 0; border-bottom-left-radius: 0; } .sc-chip.more { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  @media (max-width: 640px) { .sc-week { min-height: 72px; } .sc-chip { font-size: 10px; padding: 0 4px; } }
   .sc-item .cr-title.done { color: var(--muted); text-decoration: line-through; }
   .sc-opt { display: grid; grid-template-columns: 1fr 90px 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
   .sc-opt input[type=number] { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; width: 100%; }
@@ -948,7 +990,7 @@ const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', i
 const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'card', 'board', 'est', 'fin', 'detail', 'sikgu', 'master'];
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
-const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '' };
+const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '', badges: {} };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -1006,7 +1048,7 @@ async function start() {
   $('loginMsg').style.color = 'var(--muted)';
   try {
     const d = await api({ action: 'me' });
-    Object.assign(S, { me: d.user, tabs: d.tabs, links: d.links, sites: d.sites });
+    Object.assign(S, { me: d.user, tabs: d.tabs, links: d.links, sites: d.sites, badges: d.badges || {} });
     $('loginView').hidden = true;
     $('appView').hidden = false;
     $('loginMsg').style.color = '';
@@ -1041,7 +1083,7 @@ function renderShell() {
 
   // 설계 → 현장관리 → 입금요청 → 변경요청 → 식구 순 (고객관리는 계약 전 단계라 맨 앞)
   $('tabs').innerHTML = TAB_ORDER.map(key => {
-    if (S.tabs.includes(key)) return `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}</button>`;
+    if (S.tabs.includes(key)) return `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}<i class="tab-badge" data-badge="${key}" ${S.badges[key] ? '' : 'hidden'}>${S.badges[key] || ''}</i></button>`;
     const l = S.links.find(x => x.key === key);
     return l ? `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>` : '';
   }).join('');
@@ -1084,6 +1126,11 @@ function fbDoc(html, data) {
 <style>:root{color-scheme:dark}:root[data-theme="dark"]{--bg:#262624;--panel:#2D2D2B;--line:#3A3937;--track:#3A3937}body{background:var(--bg)}</style>`;
   return /<head[^>]*>/i.test(h) ? h.replace(/<head[^>]*>/i, m => m + inject) : inject + h;
 }
+function setBadge(key, n) {
+  S.badges[key] = n;
+  const b = document.querySelector(`[data-badge="${key}"]`); if (!b) return;
+  b.hidden = !n; b.textContent = n || '';
+}
 function fbFrame(doc) {
   $('main').innerHTML = '<iframe class="fb-frame" id="fbFrame" title="재정 화면"></iframe>';
   const f = $('fbFrame');
@@ -1095,7 +1142,7 @@ function fbFrame(doc) {
 async function renderBoardTab() {
   if (!FB.board) {
     $('main').innerHTML = '<div class="loading">현장재정 보드를 불러오는 중...</div>';
-    try { const d = await api({ action: 'fb_board' }); FB.board = d.data; FB.boardHtml = d.html; }
+    try { const d = await api({ action: 'fb_board' }); FB.board = d.data; FB.boardHtml = d.html; setBadge('board', (d.data.alerts || []).length); }
     catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
     if (S.tab !== 'board') return;
   }
@@ -1670,7 +1717,69 @@ function dtForm(o) {
 }
 
 // ---------- 공정표 ----------
-const SC = { site: null, cond: null, tasks: [], meta: null, canEdit: false, loading: false };
+const SC = { site: null, cond: null, tasks: [], meta: null, canEdit: false, loading: false, view: 'all', month: '' };
+try { SC.view = localStorage.getItem('bfp_sc_view') === 'month' ? 'month' : 'all'; } catch (e) {}
+const SC_DOW = ['일', '월', '화', '수', '목', '금', '토'];
+function scCls(t) { return t.status === '완료' ? 'done' : (t.end < today() ? 'late' : t.status === '진행중' ? 'doing' : ''); }
+function scAddDays(d, n) { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return ymd(x); }
+
+// 1안 전체공정: 첨부 공사일정표처럼 하루 한 칸, 월·일·요일·일수 머리글 + 공종별 막대
+function scGridHtml(ts, print) {
+  const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
+  const n = dayDiff(first, last) + 1, days = [];
+  for (let i = 0; i < n; i++) { const d = new Date(scAddDays(first, i) + 'T00:00:00'); days.push({ s: ymd(d), d: d.getDate(), w: d.getDay(), m: d.getMonth() + 1, y: d.getFullYear() }); }
+  const months = []; days.forEach(x => { const k = `${x.y}-${x.m}`; const m = months[months.length - 1]; if (m && m.k === k) m.n++; else months.push({ k, label: `${x.m}월`, n: 1 }); });
+  const dc = x => (x.w === 0 ? 'sc-we sc-sun' : x.w === 6 ? 'sc-we sc-sat' : '') + (x.s === today() && !print ? ' sc-tdy' : '');
+  const head = `<thead>
+    <tr><th class="sc-h" rowspan="4">공종</th>${months.map(m => `<th colspan="${m.n}">${m.label}</th>`).join('')}</tr>
+    <tr>${days.map(x => `<th class="sc-d ${dc(x)}">${x.d}</th>`).join('')}</tr>
+    <tr>${days.map(x => `<th class="sc-d ${dc(x)}">${SC_DOW[x.w]}</th>`).join('')}</tr>
+    <tr>${days.map((x, i) => `<th class="sc-d ${dc(x)}">${i + 1}</th>`).join('')}</tr></thead>`;
+  let ph = '';
+  const body = ts.map(t => {
+    const a = dayDiff(first, t.start), len = dayDiff(t.start, t.end) + 1, cls = scCls(t);
+    const cells = [];
+    for (let i = 0; i < a; i++) cells.push(`<td class="sc-d ${dc(days[i])}"></td>`);
+    cells.push(`<td class="sc-span" colspan="${len}" data-tid="${esc(t.id)}" title="${esc(t.name)} ${esc(t.start)}~${esc(t.end)}"><i class="${cls}">${t.progress > 0 && t.progress < 100 ? `<b style="width:${t.progress}%"></b>` : ''}</i><em>${esc(t.name)}${t.owner ? ' · ' + esc(t.owner) : ''} (${t.days}일)</em></td>`);
+    for (let i = a + len; i < n; i++) cells.push(`<td class="sc-d ${dc(days[i])}"></td>`);
+    const phRow = t.phase !== ph ? (ph = t.phase, `<tr class="sc-ph"><td class="sc-h">${esc(t.phase)}</td><td colspan="${n}"></td></tr>`) : '';
+    return phRow + `<tr><td class="sc-h" data-tid="${esc(t.id)}">${esc(t.name)}</td>${cells.join('')}</tr>`;
+  }).join('');
+  return `<section class="panel sc-wrap"><table class="sc-grid">${head}<tbody>${body}</tbody></table>
+    <div class="sc-legend"><span><i></i>예정</span><span><i style="background:var(--amber)"></i>진행중</span><span><i style="background:var(--gray)"></i>완료</span><span><i style="background:var(--red)"></i>지연</span><span>회색 칸 = 주말</span></div></section>`;
+}
+
+// 2안 월별: 구글 캘린더처럼 달력 칸에 공종을 띠로 올린다
+function scMonthHtml(ts, print) {
+  const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
+  const ym = s => s.slice(0, 7);
+  if (!SC.month || SC.month < ym(first) || SC.month > ym(last)) SC.month = (today() >= first && today() <= last) ? ym(today()) : ym(first);
+  const [Y, M] = SC.month.split('-').map(Number);
+  const m0 = new Date(Y, M - 1, 1), m1 = new Date(Y, M, 0);
+  const gridStart = scAddDays(ymd(m0), -m0.getDay());
+  const weeks = []; for (let w = 0; ; w++) { const ws = scAddDays(gridStart, w * 7); if (ws > ymd(m1)) break; weeks.push(ws); }
+  const prev = ymd(new Date(Y, M - 2, 1)), next = ymd(new Date(Y, M, 1));
+  const weekHtml = weeks.map(ws => {
+    const we = scAddDays(ws, 6);
+    const segs = ts.filter(t => t.start <= we && t.end >= ws).map(t => {
+      const s = t.start < ws ? ws : t.start, e = t.end > we ? we : t.end;
+      return { t, c0: dayDiff(ws, s), c1: dayDiff(ws, e), cont: t.start < ws, more: t.end > we };
+    }).sort((a, b) => a.c0 - b.c0 || (b.c1 - b.c0) - (a.c1 - a.c0));
+    const lanes = []; segs.forEach(g => { let i = 0; while (lanes[i] && lanes[i] > g.c0) i++; lanes[i] = g.c1 + 1; g.lane = i; });
+    const dayCells = Array.from({ length: 7 }, (_, i) => { const d = scAddDays(ws, i); const dd = new Date(d + 'T00:00:00');
+      const out = dd.getMonth() + 1 !== M, cls = [out ? 'out' : '', i === 0 ? 'we sun' : i === 6 ? 'we sat' : '', d === today() && !print ? 'tdy' : ''].join(' ');
+      return `<div class="sc-day ${cls}"><b>${dd.getDate()}${!out && dd.getDate() === 1 ? '일' : ''}</b></div>`; }).join('');
+    const chips = segs.map(g => `<span class="sc-chip ${scCls(g.t)} ${g.cont ? 'cont' : ''} ${g.more ? 'more' : ''}" data-tid="${esc(g.t.id)}"
+      style="left:calc(${g.c0 / 7 * 100}% + 2px);width:calc(${(g.c1 - g.c0 + 1) / 7 * 100}% - 4px);top:${24 + g.lane * 21}px" title="${esc(g.t.name)} ${esc(g.t.start)}~${esc(g.t.end)}">${g.cont ? '' : ''}${esc(g.t.name)}</span>`).join('');
+    return `<div class="sc-week" style="min-height:${Math.max(84, 28 + lanes.length * 21)}px">${dayCells}${chips}</div>`;
+  }).join('');
+  return `<section class="panel">
+    <div class="sc-cal-top"><h3>${Y}년 ${M}월</h3>${print ? '' : `<span class="nav">
+      <button type="button" data-mv="${prev.slice(0, 7)}" ${prev.slice(0, 7) < ym(first) ? 'disabled' : ''}>‹ 이전 달</button>
+      <button type="button" data-mv="${(today() >= first && today() <= last ? today() : first).slice(0, 7)}">이번 달</button>
+      <button type="button" data-mv="${next.slice(0, 7)}" ${next.slice(0, 7) > ym(last) ? 'disabled' : ''}>다음 달 ›</button></span>`}</div>
+    <div class="sc-cal">${SC_DOW.map((d, i) => `<div class="dow ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</div>`).join('')}${weekHtml}</div></section>`;
+}
 
 async function scLoad(code) {
   if (SC.site === code || SC.loading) return;
@@ -1711,6 +1820,9 @@ function scRender(el) {
 
   el.innerHTML = `
     <div class="cr-bar"><h2 style="font-size:17px">공정표 <span class="cr-sub" style="font-weight:500">${esc(first)} ~ ${esc(last)}</span></h2>
+      <span class="sc-view" role="group" aria-label="보기 방식">
+        <button type="button" data-v="all" aria-pressed="${SC.view === 'all'}">전체공정</button>
+        <button type="button" data-v="month" aria-pressed="${SC.view === 'month'}">월별</button></span>
       <button class="btn ghost" type="button" id="scPrint">🖨 인쇄</button>
       ${SC.canEdit ? '<button class="btn ghost" type="button" id="scShift">이후 공정 순연</button>' : ''}
       ${S.me.role === 'admin' ? '<button class="btn ghost" type="button" id="scReset">다시 만들기</button>' : ''}</div>
@@ -1725,19 +1837,7 @@ function scRender(el) {
       <div class="ds-next">${now.length ? `진행 중 · <b>${esc(now.map(t => t.name).join(', '))}</b>` : next.length ? `다음 · <b>${esc(next[0].name)}</b> ${esc(next[0].start.slice(5).replace('-', '/'))} 시작` : '모든 공정 완료'}</div>
     </section>
 
-    <section class="panel sc-gantt">
-      <div class="sc-months">${months.map(m => `<span style="left:${m.left}%;width:${m.width}%">${m.label}</span>`).join('')}</div>
-      <div class="sc-rows">
-        ${todayLeft !== null ? `<i class="sc-today" style="left:${todayLeft}%"></i>` : ''}
-        ${ts.map(t => {
-          const l = dayDiff(first, t.start) / span * 100, w = Math.max(1.2, (dayDiff(t.start, t.end) + 1) / span * 100);
-          const late2 = t.status !== '완료' && t.end < today();
-          return `<div class="sc-row" data-id="${esc(t.id)}"><span class="sc-name">${esc(t.name)}</span>
-            <span class="sc-track"><i class="sc-bar ${t.status === '완료' ? 'done' : late2 ? 'late' : t.status === '진행중' ? 'doing' : ''}" style="left:${l}%;width:${w}%">
-              ${t.progress > 0 && t.progress < 100 ? `<b style="width:${t.progress}%"></b>` : ''}</i></span></div>`;
-        }).join('')}
-      </div>
-    </section>
+    ${SC.view === 'month' ? scMonthHtml(ts) : scGridHtml(ts)}
 
     <section class="panel">
       ${(() => { let ph = ''; return ts.map(t => {
@@ -1751,7 +1851,9 @@ function scRender(el) {
         </button>`; }).join(''); })()}
     </section>`;
 
-  el.querySelectorAll('.sc-item, .sc-row').forEach(b => b.onclick = () => scTaskForm(b.dataset.id));
+  el.querySelectorAll('.sc-item, .sc-row, [data-tid]').forEach(b => b.onclick = () => scTaskForm(b.dataset.id || b.dataset.tid));
+  el.querySelectorAll('.sc-view button').forEach(b => b.onclick = () => { SC.view = b.dataset.v; try { localStorage.setItem('bfp_sc_view', SC.view); } catch (e) {} scRender(el); });
+  el.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { SC.month = b.dataset.mv; scRender(el); });
   if ($('scShift')) $('scShift').onclick = scShiftForm;
   if ($('scReset')) $('scReset').onclick = () => { if (confirm('공정표를 지우고 다시 만들까요? 입력한 진행 상황도 함께 지워집니다.')) { SC.cond = null; SC.tasks = []; scRender(el); } };
   $('scPrint').onclick = scPrint;
@@ -1864,6 +1966,24 @@ function scShiftForm() {
 function scPrint() {
   const s = currentSite(), ts = SC.tasks;
   const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+  const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
+  const title = `${esc(s.code)} ${esc(s.name)} · ${esc(first)} ~ ${esc(last)} · ${SC.cond && SC.cond.area ? esc(SC.cond.area) + '평 · ' : ''}(주)사람사는집종합건설`;
+  if (SC.view === 'month' || SC.view === 'all') {
+    const month = SC.view === 'month';
+    const cw = Math.max(9, Math.min(22, Math.floor(1460 / (dayDiff(first, last) + 1))));
+    w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>공정표 ${esc(s.code)}</title><style>
+      :root{--line:#C9C9C4;--line-strong:#9A9A95;--raise:#EFEFEC;--surface:#fff;--bg:#fff;--ink:#000;--text:#222;--muted:#666;--green-2:#4F86C6;--amber:#E0A72E;--gray:#9A9A95;--red:#D9534F;--heritage:#0466C8}
+      body{font-family:"Malgun Gothic",sans-serif;font-size:11px;color:#222;margin:14px}
+      h1{font-size:17px;margin:0 0 2px}.sub{color:#666;margin-bottom:8px;font-size:11px}
+      .panel{border:1px solid var(--line)}.sc-wrap{overflow:visible}
+      ${[...document.styleSheets].flatMap(ss => { try { return [...ss.cssRules]; } catch (e) { return []; } }).map(r => r.cssText).filter(t => /\.sc-(grid|wrap|legend|cal|week|day|chip|ph|h\b|d\b|we|sun|sat|span)/.test(t)).join('\n')}
+      .sc-grid th{position:static;background:#EFEFEC;color:#000}.sc-grid td.sc-h{position:static;background:#fff}.sc-grid .sc-we{background:#E6E6E2}.sc-grid th.sc-we{background:#DADAD6}
+      .sc-grid .sc-d{width:${cw}px;min-width:${cw}px;font-size:8.5px}.sc-grid .sc-h{width:104px;min-width:104px;font-size:10px}.sc-grid td.sc-span em{color:#000;text-shadow:none;font-size:9px}.sc-day.out{background:#F4F4F2}.sc-day.we{background:#EDEDEA}.sc-chip{color:#fff}
+      button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}@page{size:${month ? 'A4 portrait' : 'A3 landscape'};margin:8mm}}
+    </style></head><body><button onclick="window.print()">인쇄</button>
+      <h1>${month ? '월별 공정표' : 'Construction Progress Schedule'}</h1><div class="sub">${title}</div>${month ? scMonthHtml(ts, true) : scGridHtml(ts, true)}</body></html>`);
+    w.document.close(); return;
+  }
   const rows = ts.map(t => `<tr class="${t.status === '완료' ? 'done' : t.end < today() && t.status !== '완료' ? 'late' : ''}">
     <td>${esc(t.phase)}</td><td>${esc(t.name)}</td><td>${t.days}일</td><td>${esc(t.start)}</td><td>${esc(t.end)}</td>
     <td>${esc(t.status)}${t.progress && t.progress < 100 ? ` ${t.progress}%` : ''}</td><td>${esc(t.owner)}</td><td>${esc(t.note)}</td></tr>`).join('');
