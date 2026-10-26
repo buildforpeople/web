@@ -228,6 +228,17 @@
   .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 17px; }
   .loading { padding: 80px 20px; text-align: center; color: var(--muted); }
   .tab-badge { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; font-style: normal; text-align: center; vertical-align: 1px; }
+  .vw-list { padding: 6px 10px; }
+  .vw-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  .vw-item:last-child { border-bottom: 0; }
+  .vw-item.on .vw-pick { color: var(--accent); }
+  .vw-pick { flex: 1; text-align: left; background: none; border: 0; color: var(--text); padding: 4px 6px; border-radius: 6px; }
+  .vw-pick:hover { background: var(--raise); }
+  .vw-pick b { display: block; font-size: 14px; } .vw-pick small { color: var(--muted); font-size: 12px; }
+  .vw-item .btn { padding: 6px 10px; font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+  .vw-frame-wrap { margin-top: 12px; padding: 0; overflow: hidden; }
+  .vw-frame { display: block; width: 100%; height: min(72vh, 760px); border: 0; background: #000; }
+  .vw-note { padding: 8px 12px; font-size: 12px; color: var(--muted); }
   .fb-frame { display: block; width: 100%; border: 0; border-radius: 12px; background: var(--bg); min-height: 420px; }
 
   /* ===== 변경요청 ===== */
@@ -1267,7 +1278,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '공정표', '건축주 계정'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '공정표', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   $('toInfo').onclick = () => selectTab('info');
   if (S.siteSub === '대시보드') { ovRenderSite($('subBody')); return; }
@@ -1279,6 +1290,7 @@ function renderSiteTab() {
     return;
   }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
+  if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
   if (S.siteSub === '현장보고') {
     rpLoad(s.code).then(() => {
       if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '현장보고' && $('subBody')) rpRender($('subBody'));
@@ -1714,6 +1726,60 @@ function dtForm(o) {
     const i = DT.items.findIndex(x => x.id === d.item.id);
     if (i >= 0) DT.items[i] = d.item; else DT.items.push(d.item);
     closeSheet(); renderDetailTab(); toast('저장했습니다');
+  });
+}
+
+// ---------- 360 VIEW (Cupix 링크) ----------
+const VW = { site: null, items: [], canEdit: false, open: null };
+async function vwRender(code) {
+  const el = $('subBody'); if (!el) return;
+  if (VW.site !== code) {
+    try { const d = await api({ action: 'vw_list', siteCode: code }); Object.assign(VW, { site: code, items: d.items, canEdit: d.canEdit, open: (d.items[0] || {}).id || null }); }
+    catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (S.tab !== 'site' || S.siteCode !== code || S.siteSub !== '360 VIEW' || !$('subBody')) return;
+  }
+  const cur = VW.items.find(x => x.id === VW.open) || VW.items[0];
+  $('subBody').innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">360 VIEW <span class="cr-sub" style="font-weight:500">Cupix ${VW.items.length}회차</span></h2>
+      ${VW.canEdit ? '<button class="btn" type="button" id="vwAdd">+ 링크 등록</button>' : ''}</div>
+    ${VW.items.length ? `
+    <section class="panel vw-list">
+      ${VW.items.map(x => `<div class="vw-item ${cur && x.id === cur.id ? 'on' : ''}" data-id="${esc(x.id)}">
+        <button type="button" class="vw-pick"><b>${esc(x.title)}</b><small>${esc(x.shotDate || '')}${x.memo ? ' · ' + esc(x.memo) : ''}</small></button>
+        <a class="btn ghost" href="${esc(x.url)}" target="_blank" rel="noopener">새 창에서 열기${EXT_ICON}</a>
+        ${VW.canEdit ? `<button type="button" class="btn ghost vw-edit" data-id="${esc(x.id)}">수정</button>` : ''}
+      </div>`).join('')}
+    </section>
+    ${cur ? `<section class="panel vw-frame-wrap"><iframe class="vw-frame" src="${esc(cur.url)}" allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer" allowfullscreen title="${esc(cur.title)}"></iframe>
+      <div class="vw-note">화면이 비어 있으면 Cupix 쪽에서 삽입을 막은 링크입니다. 위 '새 창에서 열기'로 보세요.</div></section>` : ''}`
+    : `<section class="panel empty"><h3>등록된 360 VIEW가 없습니다</h3>${VW.canEdit ? 'Cupix에서 공유 링크를 복사해 "+ 링크 등록"으로 넣어 주세요.' : '촬영 후 등록되면 여기서 볼 수 있습니다.'}</section>`}`;
+  $('subBody').querySelectorAll('.vw-pick').forEach(b => b.onclick = () => { VW.open = b.closest('.vw-item').dataset.id; vwRender(code); });
+  $('subBody').querySelectorAll('.vw-edit').forEach(b => b.onclick = () => vwForm(code, VW.items.find(x => x.id === b.dataset.id)));
+  if ($('vwAdd')) $('vwAdd').onclick = () => vwForm(code, null);
+}
+function vwForm(code, o) {
+  const s = currentSite();
+  const body = openSheet(o ? '360 VIEW 수정' : '360 VIEW 링크 등록', `${esc(s.code)} ${esc(s.name)}`, `
+    <div class="card">
+      <div class="f"><label for="vwUrl">Cupix 공유 링크</label><input type="url" id="vwUrl" value="${esc(o ? o.url : '')}" placeholder="https://..." inputmode="url"></div>
+      <div class="cx-when">
+        <div class="f"><label for="vwTitle">제목</label><input type="text" id="vwTitle" value="${esc(o ? o.title : '')}" placeholder="예: 골조 완료"></div>
+        <div class="f"><label for="vwDate">촬영일</label><input type="date" id="vwDate" value="${esc(o ? o.shotDate : today())}"></div>
+      </div>
+      <div class="f"><label for="vwMemo">메모 (선택)</label><input type="text" id="vwMemo" value="${esc(o ? o.memo : '')}"></div>
+    </div>
+    <div class="actions">
+      ${o ? '<button class="btn danger" type="button" id="vwDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="vwClose">닫기</button><button class="btn" type="button" id="vwSave">저장</button></div>`);
+  $('vwClose').onclick = closeSheet;
+  $('vwSave').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'vw_save', siteCode: code, id: o ? o.id : '', url: $('vwUrl').value, title: $('vwTitle').value, shotDate: $('vwDate').value, memo: $('vwMemo').value });
+    VW.items = d.items; VW.open = d.item.id; closeSheet(); vwRender(code); toast('저장했습니다');
+  });
+  if ($('vwDel')) $('vwDel').onclick = e => submitting(e.target, async () => {
+    if (!confirm('이 링크를 지울까요?')) return;
+    const d = await api({ action: 'vw_delete', siteCode: code, id: o.id });
+    VW.items = d.items; VW.open = null; closeSheet(); vwRender(code); toast('지웠습니다');
   });
 }
 
