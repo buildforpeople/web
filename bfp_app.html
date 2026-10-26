@@ -226,6 +226,7 @@
   .empty { padding: 48px 24px; text-align: center; color: var(--muted); }
   .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 17px; }
   .loading { padding: 80px 20px; text-align: center; color: var(--muted); }
+  .fb-frame { display: block; width: 100%; border: 0; border-radius: 12px; background: var(--bg); min-height: 420px; }
 
   /* ===== 변경요청 ===== */
   .cr-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
@@ -943,8 +944,8 @@
 const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', info: '현장정보', site: '현장관리', change: '변경요청', card: '법인카드', detail: '회사디테일' };
-const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'card', 'detail', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', info: '현장정보', site: '현장관리', change: '변경요청', card: '법인카드', board: '현장재정', est: '견적기', detail: '회사디테일' };
+const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'card', 'board', 'est', 'fin', 'detail', 'sikgu', 'master'];
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
 const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '' };
@@ -1054,7 +1055,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card'].includes(t);
+  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est'].includes(t);
   renderTab();
 }
 
@@ -1066,10 +1067,49 @@ function renderTab() {
   if (S.tab === 'info') return renderInfoTab();
   if (S.tab === 'detail') return renderDetailTab();
   if (S.tab === 'card') return renderCardTab();
+  if (S.tab === 'board') return renderBoardTab();
+  if (S.tab === 'est') return renderEstTab();
   if (S.tab === 'design') return renderDesignTab();
   if (S.tab === 'site') return renderSiteTab();
   if (S.tab === 'change') return renderChangeTab();
   if (S.tab === 'cx') return renderCxTab();
+}
+
+// ---------- 재정 메뉴 (현장재정 보드 · 견적기) ----------
+// 화면 파일은 서버가 권한 확인 후 내려주고, 여기서는 iframe 안에 그대로 띄운다 (다크 테마·데이터 주입)
+const FB = { board: null, est: null, boardHtml: '', estHtml: '' };
+function fbDoc(html, data) {
+  let h = html.replace(/<html(\s[^>]*)?>/i, '<html data-theme="dark">');
+  const inject = `<script>window.BFP_DATA=${data ? JSON.stringify(data).replace(/<\//g, '<\\/') : 'null'};<\/script>
+<style>:root{color-scheme:dark}:root[data-theme="dark"]{--bg:#262624;--panel:#2D2D2B;--line:#3A3937;--track:#3A3937}body{background:var(--bg)}</style>`;
+  return /<head[^>]*>/i.test(h) ? h.replace(/<head[^>]*>/i, m => m + inject) : inject + h;
+}
+function fbFrame(doc) {
+  $('main').innerHTML = '<iframe class="fb-frame" id="fbFrame" title="재정 화면"></iframe>';
+  const f = $('fbFrame');
+  const fit = () => { if (!document.body.contains(f)) { window.removeEventListener('resize', fit); return; }
+    f.style.height = Math.max(420, window.innerHeight - f.getBoundingClientRect().top - 12) + 'px'; };
+  window.addEventListener('resize', fit); fit();
+  f.srcdoc = doc;
+}
+async function renderBoardTab() {
+  if (!FB.board) {
+    $('main').innerHTML = '<div class="loading">현장재정 보드를 불러오는 중...</div>';
+    try { const d = await api({ action: 'fb_board' }); FB.board = d.data; FB.boardHtml = d.html; }
+    catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'board') return;
+  }
+  if (!FB.board.sites.length) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 마스터에 등록되어 있는지 확인해 주세요.</div>'; return; }
+  fbFrame(fbDoc(FB.boardHtml, FB.board));
+}
+async function renderEstTab() {
+  if (!FB.estHtml) {
+    $('main').innerHTML = '<div class="loading">현장 견적기를 불러오는 중...</div>';
+    try { const d = await api({ action: 'fb_est' }); FB.estHtml = d.html; }
+    catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'est') return;
+  }
+  fbFrame(fbDoc(FB.estHtml, null));
 }
 
 // ---------- Did you know ----------
@@ -3324,10 +3364,34 @@ function rpForm(item, date) {
       action: 'rp_save', id: editing ? item.id : '', siteCode: s.code, date: editing ? item.date : $('rDate').value,
       weather: segVal(body, 'rW'), tempMin: $('rTmin').value, tempMax: $('rTmax').value,
       tomorrow: $('rTomorrow').value, note: $('rNote').value, work, materials, equipment,
-      photos: await readFiles($('rPhotos')), removePhotos: removed
+      photoRefs: await rpUploadPhotos($('rPhotos'), s.code, editing ? item.date : $('rDate').value, e.target), removePhotos: removed
     });
     RP.site = null; OV.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast(editing ? '수정했습니다' : '현장보고를 등록했습니다');
   });
+}
+
+// 사진은 줄인 뒤 3장씩 묶어 4개까지 동시에 올린다 (한 번에 다 보내면 1분 넘게 걸림)
+async function rpUploadPhotos(input, siteCode, date, btn) {
+  const picked = Array.from(input.files || []);
+  if (!picked.length) return [];
+  const total = picked.length; let done = 0;
+  const say = t => { if (btn) btn.textContent = t; };
+  say(`사진 준비 중 0/${total}`);
+  const files = [];
+  for (const f of picked) { files.push((await readFiles({ files: [f] }))[0]); done++; say(`사진 준비 중 ${done}/${total}`); }
+  const batches = []; for (let i = 0; i < files.length; i += 3) batches.push(files.slice(i, i + 3));
+  const refs = new Array(batches.length); let sent = 0, next = 0;
+  say(`사진 올리는 중 0/${total}`);
+  const worker = async () => {
+    while (next < batches.length) {
+      const i = next++;
+      const d = await api({ action: 'rp_photo_up', siteCode, date, photos: batches[i] });
+      refs[i] = d.photos; sent += batches[i].length; say(`사진 올리는 중 ${sent}/${total}`);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, batches.length) }, worker));
+  say('저장 중...');
+  return refs.flat();
 }
 
 function rpMatRow(m = {}) {
@@ -3951,10 +4015,10 @@ async function readFiles(input) {
   for (const f of Array.from(input.files || [])) {
     if (f.type.startsWith('image/') && f.type !== 'image/gif') {
       const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(f); });
-      const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const k = Math.min(1, 1400 / Math.max(img.width, img.height));
       const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      out.push({ name: f.name.replace(/\.\w+$/, '') + '.jpg', type: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.82).split(',')[1] });
+      out.push({ name: f.name.replace(/\.\w+$/, '') + '.jpg', type: 'image/jpeg', data: c.toDataURL('image/jpeg', 0.78).split(',')[1] });
     } else {
       if (f.size > 10 * 1024 * 1024) throw new Error(f.name + ': 10MB 이하 파일만 첨부할 수 있습니다.');
       const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
