@@ -2526,6 +2526,7 @@ function caRenderSheet() {
       ${caPeriodSelect()}
       <button class="btn ghost" type="button" id="caList">목록 보기</button>
       ${CA.canAll ? `<button class="btn ghost" type="button" id="caPaste">이용내역 불러오기</button>` : ''}
+      ${CA.canAll && CA.items.some(o => !o.siteCode) ? `<button class="btn ghost" type="button" id="caAuto">현장 자동 지정 (${CA.items.filter(o => !o.siteCode).length})</button>` : ''}
       <button class="btn ghost" type="button" id="caAdd">+ 직접 입력</button>
       <button class="btn ghost" type="button" id="caPrint">인쇄</button></div>
     <div class="ca-print-title" id="caPrintTitle"></div>
@@ -2551,6 +2552,13 @@ function caRenderSheet() {
   if ($('caPaste')) $('caPaste').onclick = caPasteForm;
   $('caAdd').onclick = caAddForm;
   $('caPrint').onclick = () => window.print();
+  if ($('caAuto')) $('caAuto').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'ca_autosite', month: '' });
+    CA.items = d.items; CA.sel = {};
+    caRenderSheet();
+    const how = Object.entries(d.how || {}).map(([k, v]) => `${k} ${v}`).join(' · ');
+    toast(`${d.saved}건 현장 지정${how ? ' (' + how + ')' : ''}${d.none ? ` · 담당 현장을 못 찾은 ${d.none}건은 그대로` : ''}`);
+  });
   caBindRows($('main'));
   caBindChecks();
   caBulkBar();
@@ -2812,6 +2820,7 @@ function caImportResult(d) {
   const block = f => {
     const det = f.details || [];
     const dups = det.filter(x => x.type === '중복'), skips = det.filter(x => x.type === '제외'), ign = det.filter(x => x.type === '읽지 않음');
+    const guess = det.filter(x => x.type === '현장 추정');
     const list = (arr, cls) => arr.length ? `<ul class="ca-res-list ${cls}">${arr.map(x =>
       `<li><span>${esc(x.text)}</span><small>${esc(x.why)}</small></li>`).join('')}</ul>` : '';
     return `<div class="card"><h4>${esc(f.name)}</h4>
@@ -2819,6 +2828,7 @@ function caImportResult(d) {
       <div class="ca-res-n"><span><b>${f.added}</b>건 등록</span><span class="${f.dup ? 'w' : ''}"><b>${f.dup}</b>건 중복</span><span class="${f.skip ? 'w' : ''}"><b>${f.skip}</b>건 제외</span></div>
       ${dups.length ? '<h5>중복으로 넣지 않은 것</h5>' + list(dups, 'dup') : ''}
       ${skips.length ? '<h5>제외한 것</h5>' + list(skips, 'skip') : ''}
+      ${guess.length ? '<h5>현장을 추정해서 넣은 것 — 맞는지 확인해 주세요</h5>' + list(guess, 'dup') : ''}
       ${ign.length ? '<details class="ca-res-ign"><summary>읽지 않은 줄 ' + ign.length + '개 (제목·합계 등) — 결제가 섞여 있지 않은지 확인</summary>' + list(ign, 'ign') + '</details>' : ''}`}</div>`;
   };
   const body = openSheet('불러오기 결과', `${d.added}건 등록 · 중복 ${d.dup}건 · 제외 ${d.skip}건`, `
