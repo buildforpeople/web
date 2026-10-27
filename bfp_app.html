@@ -112,7 +112,9 @@
   .ca-grid th.t { width: 112px; } .ca-grid th.st0 { width: 130px; } .ca-grid th.w { width: 108px; } .ca-grid th.c { width: 66px; }
   .ca-grid td { padding: 0; border-bottom: 1px solid #383836; height: 32px; vertical-align: middle; }
   .ca-grid td + td { border-left: 1px solid #383836; }
-  .ca-grid td.d { padding: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ca-grid td.d { padding: 0 8px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ca-sort { background: none; border: 0; color: inherit; font: inherit; font-weight: inherit; padding: 0; cursor: pointer; white-space: nowrap; }
+  .ca-sort span { font-size: 9px; color: var(--muted); }
   .ca-grid td.store, .ca-grid td.who { padding: 0 8px; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ca-grid td.c { text-align: center; }
   .ca-grid td.who { padding: 0; } .ca-grid td.who select { font-size: 12.5px; }
@@ -2687,7 +2689,7 @@ function stQtyForm() {
 }
 
 // ---------- 법인카드 ----------
-const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '전체', canAll: false, loaded: false, sel: {}, view: 'sheet', siteTab: '*', colf: {}, sum: null, docLimit: 100000 };
+const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '전체', canAll: false, loaded: false, sel: {}, view: 'sheet', siteTab: '*', colf: {}, sum: null, docLimit: 100000, desc: true };   // desc: 최신이 위
 
 async function renderCardTab() {
   if (!CA.loaded || CA.reload) {
@@ -2895,7 +2897,8 @@ function caDateCell(v) {
 }
 function caSheetRows() {
   const rows = CA.items.filter(caInPeriod);
-  return rows.slice().sort((a, b) => String(a.paidAt).localeCompare(String(b.paidAt)) || String(a.id).localeCompare(String(b.id)));
+  const d = CA.desc ? -1 : 1;
+  return rows.slice().sort((a, b) => d * (String(a.paidAt).localeCompare(String(b.paidAt)) || String(a.id).localeCompare(String(b.id))));
 }
 function caSheetSites(rows) {
   const g = {};
@@ -2981,7 +2984,7 @@ function caRenderSheet() {
     <div id="caBulkBar"></div>
     <section class="panel ca-gridwrap">
       ${vis.length ? `<table class="ca-grid">
-        <thead><tr><th class="ck"><input type="checkbox" id="caCkAll" aria-label="모두 선택"></th><th class="d">일시</th>
+        <thead><tr><th class="ck"><input type="checkbox" id="caCkAll" aria-label="모두 선택"></th><th class="d"><button type="button" class="ca-sort" id="caSortDate" title="정렬 바꾸기">일시 <span>${CA.desc ? '▼' : '▲'}</span></button></th>
           ${caTh('kind', 'k', '분류')}${caTh('memo', '', '지출내용')}<th class="r">금액</th>
           ${caTh('siteCode', 's', '현장')}${caTh('trade', 't', '공종')}${caTh('store', 'st0', '가맹점')}${caTh('owner', 'w', '사용자')}
           ${caTh('docs', 'c', '증빙')}</tr></thead>
@@ -3007,6 +3010,7 @@ function caRenderSheet() {
   });
   caBindRows($('main'));
   caBindChecks();
+  if ($('caSortDate')) $('caSortDate').onclick = () => { CA.desc = !CA.desc; caRenderSheet(); };
   caBulkBar();
   $('main').querySelectorAll('.ca-fbtn').forEach(b => b.onclick = e => { e.stopPropagation(); caFilterPop(b); });
 }
