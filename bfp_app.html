@@ -31,7 +31,6 @@
   :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
   [hidden] { display: none !important; }
 
-  /* 로그인 */
   .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
   .login-card { width: min(380px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 36px 28px 28px; text-align: center; }
   .login-logo { width: 168px; display: block; margin: 0 auto 16px; }
@@ -40,7 +39,6 @@
   #gbtn { display: flex; justify-content: center; min-height: 44px; }
   .login-msg { margin-top: 16px; font-size: 13px; color: var(--red); min-height: 18px; }
 
-  /* 상단 */
   .top { background: var(--green); color: #fff; position: sticky; top: 0; z-index: 10; padding-top: env(safe-area-inset-top); }
   .top-row { max-width: 1080px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
   .brand { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; display: flex; align-items: center; gap: 9px; }
@@ -103,7 +101,7 @@
   #caBulkBar .ca-bulk { margin: 0 0 10px; position: sticky; top: 0; z-index: 3; }
   .ca-grid th.d { width: 104px; }
   .ca-grid td.d small { font-size: 11px; color: var(--muted); opacity: .8; margin-left: 3px; }
-  /* 옆으로 밀어도 체크·날짜는 왼쪽에 붙어 있게 */
+
   .ca-grid th.ck, .ca-grid td.ck { position: sticky; left: 0; z-index: 2; background: var(--surface); }
   .ca-grid th.d, .ca-grid td.d { position: sticky; left: 34px; z-index: 2; background: var(--surface); box-shadow: 1px 0 0 var(--line); }
   .ca-grid thead th.ck, .ca-grid thead th.d { background: #31312F; z-index: 4; }
@@ -196,7 +194,6 @@
   main { max-width: 1080px; margin: 0 auto; padding: 20px 20px 60px; }
   .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 
-  /* 현장 요약 */
   .site-head { padding: 20px 22px 18px; }
   .site-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
   .code { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--heritage); background: var(--heritage-soft); border-radius: 6px; padding: 2px 8px; font-size: 14px; letter-spacing: .03em; }
@@ -229,6 +226,7 @@
   .empty { padding: 48px 24px; text-align: center; color: var(--muted); }
   .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 17px; }
   .loading { padding: 80px 20px; text-align: center; color: var(--muted); }
+  .tab-grp { display: none; }
   .tab-badge { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; font-style: normal; text-align: center; vertical-align: 1px; }
   .vw-list { padding: 6px 10px; }
   .vw-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
@@ -243,7 +241,6 @@
   .vw-note { padding: 8px 12px; font-size: 12px; color: var(--muted); }
   .fb-frame { display: block; width: 100%; border: 0; border-radius: 12px; background: var(--bg); min-height: 420px; }
 
-  /* ===== 변경요청 ===== */
   .cr-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
   .cr-bar h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; margin-right: auto; }
   .btn { border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 600; background: var(--green); color: #fff; }
@@ -344,7 +341,7 @@
   input[type=file] { width: 100%; font-size: 14px; color: var(--muted); }
   input[type=file]::file-selector-button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 8px 14px; font-weight: 600; margin-right: 10px; font-family: inherit; cursor: pointer; }
   .fab { display: none; }
-  /* ===== 고객관리 ===== */
+
   .badge { background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; padding: 0 5px; text-align: center; margin-left: 2px; }
   .cx-alert { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .cx-alert button { flex: 1 1 220px; text-align: left; border: 1px solid #6A3A35; background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 12px 16px; font-weight: 700; }
@@ -412,7 +409,7 @@
     .cx-plan { grid-template-columns: 1fr 1fr; }
     .cx-plan .f:first-child { grid-column: 1 / -1; }
   }
-  /* ===== 설계 일정 ===== */
+
   .ds-time { padding: 14px 18px; margin-bottom: 14px; }
   .ds-time-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
   .ds-now { font-weight: 700; font-size: 17px; }
@@ -423,7 +420,7 @@
   .ds-phase { padding: 10px 18px 6px; font-size: 12px; font-weight: 700; color: var(--muted); background: #2F2F2D; border-bottom: 1px solid var(--line); }
   .ds-row .cr-title.done { color: var(--muted); text-decoration: line-through; }
   .ds-prev-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; margin-top: 6px; }
-  /* ===== 현장보고 ===== */
+
   .rp-stat { display: flex; gap: 20px; padding: 14px 18px; margin-bottom: 12px; align-items: flex-end; flex-wrap: wrap; }
   .rp-stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
   .rp-spark { margin-left: auto; }
@@ -477,7 +474,7 @@
     .rp-cell { min-height: 52px; }
     .rp-stat { gap: 14px; }
   }
-  /* ===== 대시보드 ===== */
+
   .ov-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
   .ov-card { padding: 14px 16px; }
   .ov-card b { display: block; font-size: 24px; margin: 2px 0; font-variant-numeric: tabular-nums; }
@@ -504,7 +501,7 @@
     .ov-cards { grid-template-columns: 1fr 1fr; }
     .ov-trade { grid-template-columns: 84px 1fr 50px; font-size: 13px; }
   }
-  /* ===== 현장정보 · 회사디테일 ===== */
+
   .si-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; padding: 12px; }
   .si-card { display: flex; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; font: inherit; color: inherit; cursor: pointer; }
   .si-card:hover { border-color: #3E5446; }
@@ -522,7 +519,7 @@
   .dt-txt { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
   .dt-full { padding: 8px; }
   .dt-full img { width: 100%; display: block; border-radius: 6px; background: var(--surface); cursor: zoom-in; }
-  /* ===== 공정표 ===== */
+
   .sc-gantt { padding: 12px 14px; margin-bottom: 12px; overflow: hidden; }
   .sc-months { position: relative; height: 18px; margin-left: 120px; font-size: 11px; color: var(--muted); }
   .sc-months span { position: absolute; text-align: center; border-left: 1px solid var(--line); padding-left: 4px; }
@@ -537,7 +534,7 @@
   .sc-bar.late { background: var(--red); }
   .sc-bar b { display: block; height: 100%; background: rgba(255,255,255,.45); border-radius: 3px; }
   .sc-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--heritage); z-index: 1; margin-left: 120px; }
-  /* 공정표 보기 1안: 전체공정 (일 단위 표) */
+
   .sc-view { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; }
   .sc-view button { border: 0; background: transparent; color: var(--muted); padding: 7px 12px; font-size: 13px; font-weight: 600; }
   .sc-view button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
@@ -564,7 +561,7 @@
   .sc-grid td.sc-span em { position: absolute; left: 4px; top: 0; line-height: 24px; font-style: normal; font-size: 10.5px; color: #fff; white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px #000, 0 0 2px #000; }
   .sc-legend { display: flex; gap: 14px; padding: 8px 14px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
   .sc-legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; background: var(--green-2); }
-  /* 공정표 보기 2안: 월별 (달력) */
+
   .sc-cal-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
   .sc-cal-top h3 { margin: 0; font-size: 16px; }
   .sc-cal-top .nav button { border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); border-radius: 6px; padding: 5px 10px; margin-left: 6px; font-size: 13px; }
@@ -582,7 +579,7 @@
   .sc-opt { display: grid; grid-template-columns: 1fr 90px 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
   .sc-opt input[type=number] { border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; width: 100%; }
   .sc-opt input:disabled { background: var(--gray-soft); }
-  /* ===== 성능 · Passport ===== */
+
   .pf-card { padding: 18px 20px; margin-bottom: 12px; }
   .pf-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
   .pf-head h3 { margin: 2px 0; font-size: 19px; }
@@ -642,7 +639,7 @@
     .pf-row { grid-template-columns: 1fr 70px; }
     .pf-row .pf-wood, .pf-x { grid-column: span 1; }
   }
-  /* ===== 우리 집 이야기 ===== */
+
   .st-hero { background: linear-gradient(160deg, #2D5016, #2A2A2A); color: #fff; border-radius: 14px; padding: 30px 26px 24px; margin-bottom: 14px; }
   .st-tag { font-size: 11px; letter-spacing: .18em; opacity: .7; font-weight: 700; }
   .st-hero h2 { margin: 8px 0 6px; font-size: 26px; line-height: 1.3; }
@@ -682,7 +679,7 @@
     .st-hero { background: #2D5016 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .st-block { break-inside: avoid; border-color: #444; }
   }
-  /* ===== 법인카드 ===== */
+
   .ca-month { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; font: inherit; }
   .ca-row { position: relative; padding: 7px 14px 7px 38px; cursor: pointer; gap: 1px 12px; align-items: center; }
   .ca-chk { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; }
@@ -721,17 +718,15 @@
     .fact.blank { display: none; }
   }
 
-  /* ===== 모바일 최적화 ===== */
   @media (max-width: 760px) {
     body { font-size: 15px; }
-    /* iOS 입력 시 화면 확대 방지 */
+
     input, select, textarea { font-size: 16px !important; }
     .tab { padding: 10px 12px 11px; }
     .me { gap: 6px; }
     .me #meName { max-width: 5em; overflow: hidden; text-overflow: ellipsis; }
     .dyk { align-self: stretch; max-width: none; margin: 6px 12px 8px; }
 
-    /* 변경요청 목록 */
     .cr-bar { margin-bottom: 10px; }
     .cr-bar h2 .cr-sub { display: none; }
     .cr-bar #crNew { display: none; }
@@ -748,7 +743,6 @@
     .fab { display: flex; align-items: center; gap: 6px; position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 20;
       background: var(--green); color: #fff; border: 0; border-radius: 999px; padding: 14px 20px; font-weight: 700; font-size: 16px; box-shadow: 0 6px 18px rgba(45,80,22,.35); }
 
-    /* 상세·접수 시트: 전체 화면 */
     .sheet { width: 100%; box-shadow: none; }
     .sheet-head { padding: calc(12px + env(safe-area-inset-top)) 14px 12px; position: sticky; top: 0; }
     .sheet-head .x { font-size: 28px; padding: 2px 8px; margin-right: -6px; }
@@ -756,11 +750,9 @@
     .card { padding: 14px; border-radius: 12px; }
     .kv { grid-template-columns: 80px 1fr; }
 
-    /* 단계 표시: 7단계가 한 화면에 */
     .steps { overflow: visible; }
     .step { flex: 1 1 0; min-width: 0; font-size: 11px; line-height: 1.25; word-break: keep-all; padding: 22px 1px 0; }
 
-    /* 버튼·입력 터치 크기 */
     .actions.sticky { position: sticky; bottom: calc(-40px - env(safe-area-inset-bottom)); background: var(--bg); margin: 0 -12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); z-index: 2; }
     .actions .btn { flex: 1 1 0; min-height: 48px; font-size: 16px; }
     .seg button { padding: 9px 14px; }
@@ -770,13 +762,11 @@
     .check input { width: 20px; height: 20px; flex: none; margin-top: 1px; }
   }
 
-  /* ===================== PC: 왼쪽 메뉴 =====================
-     마우스를 쓰는 넓은 화면(PC)에서만. 태블릿·휴대폰은 위쪽 탭 그대로. */
   @media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
     :root { --side: 228px; }
     .top { position: fixed; top: 0; left: 0; bottom: 0; width: var(--side); display: flex; flex-direction: column;
       overflow-y: auto; overflow-x: hidden; z-index: 20; padding-top: 0; scrollbar-width: thin; }
-    .top-row { display: contents; }                                  /* 안쪽 항목을 세로 막대에 바로 배치 */
+    .top-row { display: contents; }
     .brand { order: 0; padding: 22px 20px 14px; }
     .logo-mark { height: 14px; }
     .site-pick { order: 1; margin: 0 14px 10px; }
@@ -784,6 +774,7 @@
     .tabs-row { order: 2; max-width: none; margin: 0; flex-direction: column; flex: 1; }
     .tabs { flex-direction: column; padding: 4px 10px; gap: 2px; overflow: visible; width: auto; }
     .tab { width: 100%; justify-content: flex-start; border-radius: 8px; padding: 10px 14px; font-size: 15px; color: rgba(255,255,255,.78); }
+    .tab-grp { display: block; padding: 12px 14px 4px; font-size: 11px; letter-spacing: .06em; color: rgba(255,255,255,.38); }
     .tab:hover { background: rgba(255,255,255,.08); color: #fff; }
     .tab[aria-selected="true"] { background: var(--bg); color: var(--ink); }
     .tab.ext { font-size: 14px; }
@@ -793,16 +784,14 @@
     .dyk-text { white-space: normal; line-height: 1.45; font-size: 13px; }
     .me { order: 9; margin-top: auto; padding: 14px 20px 18px; border-top: 1px solid rgba(255,255,255,.12); flex-wrap: wrap; }
     main { margin-left: var(--side); max-width: 1640px; padding: 26px 34px 60px; }
-    /* 넓어진 화면에 맞춰 표도 넓게 */
+
     .ca-grid { min-width: 1150px; }
   }
 
-
-  /* ===== 테마: 작업도구 (차분한 회색 메뉴 · 숲 녹색 강조) ===== */
   :root { --bg:#FFFFFF; --surface:#FFFFFF; --raise:#F7F7F5; --ink:#1F1F1E; --text:#37352F; --muted:#787774;
     --line:#383836; --line-strong:#DCDCD9; --accent:#2F5D46; --accent-soft:#2C3A32; --red:#D44C47; --red-soft:#FBECEB;
     --green:#2F5D46; --green-2:#264D3A; --green-soft:#2C3A32; --amber:#9A6A1B; --amber-soft:#3A3123; --blue:#4F4E4A; --blue-soft:#353533; --gray-soft:#353533; }
-  
+
   body { color: var(--text); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
@@ -865,7 +854,6 @@
     .me { border-top-color: var(--line); }
   }
 
-  /* ===== 메뉴만 어둡게 (단색, 무늬 없음) — 본문은 그대로 ===== */
   :root { --nav: #191A19; --nav-line: rgba(255,255,255,.09); --nav-text: rgba(255,255,255,.66); }
   .top { background: var(--nav); color: #fff; box-shadow: none; }
   .logo-mark { filter: none; }
@@ -891,7 +879,6 @@
     .me { border-top-color: var(--nav-line); }
   }
 
-  /* ===================== 다크 (이 대화창처럼 따뜻한 짙은 회색) ===================== */
   :root {
     color-scheme: dark;
     --bg: #262624; --surface: #2D2D2B; --raise: #333331; --nav: #1F1E1D;
@@ -907,7 +894,6 @@
   @media (min-width: 1100px) and (hover: hover) and (pointer: fine) { .top { background: var(--nav); box-shadow: 1px 0 0 var(--line); } }
   .tab[aria-selected="true"]::after { background: var(--accent); }
 
-  /* 버튼·입력 */
   .btn { background: var(--green); color: #fff; }
   .btn:hover:not(:disabled) { background: var(--green-2); }
   .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
@@ -922,7 +908,6 @@
   input::placeholder, textarea::placeholder { color: #77746E; }
   input[type=file]::file-selector-button { background: transparent; color: var(--ink); border-color: var(--line-strong); }
 
-  /* 표면 */
   .panel, .card { background: var(--surface); border-color: var(--line); }
   .sheet { background: var(--bg); box-shadow: -10px 0 30px rgba(0,0,0,.45); }
   .sheet-head { background: var(--surface); }
@@ -937,12 +922,10 @@
   .login-logo { filter: invert(1); }
   .login-card { background: var(--surface); }
 
-  /* 서명칸은 종이처럼 흰색 유지 (인쇄용 서명이 어둡게 찍히도록) */
   .sig-wrap { background: #fff !important; }
   .sig-wrap .ph { color: #9A9791; }
   .sig-wrap .clr { background: #fff; color: #262626; border-color: #CFCFCB; }
 
-  /* 법인카드 표 */
   .ca-grid th, .ca-grid thead th.ck, .ca-grid thead th.d { background: var(--raise); color: var(--muted); }
   .ca-grid td, .ca-grid th { border-bottom-color: var(--line); }
   .ca-grid td + td { border-left-color: #333331; }
@@ -966,7 +949,7 @@
 </head>
 <body>
 
-<!-- ▼ 설치 후 이 한 줄만 수정: 마스터 Apps Script "새 배포"의 웹 앱 URL -->
+
 <script>const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
 
 <section class="login" id="loginView">
@@ -996,12 +979,12 @@
 
 <div class="toast" id="toast" role="alert"></div>
 
-<script>
-const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
+<script>const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객관리', design: '설계', info: '현장정보', site: '현장관리', change: '변경요청', card: '법인카드', board: '현장재정', est: '견적기', detail: '회사디테일' };
-const TAB_ORDER = ['all', 'cx', 'design', 'info', 'site', 'change', 'payreq', 'card', 'board', 'est', 'fin', 'detail', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일' };
+const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'payreq', 'card', 'board', 'fin', 'detail', 'sikgu', 'master'];
+const TAB_GROUPS = { cx: '상담·설계', info: '시공', payreq: '재정', detail: '회사' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
 const S = { me: null, tabs: [], links: [], sites: [], tab: null, siteCode: null, siteSub: '', badges: {} };
@@ -1014,7 +997,6 @@ function toast(msg) {
   clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 4000);
 }
 
-// ---------- 로그인 ----------
 function parseJwt(t) {
   const b = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
   return JSON.parse(decodeURIComponent(atob(b).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
@@ -1079,12 +1061,10 @@ $('logoutBtn').onclick = () => {
   location.reload();
 };
 
-// ---------- 화면 틀 ----------
 function renderShell() {
   $('meName').textContent = S.me.name;
   $('meRole').textContent = S.me.roleLabel;
 
-  // 현장 선택 — 현장코드 순 (숫자로 시작하는 코드 먼저, HQ 등은 뒤로)
   const codeKey = c => (/^\d/.test(c) ? '0' : '1') + c;
   S.sites.sort((a, b) => codeKey(a.code).localeCompare(codeKey(b.code)));
   const saved = localStorage.getItem(SITE_KEY);
@@ -1095,18 +1075,22 @@ function renderShell() {
   $('sitePick').value = S.siteCode || '';
   $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; PF.site = null; PF.d = null; ST.site = null; ST.d = null; renderTab(); };
 
-  // 설계 → 현장관리 → 입금요청 → 변경요청 → 식구 순 (고객관리는 계약 전 단계라 맨 앞)
+  const avail = new Set(TAB_ORDER.filter(k => S.tabs.includes(k) || S.links.some(x => x.key === k)));
+  const grpFirst = {}; let g = '';
+  TAB_ORDER.forEach(k => { if (TAB_GROUPS[k]) g = TAB_GROUPS[k]; if (avail.has(k) && g && !grpFirst[g]) grpFirst[g] = k; });
   $('tabs').innerHTML = TAB_ORDER.map(key => {
-    if (S.tabs.includes(key)) return `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}<i class="tab-badge" data-badge="${key}" ${S.badges[key] ? '' : 'hidden'}>${S.badges[key] || ''}</i></button>`;
+    const grp = Object.keys(grpFirst).find(x => grpFirst[x] === key);
+    const head = grp ? `<span class="tab-grp">${grp}</span>` : '';
+    if (S.tabs.includes(key)) return head + `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}<i class="tab-badge" data-badge="${key}" ${S.badges[key] ? '' : 'hidden'}>${S.badges[key] || ''}</i></button>`;
     const l = S.links.find(x => x.key === key);
-    return l ? `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>` : '';
+    return l ? head + `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>` : '';
   }).join('');
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
 
   selectTab(S.tabs.includes(S.tab) ? S.tab : S.tabs[0]);
   if (S.tabs.includes('cx') && !CX.loaded) cxLoad().then(() => { if (S.tab === 'cx') cxRenderList(); }).catch(() => {});
   dykLoad();
-  // 자주 가는 화면은 로그인 직후 미리 받아 둔다 (현장관리 대시보드)
+
   setTimeout(() => {
     if (S.tab !== 'site' && S.tabs.includes('site') && S.siteCode && OV.site !== S.siteCode) {
       const code = S.siteCode;
@@ -1125,7 +1109,7 @@ function selectTab(t) {
 function currentSite() { return S.sites.find(s => s.code === S.siteCode); }
 
 function renderTab() {
-  const fab = $('crFab'); if (fab) fab.hidden = S.tab !== 'change';
+  const fab = $('crFab'); if (fab) fab.hidden = !crActive();
   if (S.tab === 'all') return renderAllTab();
   if (S.tab === 'info') return renderInfoTab();
   if (S.tab === 'detail') return renderDetailTab();
@@ -1134,12 +1118,9 @@ function renderTab() {
   if (S.tab === 'est') return renderEstTab();
   if (S.tab === 'design') return renderDesignTab();
   if (S.tab === 'site') return renderSiteTab();
-  if (S.tab === 'change') return renderChangeTab();
   if (S.tab === 'cx') return renderCxTab();
 }
 
-// ---------- 재정 메뉴 (현장재정 보드 · 견적기) ----------
-// 화면 파일은 서버가 권한 확인 후 내려주고, 여기서는 iframe 안에 그대로 띄운다 (다크 테마·데이터 주입)
 const FB = { board: null, est: null, boardHtml: '', estHtml: '' };
 function fbDoc(html, data) {
   let h = html.replace(/<html(\s[^>]*)?>/i, '<html data-theme="dark">');
@@ -1180,7 +1161,6 @@ async function renderEstTab() {
   fbFrame(fbDoc(FB.estHtml, null));
 }
 
-// ---------- Did you know ----------
 const DYK = { items: [], i: 0, timer: null };
 async function dykLoad() {
   if (S.me.role === 'client') return;
@@ -1205,7 +1185,6 @@ $('dyk').onclick = () => {
   </ul></div>`);
 };
 
-// ---------- 현장관리 ----------
 function toPy(m2) { return Math.round(m2 / 3.3058 * 10) / 10; }
 function fmtNum(n) { return (Math.round(n * 10) / 10).toLocaleString('ko-KR'); }
 function dayDiff(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
@@ -1247,7 +1226,7 @@ function siteSummaryHtml(s) {
     facts.push(['설계', s.designBy === '건축사사무소' ? (s.architect || '건축사사무소') : (s.designBy ? '사람사는집 자체 설계' : '—'), cp ? `계약 ${fmtNum(cp)}평` : '']);
     facts.push(['NAS 폴더', s.nasFolder || '—', '']);
   }
-  // 4칸 단위로 채우기
+
   while (facts.length % 4) facts.push(['', '', '']);
 
   return `<section class="panel">
@@ -1273,7 +1252,7 @@ function renderSiteTab() {
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
   const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공지', '스펙북', '360 VIEW']
-    : ['대시보드', '현장보고', '공정표', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
+    : ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
   $('main').innerHTML = `
@@ -1287,8 +1266,9 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '공정표', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '공정표', '변경공사', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
+  { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
   if (S.siteSub === '대시보드') { ovRenderSite($('subBody')); return; }
   if (S.siteSub === '공정표') {
@@ -1300,6 +1280,7 @@ function renderSiteTab() {
   }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
   if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
+  if (S.siteSub === '변경공사') { CR.mode = CR.wantAll ? 'all' : 'site'; CR.wantAll = false; renderChangeTab(); return; }
   if (S.siteSub === '현장보고') {
     rpLoad(s.code).then(() => {
       if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '현장보고' && $('subBody')) rpRender($('subBody'));
@@ -1309,7 +1290,6 @@ function renderSiteTab() {
 
 }
 
-// ---------- 대시보드 ----------
 const OV = { site: null, data: null, all: null, allAt: 0 };
 
 function ovBar(pct, cls) { return `<div class="bar"><i class="${cls || ''}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>`; }
@@ -1375,7 +1355,7 @@ async function ovRenderSite(el) {
       <button class="btn ghost" type="button" id="ovGoRp" style="margin-top:10px">현장보고 전체 보기</button>
     </section>` : ''}`;
 
-  if ($('ovGoCr')) $('ovGoCr').onclick = () => { CR.mode = 'site'; selectTab('change'); };
+  if ($('ovGoCr')) $('ovGoCr').onclick = () => { CR.mode = 'site'; S.siteSub = '변경공사'; selectTab('site'); };
   if ($('ovGoRp')) $('ovGoRp').onclick = () => { S.siteSub = '현장보고'; renderSiteTab(); };
   el.querySelectorAll('[data-pid]').forEach(b => {
     const item = { id: b.dataset.rid };
@@ -1408,7 +1388,6 @@ function ovGroupHtml(title, rows, prog) {
   </section>`;
 }
 
-// ---- 전체 현황 (관리자·공무) ----
 async function renderAllTab() {
   const fresh = OV.all && Date.now() - OV.allAt < 60000;
   if (!fresh) {
@@ -1455,7 +1434,7 @@ async function renderAllTab() {
     ${ovGroupHtml('그 외', rows.filter(r => !['시공중', '설계중', '견적조정중', '허가중', '보류'].includes(r.status)), prog)}`;
 
   $('ovRefresh').onclick = () => { OV.allAt = 0; renderAllTab(); };
-  $('ovCrCard').onclick = () => { CR.mode = 'all'; CR.allAt = 0; selectTab('change'); };
+  $('ovCrCard').onclick = () => { CR.wantAll = true; CR.allAt = 0; S.siteSub = '변경공사'; selectTab('site'); };
   $('main').querySelectorAll('.ov-row').forEach(b => b.onclick = () => {
     S.siteCode = b.dataset.code; localStorage.setItem(SITE_KEY, S.siteCode);
     $('sitePick').value = S.siteCode;
@@ -1464,7 +1443,6 @@ async function renderAllTab() {
   });
 }
 
-// ---------- 현장 정보 (개요 + 선정 소재) ----------
 const SI = { site: null, items: [], groups: {}, statuses: [], canEdit: false, group: '전체' };
 
 const INFO_SECTIONS = ['개요·소재', '성능 · Passport', '우리 집 이야기'];
@@ -1614,12 +1592,11 @@ async function siPrint() {
     body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#262626;padding:24px}h1{font-size:18px;margin:0 0 4px;color:#000000;border-top:3px solid #000000;padding-top:10px}
     .sub{color:#8C8C88;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;vertical-align:middle}th{background:#F5F5F3;color:#000000}
     td.im{width:80px}td.im img{width:72px;height:72px;object-fit:cover;display:block}button{margin-bottom:12px;padding:9px 20px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
-  </style></head><body><button onclick="window.print()">인쇄</button><h1>선정 소재 목록</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · (주)사람사는집종합건설</div>
+</style></head><body><button onclick="window.print()">인쇄</button><h1>선정 소재 목록</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · (주)사람사는집종합건설</div>
     <table><tr><th>공간</th><th>부위</th><th>사진</th><th>제품</th><th>색상</th><th>상태</th><th>메모</th></tr>${rows.join('') || '<tr><td colspan="7">등록된 소재 없음</td></tr>'}</table></body></html>`);
   w.document.close();
 }
 
-// ---------- 회사 디테일 도면 ----------
 const DT = { items: [], cats: [], canEdit: false, loaded: false, cat: '전체', q: '' };
 
 async function renderDetailTab() {
@@ -1700,7 +1677,7 @@ async function dtPrint(o) {
     h1{font-size:17px;margin:0}.meta{font-size:11px;color:#8C8C88}.desc{font-size:12px;white-space:pre-wrap;margin:8px 0;padding:8px;background:#F5F5F3}
     .pg{text-align:center;page-break-after:always}.pg:last-child{page-break-after:auto}.pg img{max-width:100%;max-height:88vh}
     button{margin-bottom:12px;padding:9px 20px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
-  </style></head><body><button onclick="window.print()">인쇄</button>
+</style></head><body><button onclick="window.print()">인쇄</button>
     <div class="head"><h1>${esc(o.id)} ${esc(o.title)}</h1><span class="meta">${esc(o.cat)}${o.rev ? ' · ' + esc(o.rev) : ''} · (주)사람사는집종합건설 표준 디테일</span></div>
     ${o.desc ? `<div class="desc">${esc(o.desc)}</div>` : ''}${pages || '<p>인쇄할 이미지가 없습니다. PDF는 파일을 열어 인쇄하세요.</p>'}</body></html>`);
   w.document.close();
@@ -1726,7 +1703,7 @@ function dtForm(o) {
   $('dSave').onclick = e => submitting(e.target, async () => {
     const input = $('dFiles');
     const files = [];
-    for (const f of Array.from(input.files)) {   // 도면은 원본 해상도 유지 (축소하지 않음)
+    for (const f of Array.from(input.files)) {
       if (f.size > 15 * 1024 * 1024) throw new Error(f.name + ': 15MB 이하만 올릴 수 있습니다.');
       files.push(await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res({ name: f.name, type: f.type || 'application/octet-stream', data: String(r.result).split(',')[1] }); r.onerror = rej; r.readAsDataURL(f); }));
     }
@@ -1738,7 +1715,6 @@ function dtForm(o) {
   });
 }
 
-// ---------- 360 VIEW (Cupix 링크) ----------
 const VW = { site: null, items: [], canEdit: false, open: null };
 async function vwRender(code) {
   const el = $('subBody'); if (!el) return;
@@ -1792,14 +1768,12 @@ function vwForm(code, o) {
   });
 }
 
-// ---------- 공정표 ----------
 const SC = { site: null, cond: null, tasks: [], meta: null, canEdit: false, loading: false, view: 'all', month: '' };
 try { SC.view = localStorage.getItem('bfp_sc_view') === 'month' ? 'month' : 'all'; } catch (e) {}
 const SC_DOW = ['일', '월', '화', '수', '목', '금', '토'];
 function scCls(t) { return t.status === '완료' ? 'done' : (t.end < today() ? 'late' : t.status === '진행중' ? 'doing' : ''); }
 function scAddDays(d, n) { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + n); return ymd(x); }
 
-// 1안 전체공정: 첨부 공사일정표처럼 하루 한 칸, 월·일·요일·일수 머리글 + 공종별 막대
 function scGridHtml(ts, print) {
   const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
   const n = dayDiff(first, last) + 1, days = [];
@@ -1825,7 +1799,6 @@ function scGridHtml(ts, print) {
     <div class="sc-legend"><span><i></i>예정</span><span><i style="background:var(--amber)"></i>진행중</span><span><i style="background:var(--gray)"></i>완료</span><span><i style="background:var(--red)"></i>지연</span><span>회색 칸 = 주말</span></div></section>`;
 }
 
-// 2안 월별: 구글 캘린더처럼 달력 칸에 공종을 띠로 올린다
 function scMonthHtml(ts, print) {
   const first = ts[0].start, last = ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end);
   const ym = s => s.slice(0, 7);
@@ -2056,7 +2029,7 @@ function scPrint() {
       .sc-grid th{position:static;background:#EFEFEC;color:#000}.sc-grid td.sc-h{position:static;background:#fff}.sc-grid .sc-we{background:#E6E6E2}.sc-grid th.sc-we{background:#DADAD6}
       .sc-grid .sc-d{width:${cw}px;min-width:${cw}px;font-size:8.5px}.sc-grid .sc-h{width:104px;min-width:104px;font-size:10px}.sc-grid td.sc-span em{color:#000;text-shadow:none;font-size:9px}.sc-day.out{background:#F4F4F2}.sc-day.we{background:#EDEDEA}.sc-chip{color:#fff}
       button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}@page{size:${month ? 'A4 portrait' : 'A3 landscape'};margin:8mm}}
-    </style></head><body><button onclick="window.print()">인쇄</button>
+</style></head><body><button onclick="window.print()">인쇄</button>
       <h1>${month ? '월별 공정표' : 'Construction Progress Schedule'}</h1><div class="sub">${title}</div>${month ? scMonthHtml(ts, true) : scGridHtml(ts, true)}</body></html>`);
     w.document.close(); return;
   }
@@ -2069,14 +2042,13 @@ function scPrint() {
     table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px}th{background:#F5F5F3;color:#000000}
     tr.done td{color:#888;text-decoration:line-through}tr.late td{background:#F9ECEA}
     button{margin-bottom:12px;padding:9px 20px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
-  </style></head><body><button onclick="window.print()">인쇄</button>
+</style></head><body><button onclick="window.print()">인쇄</button>
     <h1>시공 공정표</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · ${esc(ts[0].start)} ~ ${esc(ts.reduce((m, t) => t.end > m ? t.end : m, ts[0].end))} · (주)사람사는집종합건설</div>
     <table><tr><th>단계</th><th>공종</th><th>소요</th><th>시작</th><th>종료</th><th>상태</th><th>담당</th><th>메모</th></tr>${rows}</table>
   </body></html>`);
   w.document.close();
 }
 
-// ---------- 주택 성능 · Passport ----------
 const PF = { site: null, d: null, loading: false, tab: '성능 요약' };
 const PF_U_LIMIT = { '지붕': 0.150, '외벽': 0.170, '최하층바닥': 0.220, '창호': 1.000, '현관문': 1.400 };
 
@@ -2131,7 +2103,6 @@ function pfRender(el) {
   else pfEnergyList(body);
 }
 
-// ---- 성능 요약 (Passport) ----
 function pfSummary(el) {
   const d = PF.d, s = d.site;
   const air = (d.air || [])[0];
@@ -2200,7 +2171,6 @@ function pfBar(pct, cls, marks) {
   return `<div class="pf-bar ${cls || ''}"><i style="width:${pct}%"></i>${(marks || []).map((m, i) => `<em style="left:${[23, 50, 100][i]}%" data-m="${esc(m)}"></em>`).join('')}</div>`;
 }
 
-// ---- 외피 구성 ----
 function pfEnvList(el) {
   const d = PF.d, list = d.env || [];
   el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">외피 구성</h2>
@@ -2306,7 +2276,6 @@ function pfEnvForm(o) {
   });
 }
 
-// ---- 기밀 테스트 ----
 function pfAirList(el) {
   const d = PF.d, list = d.air || [];
   el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">기밀 테스트</h2>
@@ -2388,7 +2357,6 @@ function pfAirForm(a) {
   });
 }
 
-// ---- 에너지 사용 ----
 function pfEnergyList(el) {
   const d = PF.d, rows = d.energy || [], st = pfEnergyStat(d);
   const maxE = Math.max(1, ...rows.map(r => Number(r.elecKwh) || 0));
@@ -2480,7 +2448,6 @@ function pfBulkForm() {
   });
 }
 
-// ---- Passport 인쇄 ----
 function pfPrint() {
   const d = PF.d, s = d.site, air = (d.air || [])[0], st = pfEnergyStat(d);
   const ag = air ? pfAirGrade(air.ach50) : null, eg = st ? pfEnGrade(st.primary) : null;
@@ -2500,7 +2467,7 @@ function pfPrint() {
     .big em{font-style:normal;font-size:12px;color:#2F5D46;font-weight:600}
     .ft{margin-top:24px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#888;display:flex;justify-content:space-between}
     button{margin-bottom:14px;padding:9px 22px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
-  </style></head><body><button onclick="window.print()">인쇄</button>
+</style></head><body><button onclick="window.print()">인쇄</button>
     <div class="hd"><div><div class="lb">PERFORMANCE PASSPORT</div><h1>${esc(s.name)}</h1></div>
       <div style="text-align:right;font-size:12px;color:#8C8C88">(주)사람사는집종합건설<br>발행일 ${today()}</div></div>
     <div class="sub">${esc(s.code)}${s.endDate ? ' · 준공 ' + esc(s.endDate) : ''}${s.area ? ' · 연면적 ' + s.area + '㎡ (' + Math.round(s.area / 3.3058) + '평)' : ''}${s.struct ? ' · ' + esc(s.struct) : ''}${s.type ? ' · ' + esc(s.type) : ''}</div>
@@ -2535,7 +2502,6 @@ function pfPrint() {
   w.document.close();
 }
 
-// ---------- 우리 집 이야기 ----------
 const ST = { site: null, d: null, loading: false };
 
 async function stLoad(code) {
@@ -2688,16 +2654,15 @@ function stQtyForm() {
   });
 }
 
-// ---------- 법인카드 ----------
-const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '전체', canAll: false, loaded: false, sel: {}, view: 'sheet', siteTab: '*', colf: {}, sum: null, docLimit: 100000, desc: true };   // desc: 최신이 위
+const CA = { items: [], kinds: [], trades: [], cards: [], months: [], month: '', filter: '전체', canAll: false, loaded: false, sel: {}, view: 'sheet', siteTab: '*', colf: {}, sum: null, docLimit: 100000, desc: true };
 
 async function renderCardTab() {
   if (!CA.loaded || CA.reload) {
     $('main').innerHTML = '<div class="loading">카드 내역을 불러오는 중...</div>';
     try {
       const d = await api({ action: 'ca_list', month: '', status: '' });
-      Object.assign(CA, { items: d.items, kinds: d.kinds, trades: d.trades || [], cards: d.cards, months: d.months, canAll: d.canAll, docLimit: d.docLimit || 100000, loaded: true, reload: false });
-      if (!CA.month) CA.month = '*';   // 기본은 전체 기간
+      Object.assign(CA, { items: d.items, kinds: d.kinds, trades: d.trades || [], tradeGroups: d.tradeGroups || [], cards: d.cards, months: d.months, canAll: d.canAll, docLimit: d.docLimit || 100000, loaded: true, reload: false });
+      if (!CA.month) CA.month = '*';
     } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
     if (S.tab !== 'card') return;
   }
@@ -2738,7 +2703,7 @@ async function renderCardTab() {
     ${selIds.length ? `<div class="ca-bulk"><b>${selIds.length}건 선택</b>
       <select id="caBulkSite"><option value="">현장 유지</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
       <select id="caBulkKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
-      <select id="caBulkTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
+      <select id="caBulkTrade">${tradeOpts(CA.tradeGroups, CA.trades, '', '공종 유지')}</select>
       <button class="btn" type="button" id="caBulkGo">지정</button>
       <button class="btn ghost" type="button" id="caBulkClear">해제</button>
       ${CA.canAll ? `<button class="btn ghost danger" type="button" id="caBulkDel">삭제</button>` : ''}</div>` : ''}
@@ -2791,7 +2756,7 @@ async function renderCardTab() {
 }
 
 function caBig(o) { return Math.abs(Number(o.amount) || 0) >= (CA.docLimit || 100000); }
-// 기간: '*' = 전체 기간, 'yyyy' = 그 해 전체, 'yyyy-MM' = 그 달
+
 function caInPeriod(o) {
   const p = CA.month || '*';
   if (p === '*') return true;
@@ -2815,8 +2780,6 @@ function caPeriodSelect() {
 }
 function caLacks(o) { return caBig(o) && (!o.trade || !(o.files || []).length); }
 
-// ---------- 시트 화면 (엑셀처럼 칸을 바로 고치면 저장) ----------
-// ---------- 엑셀식 열 필터 ----------
 const CA_COLS = {
   kind:     { label: '분류',     val: o => o.kind || '' },
   memo:     { label: '지출내용', val: o => o.memo || '' },
@@ -2841,7 +2804,7 @@ function caTh(col, cls, text) {
 function caFilterPop(btn) {
   const col = btn.dataset.col, C = CA_COLS[col];
   document.querySelectorAll('.ca-fpop').forEach(x => x.remove());
-  // 다른 필터·기간·현장 탭을 통과한 줄에서 값 목록을 만듭니다 (엑셀과 같음)
+
   const base = caSheetRows().filter(o => caColPass(o, col))
     .filter(o => col === 'siteCode' || CA.siteTab === '*' || (o.siteCode || '') === CA.siteTab);
   const cnt = {};
@@ -2871,7 +2834,7 @@ function caFilterPop(btn) {
   q.oninput = () => {
     const t = q.value.trim().toLowerCase();
     pop.querySelectorAll('.ca-flist label').forEach(l => { l.hidden = t && !l.textContent.toLowerCase().includes(t); });
-    // 검색하면 찾은 것만 체크된 상태로 (엑셀처럼)
+
     if (t) pop.querySelectorAll('.ca-flist label').forEach(l => { l.querySelector('input').checked = !l.hidden; });
     syncAll();
   };
@@ -2892,7 +2855,7 @@ function caFilterPop(btn) {
 function caDateCell(v) {
   const t = String(v || '');
   const d = (CA.month && CA.month.length === 7 ? t.slice(5, 10) : t.slice(2, 10)).replace(/-/g, '.');
-  const hm = t.slice(11, 16);   // 결제 시간 (엑셀 업로드분은 00:00 → 표시 안 함)
+  const hm = t.slice(11, 16);
   return hm && hm !== '00:00' ? `${d} <small>${hm}</small>` : d;
 }
 function caSheetRows() {
@@ -2912,7 +2875,7 @@ function caRowHtml(o) {
   const siteOpts = `<option value="">— 미지정</option>` + S.sites.map(x =>
     `<option value="${esc(x.code)}" ${x.code === o.siteCode ? 'selected' : ''}>${esc(x.code)} ${esc(x.name)}</option>`).join('');
   const kindOpts = (o.kind ? '' : '<option value="" selected>— 선택</option>') + CA.kinds.map(k => `<option ${k === o.kind ? 'selected' : ''}>${esc(k)}</option>`).join('');
-  const tradeOpts = `<option value="">${big ? '필요' : '—'}</option>` + CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const tradeOptsHtml = tradeOpts(CA.tradeGroups, CA.trades, o.trade, big ? '필요' : '—');
   const moved = CA.siteTab !== '*' && (o.siteCode || '') !== CA.siteTab;
   return `<tr data-id="${esc(o.id)}" class="${moved ? 'moved' : ''} ${CA.sel[o.id] ? 'sel' : ''}">
     <td class="ck"><input type="checkbox" class="ca-ck" ${CA.sel[o.id] ? 'checked' : ''} aria-label="선택"></td>
@@ -2921,7 +2884,7 @@ function caRowHtml(o) {
     <td class="memo"><input data-f="memo" list="caMemoList" autocomplete="off" value="${esc(o.memo || '')}" placeholder="${esc(o.store || '')}"></td>
     <td class="r"><input data-f="amount" class="amt ${o.amount < 0 ? 'minus' : ''}" inputmode="numeric" value="${Number(o.amount || 0).toLocaleString()}"></td>
     <td><select data-f="siteCode" class="${o.siteCode ? '' : 'need'}">${siteOpts}</select>${moved ? '<small class="ca-moved">이동됨</small>' : ''}</td>
-    <td><select data-f="trade" class="${big && !o.trade ? 'need' : ''}">${tradeOpts}</select></td>
+    <td><select data-f="trade" class="${big && !o.trade ? 'need' : ''}">${tradeOptsHtml}</select></td>
     <td class="store" title="${esc(o.store || '')}">${esc(o.store || '')}</td>
     <td class="who"><select data-f="card" class="${o.owner ? '' : 'need'}" title="${esc(o.owner || '미매칭')}${o.last4 ? ' · ' + esc(o.last4) : ''}">${caCardOpts(o)}</select></td>
     <td class="c"><button type="button" class="ca-clip ${big && !nf ? 'need' : ''}" data-act="open">${nf ? '📎' + nf : (big ? '필요' : '+')}</button></td>
@@ -3015,7 +2978,6 @@ function caRenderSheet() {
   $('main').querySelectorAll('.ca-fbtn').forEach(b => b.onclick = e => { e.stopPropagation(); caFilterPop(b); });
 }
 
-// ---------- 여러 줄 한꺼번에 (체크 → 현장·분류·공종 지정) ----------
 let caLastCk = -1;
 function caVisibleIds() { return Array.from(document.querySelectorAll('#main .ca-grid tbody tr')).map(tr => tr.dataset.id); }
 function caBindChecks() {
@@ -3035,7 +2997,7 @@ function caBindCheck(tr) {
   ck.onclick = e => {
     const ids = caVisibleIds();
     const i = ids.indexOf(tr.dataset.id);
-    if (e.shiftKey && caLastCk >= 0) {            // Shift 누르고 클릭하면 사이 줄 모두
+    if (e.shiftKey && caLastCk >= 0) {
       const [a, b] = [Math.min(caLastCk, i), Math.max(caLastCk, i)];
       for (let k = a; k <= b; k++) CA.sel[ids[k]] = ck.checked;
     } else CA.sel[tr.dataset.id] = ck.checked;
@@ -3062,7 +3024,7 @@ function caBulkBar() {
   box.innerHTML = `<div class="ca-bulk"><b>${ids.length}건 선택 · ${won(sum)}</b>
     <select id="cbSite"><option value="">현장 유지</option>${S.sites.map(x => `<option value="${esc(x.code)}">${esc(x.code)} ${esc(x.name)}</option>`).join('')}</select>
     <select id="cbKind"><option value="">분류 유지</option>${CA.kinds.map(k => `<option>${esc(k)}</option>`).join('')}</select>
-    <select id="cbTrade"><option value="">공종 유지</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select>
+    <select id="cbTrade">${tradeOpts(CA.tradeGroups, CA.trades, '', '공종 유지')}</select>
     <select id="cbCard"><option value="">사용자 유지</option>${CA.cards.map(c => `<option value="${esc(c.last4)}">${esc(c.owner || c.alias || '')} ${esc(c.last4)}</option>`).join('')}<option value="-">미매칭으로 돌리기</option></select>
     <button class="btn" type="button" id="cbGo">한꺼번에 지정</button>
     <button class="btn ghost" type="button" id="cbClear">선택 해제</button>
@@ -3102,7 +3064,7 @@ function caBindRow(tr) {
         const rows = Array.from(document.querySelectorAll('.ca-grid tbody tr'));
         const next = rows[rows.indexOf(tr) + (e.key === 'ArrowUp' ? -1 : 1)];
         const f = el.dataset.f;
-        el.blur();                                   // 바뀐 값이면 여기서 저장이 시작됩니다
+        el.blur();
         const cell = next && document.querySelector(`.ca-grid tbody tr[data-id="${CSS.escape(next.dataset.id)}"] [data-f="${f}"]`);
         if (cell) cell.focus();
       } else if (e.key === 'Escape') {
@@ -3138,8 +3100,8 @@ async function caCell(id, field, value, el) {
     const kindBefore = before.kind;
     Object.assign(o, d.item);
     caSwapRow(id, field, 'saved');
-    if (field === 'memo' && !kindBefore && o.kind) caFlash(id, 'kind');            // 지출내용으로 분류가 채워짐
-    (d.also || []).forEach(x => {                                                  // 같은 가맹점 빈 분류도 채워짐
+    if (field === 'memo' && !kindBefore && o.kind) caFlash(id, 'kind');
+    (d.also || []).forEach(x => {
       const y = CA.items.find(z => z.id === x.id); if (y) Object.assign(y, x);
       caSwapRow(x.id, 'kind', 'saved');
     });
@@ -3157,7 +3119,6 @@ function caFlash(id, field) {
   if (!el) return; el.classList.add('saved'); setTimeout(() => el.classList.remove('saved'), 1200);
 }
 
-// 저장 결과로 그 줄만 다시 그리고, 보고 있던 칸으로 커서를 돌려놓습니다.
 function caSwapRow(id, field, flash) {
   const old = document.querySelector(`.ca-grid tbody tr[data-id="${CSS.escape(id)}"]`);
   const o = CA.items.find(x => x.id === id);
@@ -3187,7 +3148,7 @@ function caOpen(id) {
     <div class="card">
       <div class="f"><label>현장</label><select id="cSite"><option value="">선택</option>${S.sites.map(s => `<option value="${esc(s.code)}" ${s.code === o.siteCode ? 'selected' : ''}>${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select></div>
       <div class="f"><span class="lb">분류</span>${segHtml('cKind', CA.kinds, o.kind || '기타')}</div>
-      <div class="f"><label>공종 <span class="hint">${big ? '(10만원 이상 필요)' : '(선택)'}</span></label><select id="cTrade"><option value="">선택</option>${CA.trades.map(t => `<option ${t === o.trade ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
+      <div class="f"><label>공종 <span class="hint">${big ? '(10만원 이상 필요)' : '(선택)'}</span></label><select id="cTrade">${tradeOpts(CA.tradeGroups, CA.trades, o.trade, '선택')}</select></div>
       <div class="f"><label>지출내용</label><input type="text" id="cMemo" value="${esc(o.memo)}" placeholder="예: 데크자재_부소포함 일체"></div>
       <div class="cx-when"><div class="f"><label>가맹점</label><input type="text" id="cStore" value="${esc(o.store)}"></div>
         <div class="f"><label>금액</label><input type="text" id="cAmt" inputmode="numeric" value="${Number(o.amount || 0).toLocaleString()}"></div></div>
@@ -3270,7 +3231,6 @@ function caPasteForm() {
   });
 }
 
-// 불러오기 결과 — 무엇이 왜 빠졌는지 그대로 보여줍니다
 function caImportResult(d) {
   const files = d.files && d.files.length ? d.files : [{ name: d.mode === '문자' ? '붙여넣은 문자' : '붙여넣은 표', added: d.added, dup: d.dup, skip: d.skip, details: d.details || [] }];
   const block = f => {
@@ -3303,7 +3263,7 @@ function caAddForm() {
       <div class="f"><label>가맹점</label><input type="text" id="nStore"></div>
       <div class="f"><label>현장</label><select id="nSite"><option value="">선택</option>${S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select></div>
       <div class="f"><span class="lb">분류</span>${segHtml('nKind', CA.kinds, '부자재.철물')}</div>
-      <div class="f"><label>공종</label><select id="nTrade"><option value="">선택</option>${CA.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="f"><label>공종</label><select id="nTrade">${tradeOpts(CA.tradeGroups, CA.trades, '', '선택')}</select></div>
       <div class="f"><label>내용</label><input type="text" id="nMemo"></div>
     </div>
     <div class="actions sticky"><button class="btn ghost" type="button" id="nClose">닫기</button><button class="btn" type="button" id="nSave">저장</button></div>`);
@@ -3317,7 +3277,6 @@ function caAddForm() {
   });
 }
 
-// ---------- 현장보고 ----------
 const RP = { site: null, items: [], stat: null, meta: null, month: null, loading: false };
 
 function rpWeatherIcon(w) { return { '맑음': '☀️', '구름': '⛅', '흐림': '☁️', '비': '🌧️', '눈': '❄️', '바람': '💨' }[w] || ''; }
@@ -3340,7 +3299,6 @@ function rpRender(el) {
   const month = RP.month || today().slice(0, 7);
   const byDate = {}; RP.items.forEach(r => byDate[r.date] = r);
 
-  // 달력
   const first = new Date(month + '-01T00:00:00');
   const startPad = first.getDay();
   const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
@@ -3410,7 +3368,6 @@ function rpShiftMonth(m, n) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
 
-// ---- 상세 ----
 async function rpOpen(id) {
   let item;
   try { item = (await api({ action: 'rp_get', id })).item; } catch (e) { toast(e.message); return; }
@@ -3466,14 +3423,13 @@ async function rpPhotoUrl(item, fileId) {
   return CR.urls[fileId];
 }
 
-// ---- 작성·수정 ----
 function rpForm(item, date) {
   const s = currentSite();
   const editing = !!item;
   const teams = RP.meta.teams;
   const workRow = (w = {}) => `<div class="rp-wrow">
     <div class="rp-wgrid">
-      <select class="wTrade"><option value="">공종 선택</option>${RP.meta.trades.map(t => `<option ${t === w.trade ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      <select class="wTrade">${tradeOpts(RP.meta.tradeGroups, RP.meta.trades, w.trade, '공종 선택')}</select>
       <input type="text" class="wDetail" placeholder="세부 (예: 지층 구조)" value="${esc(w.detail || '')}">
       <input type="text" class="wTeam" list="rpTeams" placeholder="팀·직종" value="${esc(w.team || '')}">
       <input type="number" class="wCount" min="0" step="1" inputmode="numeric" placeholder="인원" value="${w.count != null ? esc(w.count) : ''}">
@@ -3570,7 +3526,6 @@ function rpForm(item, date) {
   });
 }
 
-// 사진은 줄인 뒤 3장씩 묶어 4개까지 동시에 올린다 (한 번에 다 보내면 1분 넘게 걸림)
 async function rpUploadPhotos(input, siteCode, date, btn) {
   const picked = Array.from(input.files || []);
   if (!picked.length) return [];
@@ -3610,7 +3565,6 @@ function rpEqRow(m = {}) {
     <button type="button" class="xbtn" aria-label="삭제">×</button></div>`;
 }
 
-// ---- 주간 인쇄 ----
 function rpPrintForm() {
   const monday = d => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return ymd(x); };
   const thisWeek = monday(today());
@@ -3654,7 +3608,7 @@ function rpPrintWeek(startMon) {
     .none{color:#aaa}.foot{margin-top:12px;font-size:12px;display:flex;justify-content:space-between}
     @media print{.no-print{display:none}}
     button{margin-bottom:14px;padding:10px 22px;background:#000000;color:#fff;border:0;border-radius:6px;font-size:14px}
-  </style></head><body>
+</style></head><body>
     <button class="no-print" onclick="window.print()">인쇄</button>
     <h1>주간 현장보고</h1>
     <div class="sub">${esc(s.code)} ${esc(s.name)} · ${days[0]} ~ ${days[6]}</div>
@@ -3667,7 +3621,6 @@ function rpPrintWeek(startMon) {
   closeSheet();
 }
 
-// ---------- 사진 확대 보기 (좌우 이동·스와이프) ----------
 async function lightbox(ids, startIndex, loader) {
   if (!ids.length) return;
   let i = Math.max(0, startIndex);
@@ -3697,7 +3650,7 @@ async function lightbox(ids, startIndex, loader) {
   box.querySelector('.prev').onclick = e => { e.stopPropagation(); move(-1); };
   box.querySelector('.next').onclick = e => { e.stopPropagation(); move(1); };
   box.onclick = e => { if (e.target === box || e.target.classList.contains('lb-stage')) close(); };
-  // 모바일 스와이프
+
   let x0 = null, y0 = null;
   box.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
   box.addEventListener('touchend', e => {
@@ -3709,7 +3662,6 @@ async function lightbox(ids, startIndex, loader) {
   show();
 }
 
-// ---------- 건축주 계정 ----------
 const OA = { items: [], loaded: false };
 function oaRender(el) {
   const s = currentSite();
@@ -3752,7 +3704,6 @@ function oaRender(el) {
     .catch(e => el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`);
 }
 
-// ---------- 댓글 ----------
 function cmHtml() {
   return `<h4>댓글</h4><div id="cmList"><div class="hint">불러오는 중...</div></div>
     <div class="cm-write"><textarea id="cmText" rows="2" placeholder="댓글을 남겨주세요"></textarea>
@@ -3786,7 +3737,6 @@ function cmMount(type, id) {
   });
 }
 
-// ---------- 설계 일정 ----------
 const DS = { site: null, plan: null, items: [], canEdit: false, loading: false };
 const DS_WEEKS = 28;
 const DS_TPL = [
@@ -3974,7 +3924,6 @@ function dsShiftForm() {
   });
 }
 
-// ---------- 변경요청 ----------
 const CR = { items: [], site: null, meta: null, filter: '진행중', busy: false, urls: {},
   mode: 'all', all: [], allAt: 0, allFilter: '내 차례' };
 const CR_STEPS = [
@@ -4015,7 +3964,6 @@ function crSteps(o) {
   }).join('');
 }
 
-// 금액 한글 표기: 180000 → 금 일십팔만원정
 function wonKorean(n) {
   n = Math.floor(Number(n));
   if (!n || n < 0) return '';
@@ -4049,31 +3997,38 @@ function crCost(o) {
   return (o.costType === '감액' ? '감액 ' : '추가 ') + won(o.amount);
 }
 
+function tradeOpts(groups, flat, sel, first) {
+  const head = first === undefined ? '' : `<option value="">${first}</option>`;
+  if (!groups || !groups.length) return head + (flat || []).map(t => `<option ${t === sel ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  return head + groups.map(([g, list]) => `<optgroup label="${esc(g)}">${list.map(t => `<option ${t === sel ? 'selected' : ''}>${esc(t)}</option>`).join('')}</optgroup>`).join('');
+}
+function crActive() { return S.tab === 'site' && S.siteSub === '변경공사'; }
+function crRoot() { return (crActive() && $('subBody')) || $('main'); }
 async function renderChangeTab() {
   if (CR.mode === 'all') return crRenderAll();
   const s = currentSite();
-  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
+  if (!s) { crRoot().innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
   if (CR.site !== s.code) {
-    $('main').innerHTML = '<div class="loading">변경요청을 불러오는 중...</div>';
+    crRoot().innerHTML = '<div class="loading">변경요청을 불러오는 중...</div>';
     try {
       if (!CR.meta) CR.meta = await api({ action: 'cr_meta' });
       const d = await api({ action: 'cr_list', siteCode: s.code });
       CR.items = d.items; CR.site = s.code;
-    } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
-    if (S.tab !== 'change' || S.siteCode !== s.code) return;
+    } catch (e) { crRoot().innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (!crActive() || S.siteCode !== s.code) return;
   }
   crRenderList();
 }
 
 async function crRenderAll() {
   if (!CR.all.length || Date.now() - CR.allAt > 60000) {
-    $('main').innerHTML = '<div class="loading">변경요청을 불러오는 중...</div>';
+    crRoot().innerHTML = '<div class="loading">변경요청을 불러오는 중...</div>';
     try {
       if (!CR.meta) CR.meta = await api({ action: 'cr_meta' });
       const d = await api({ action: 'cr_all' });
       CR.all = d.items; CR.allAt = Date.now();
-    } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
-    if (S.tab !== 'change' || CR.mode !== 'all') return;
+    } catch (e) { crRoot().innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (!crActive() || CR.mode !== 'all') return;
   }
   const open = CR.all.filter(o => CR_OPEN.includes(o.status));
   const groups = {
@@ -4089,7 +4044,7 @@ async function crRenderAll() {
   const waitCount = st => open.filter(o => o.status === st).length;
   const addAmount = CR.all.filter(o => o.status === '완료' && o.costType === '추가').reduce((t, o) => t + (Number(o.amount) || 0), 0);
 
-  $('main').innerHTML = `
+  crRoot().innerHTML = `
     <div class="cr-bar"><h2>변경요청 현황</h2>
       <button class="btn ghost" type="button" id="crToSite">현장별 보기</button></div>
 
@@ -4124,13 +4079,12 @@ async function crRenderAll() {
     </section>`;
 
   $('crToSite').onclick = () => { CR.mode = 'site'; renderChangeTab(); };
-  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.allFilter = b.dataset.f; crRenderAll(); });
-  $('main').querySelectorAll('[data-site]').forEach(b => b.onclick = () => crGoSite(b.dataset.site));
-  $('main').querySelectorAll('.cr-all-row').forEach(b => b.onclick = () => crGoSite(b.dataset.code, b.dataset.id));
+  crRoot().querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.allFilter = b.dataset.f; crRenderAll(); });
+  crRoot().querySelectorAll('[data-site]').forEach(b => b.onclick = () => crGoSite(b.dataset.site));
+  crRoot().querySelectorAll('.cr-all-row').forEach(b => b.onclick = () => crGoSite(b.dataset.code, b.dataset.id));
   const fab = $('crFab'); if (fab) fab.hidden = true;
 }
 
-// 전체 목록에서 특정 현장·건으로 이동
 async function crGoSite(code, id) {
   if (S.siteCode !== code) {
     S.siteCode = code; localStorage.setItem(SITE_KEY, code);
@@ -4139,6 +4093,8 @@ async function crGoSite(code, id) {
     CR.site = null;
   }
   CR.mode = 'site';
+  S.siteSub = '변경공사';
+  if (S.tab !== 'site') { selectTab('site'); } else { renderSiteTab(); }
   await renderChangeTab();
   if (id) crOpen(id);
 }
@@ -4153,7 +4109,7 @@ function crRenderList() {
     전체: () => true
   };
   const list = CR.items.filter(groups[CR.filter]);
-  $('main').innerHTML = `
+  crRoot().innerHTML = `
     <div class="cr-bar">
       <h2>변경요청 <span class="cr-sub" style="font-size:15px;font-weight:500">${esc(s.code)} ${esc(s.name)}</span></h2>
       <button class="btn ghost" id="crToAll" type="button">전체 현황</button>
@@ -4177,11 +4133,10 @@ function crRenderList() {
   if (!fab) { fab = document.createElement('button'); fab.id = 'crFab'; fab.className = 'fab'; fab.type = 'button'; fab.innerHTML = '<span aria-hidden="true" style="font-size:20px;line-height:1">+</span> 변경요청 접수'; document.body.appendChild(fab); }
   fab.onclick = crNewForm;
   fab.hidden = false;
-  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.filter = b.dataset.f; crRenderList(); });
-  $('main').querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
+  crRoot().querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.filter = b.dataset.f; crRenderList(); });
+  crRoot().querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
 }
 
-// ---- 공통: 시트·폼 도구 ----
 function openSheet(title, sub, body) {
   closeSheet();
   const wrap = document.createElement('div');
@@ -4209,7 +4164,6 @@ function bindSegs(root, onChange) {
 }
 function segVal(root, name) { const b = root.querySelector(`[data-seg="${name}"] [aria-pressed="true"]`); return b ? b.dataset.v : ''; }
 
-// 이미지는 1600px JPEG로 줄여서 업로드
 async function readFiles(input) {
   const out = [];
   for (const f of Array.from(input.files || [])) {
@@ -4234,14 +4188,13 @@ async function submitting(btn, fn) {
   try { await fn(); } catch (e) { toast(e.message); } finally { CR.busy = false; btn.disabled = false; btn.textContent = t; }
 }
 
-// ---- 접수 ----
 function crNewForm() {
   const s = currentSite();
   const canFast = S.me.role === 'site' || S.me.role === 'admin';
   const body = openSheet('변경요청 접수', esc(s.code + ' ' + s.name), `
     <div class="notice">현장에서는 <b>접수만</b> 안내해 주세요. 변경 여부와 비용은 본사 설계팀 검토 후 확정됩니다.</div>
     <div class="card">
-      <div class="f"><label for="nTrade">공종</label><select id="nTrade"><option value="">선택</option>${CR.meta.trades.map(t => `<option>${esc(t)}</option>`).join('')}</select></div>
+      <div class="f"><label for="nTrade">공종</label><select id="nTrade">${tradeOpts(CR.meta.tradeGroups, CR.meta.trades, '', '선택')}</select></div>
       <div class="f"><label for="nTitle">제목</label><input type="text" id="nTitle" maxlength="80" placeholder="예: 거실 콘센트 2개 추가"></div>
       <div class="f"><label for="nContent">요청 내용</label><textarea id="nContent" rows="4" placeholder="위치, 수량, 높이 등 구체적으로"></textarea></div>
       <div class="f"><span class="lb">요청 경로</span>${segHtml('route', CR.meta.routes, '현장')}</div>
@@ -4275,7 +4228,6 @@ function crNewForm() {
   });
 }
 
-// ---- 상세 ----
 function crOpen(id) {
   const o = CR.items.find(x => x.id === id);
   if (!o) return;
@@ -4382,7 +4334,6 @@ async function crViewFile(o, fileId) {
   } catch (e) { toast(e.message); }
 }
 
-// ---- 단계별 처리 폼 ----
 function crActionForm(o, s, box) {
   const summary = `<div class="sum">${o.costType === '없음' ? '<b>추가비용 없음</b>' : `${o.costType === '감액' ? '감액' : '추가비용'} <b>${won(o.amount)}</b><div class="hint" style="color:var(--green)">${wonKorean(o.amount)}</div>`}</div>`;
   const noteF = (ph) => `<div class="f"><textarea class="aNote" rows="2" placeholder="${ph || '메모 (선택)'}"></textarea></div>`;
@@ -4430,7 +4381,6 @@ function crActionForm(o, s, box) {
   bindSegs(box);
   if (box.querySelector('.aAmount')) bindWonReader(box.querySelector('.aAmount'), box.querySelector('.won-read'));
 
-  // 서명 패드
   const cv = box.querySelector('.aSig');
   let signed = false;
   if (cv) {
@@ -4470,7 +4420,6 @@ function crActionForm(o, s, box) {
   }));
 }
 
-// ---------- 고객관리 ----------
 const CX = { items: [], meta: null, filter: '오늘 할 일', q: '', loaded: false };
 const CX_FIELDS = [
   ['landStatus', '고객 상황', 'land'], ['situation', '현재 상황 (문의 원문)', 'text'], ['location', '현장 소재지', 'text'],
@@ -4495,7 +4444,7 @@ function cxDue(o) {
   if (d === 0) return { cls: 'today', text: '오늘' };
   return { cls: '', text: `D-${d}` };
 }
-// 1순위: 접수 후 아직 통화 못한 고객 / 2순위: 미팅 후 계약 결정 대기
+
 function cxP1(o) { return !cxClosed(o) && ['접수', '접수(메일답장완료)'].includes(o.stage) && !o.firstContactAt; }
 function cxP2(o) { return !cxClosed(o) && ['미팅완료/계약고려중', '견적중'].includes(o.stage); }
 function cxTodo(o) { return cxP1(o) || cxP2(o); }
@@ -4515,7 +4464,7 @@ async function cxLoad() {
   CX.meta = meta; CX.items = (list.items || []).map(cxNorm); CX.loaded = true;
   cxBadge();
 }
-// 서버가 첨부를 문자열로 보내도 안전하게 (옛 배포 대비)
+
 function cxNorm(o) {
   if (!o) return o;
   if (typeof o.attachments === 'string') { try { o.attachments = JSON.parse(o.attachments || '[]'); } catch (e) { o.attachments = []; } }
@@ -4638,7 +4587,6 @@ function bindToggleSegs(root) {
   });
 }
 
-// ---- 첨부 자료 ----
 function cxFilesHtml(o) {
   const list = Array.isArray(o.attachments) ? o.attachments : [];
   if (!list.length) return '<div class="hint">올린 자료가 없습니다. 상담 중 받은 도면·스케치·사진을 올려두면 미팅 때 함께 볼 수 있습니다.</div>';
@@ -4678,7 +4626,6 @@ async function cxViewFile(o, fileId) {
   } catch (e) { toast(e.message); }
 }
 
-// ---- 오래된 자료 정리 (관리자) ----
 function cxCleanForm() {
   const body = openSheet('오래된 자료 정리', '관리자 전용', `
     <div class="card">
@@ -4724,7 +4671,6 @@ function cxCleanForm() {
   refresh();
 }
 
-// ---- 고객 등록 (전화·인스타·소개 등) ----
 function cxNewForm() {
   const body = openSheet('고객 등록', '홈페이지 외 문의', `
     <div class="card">
@@ -4746,7 +4692,6 @@ function cxNewForm() {
   });
 }
 
-// ---- 상세 ----
 function cxSiteNameGuess(loc) {
   const t = String(loc || '').split(/\s+/);
   const city = (t.find(x => /(시|군)$/.test(x) && !/(광역시|특별시|특별자치시)$/.test(x)) || t[0] || '').replace(/(광역시|특별시|특별자치시|특별자치도|도|시|군)$/, '');
@@ -4824,7 +4769,6 @@ function cxOpenInner(id) {
       <div class="actions"><button class="btn" type="button" id="xPlanSave">저장</button></div>
     </div>
 
-
     <div class="card">
       <h4>연락·상담 기록</h4>
       ${segHtml('kind', M.logKinds, '통화')}
@@ -4877,7 +4821,6 @@ function cxOpenInner(id) {
     });
   };
 
-  // 기록 종류별로 단계가 어떻게 바뀌는지 미리 안내
   const hintFor = k => {
     if (k === '통화' && ['접수', '접수(메일답장완료)'].includes(o.stage)) return '저장하면 단계가 "통화완료"로 넘어갑니다.';
     if (k === '메일·문자' && o.stage === '접수') return '저장하면 단계가 "접수(메일답장완료)"로 넘어갑니다.';
@@ -4951,7 +4894,7 @@ function cxOpenInner(id) {
       ta.remove();
     }
   };
-  // 연락처: 휴대폰이면 전화 연결, PC면 복사 / 이메일: 항상 복사
+
   const telBtn = $('cxTel');
   if (telBtn) telBtn.onclick = () => {
     const isMobile = window.matchMedia('(pointer: coarse)').matches;
@@ -5051,7 +4994,6 @@ function cxOpenInner(id) {
   loadLogs();
 }
 
-// ---------- 시작 ----------
 if (API_URL.includes('여기에_새_배포_URL')) {
   $('loginMsg').textContent = '설치 필요: 파일 상단의 API_URL을 입력하세요.';
 }
