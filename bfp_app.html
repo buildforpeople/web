@@ -2963,7 +2963,7 @@ function caRenderSheet() {
   $('caList').onclick = () => { CA.view = 'list'; renderCardTab(); };
   if ($('caPaste')) $('caPaste').onclick = caPasteForm;
   $('caAdd').onclick = caAddForm;
-  $('caPrint').onclick = () => window.print();
+  $('caPrint').onclick = caPrint;
   if ($('caAuto')) $('caAuto').onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'ca_autosite', month: '' });
     CA.items = d.items; CA.sel = {};
@@ -2979,6 +2979,38 @@ function caRenderSheet() {
 }
 
 let caLastCk = -1;
+function caPrint() {
+  const selIds = Object.keys(CA.sel).filter(k => CA.sel[k]);
+  const ids = selIds.length ? selIds : caVisibleIds();
+  const byId = {}; CA.items.forEach(o => byId[o.id] = o);
+  const rows = ids.map(id => byId[id]).filter(Boolean);
+  if (!rows.length) { toast('인쇄할 내역이 없습니다'); return; }
+  const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+  const site = c => { const x = S.sites.find(y => y.code === c); return c ? c + (x ? ' ' + x.name : '') : '미지정'; };
+  const owner = o => (o.owner || '미매칭') + (o.last4 ? ' ' + o.last4 : '');
+  const total = rows.reduce((a, o) => a + (Number(o.amount) || 0), 0);
+  const byKind = {}; rows.forEach(o => { byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + (Number(o.amount) || 0); });
+  const title = $('caPrintTitle').textContent + (selIds.length ? ` · 선택 ${rows.length}건` : '');
+  const tr = rows.map(o => `<tr><td class="c">${esc(String(o.paidAt || '').slice(2, 16).replace(/-/g, '.'))}</td><td>${esc(o.kind || '')}</td><td>${esc(o.memo || '')}</td>
+    <td class="r">${(Number(o.amount) || 0).toLocaleString('ko-KR')}</td><td>${esc(site(o.siteCode))}</td><td>${esc(o.trade || '')}</td><td>${esc(o.store || '')}</td><td>${esc(owner(o))}</td><td class="c">${(o.files || []).length ? 'O' : (caBig(o) ? '필요' : '')}</td></tr>`).join('');
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;font-size:11.5px;color:#222;margin:18px}
+    h1{font-size:16px;margin:0 0 4px}.sub{color:#555;margin-bottom:10px;font-size:12px}.sub b{color:#000;margin-right:10px}.sub span{margin-right:10px}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #bbb;padding:5px 6px;vertical-align:top;word-break:break-all}
+    th{background:#F0F0EE;font-weight:600;text-align:center}td.r,th.r{text-align:right;white-space:nowrap}td.c{text-align:center;white-space:nowrap}
+    tfoot td{font-weight:700;background:#F7F7F5}
+    col.dt{width:84px}col.kd{width:84px}col.am{width:84px}col.st{width:120px}col.tr{width:76px}col.ow{width:84px}col.dc{width:40px}
+    button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
+    @media print{button{display:none}@page{size:A4 landscape;margin:10mm}thead{display:table-header-group}tr{break-inside:avoid}}
+  </style></head><body><button onclick="window.print()">인쇄</button>
+    <h1>${esc(title)}</h1>
+    <div class="sub"><b>합계 ${won(total)}</b><span>${rows.length}건</span>${Object.keys(byKind).map(k => `<span>${esc(k)} ${won(byKind[k])}</span>`).join('')}</div>
+    <table><colgroup><col class="dt"><col class="kd"><col><col class="am"><col class="st"><col class="tr"><col><col class="ow"><col class="dc"></colgroup>
+    <thead><tr><th>일시</th><th>분류</th><th>지출내용</th><th class="r">금액</th><th>현장</th><th>공종</th><th>가맹점</th><th>사용자</th><th>증빙</th></tr></thead>
+    <tbody>${tr}</tbody><tfoot><tr><td colspan="3">합계 ${rows.length}건</td><td class="r">${total.toLocaleString('ko-KR')}</td><td colspan="5"></td></tr></tfoot></table>
+    <div class="sub" style="margin-top:8px">(주)사람사는집종합건설 · 출력 ${esc(today())}</div></body></html>`);
+  w.document.close();
+}
 function caVisibleIds() { return Array.from(document.querySelectorAll('#main .ca-grid tbody tr')).map(tr => tr.dataset.id); }
 function caBindChecks() {
   const all = $('caCkAll');
