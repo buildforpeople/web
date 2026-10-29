@@ -3002,7 +3002,7 @@ function caPrint() {
     col.dt{width:84px}col.kd{width:84px}col.am{width:84px}col.st{width:120px}col.tr{width:76px}col.ow{width:84px}col.dc{width:40px}
     button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
     @media print{button{display:none}@page{size:A4 landscape;margin:10mm}thead{display:table-header-group}tr{break-inside:avoid}}
-  </style></head><body><button onclick="window.print()">인쇄</button>
+</style></head><body><button onclick="window.print()">인쇄</button>
     <h1>${esc(title)}</h1>
     <div class="sub"><b>합계 ${won(total)}</b><span>${rows.length}건</span>${Object.keys(byKind).map(k => `<span>${esc(k)} ${won(byKind[k])}</span>`).join('')}</div>
     <table><colgroup><col class="dt"><col class="kd"><col><col class="am"><col class="st"><col class="tr"><col><col class="ow"><col class="dc"></colgroup>
@@ -4463,22 +4463,25 @@ const CX_FIELDS = [
 function cxClosed(o) { return (CX.meta ? CX.meta.closed : ['계약완료', '반려']).includes(o.stage); }
 function cxDays(o) { return Math.max(0, dayDiff(String(o.createdAt).slice(0, 10), today())); }
 function cxNoContact(o) { return !cxClosed(o) && o.stage === '접수' && !o.firstContactAt; }
+const CX_WAIT = ['미팅완료/계약고려중'];
+function cxWait(o) { return !cxClosed(o) && CX_WAIT.includes(o.stage); }
 function cxStale(o) {
-  if (cxClosed(o) || !o.lastActivityAt) return false;
+  if (cxClosed(o) || cxWait(o) || !o.lastActivityAt) return false;
   const idle = dayDiff(String(o.lastActivityAt).slice(0, 10), today());
   return idle >= (CX.meta ? CX.meta.staleDays : 14) && (!o.dueDate || o.dueDate <= today());
 }
-function cxOver(o) { return !cxClosed(o) && o.dueDate && o.dueDate < today(); }
+function cxOver(o) { return !cxClosed(o) && !cxWait(o) && o.dueDate && o.dueDate < today(); }
 function cxDue(o) {
   if (cxClosed(o) || !o.dueDate) return { cls: '', text: '' };
   const d = dayDiff(today(), o.dueDate);
+  if (cxWait(o)) return { cls: '', text: d < 0 ? '확답 대기' : d === 0 ? '오늘' : `D-${d}` };
   if (d < 0) return { cls: 'over', text: `${-d}일 지남` };
   if (d === 0) return { cls: 'today', text: '오늘' };
   return { cls: '', text: `D-${d}` };
 }
 
 function cxP1(o) { return !cxClosed(o) && ['접수', '접수(메일답장완료)'].includes(o.stage) && !o.firstContactAt; }
-function cxP2(o) { return !cxClosed(o) && ['미팅완료/계약고려중', '견적중'].includes(o.stage); }
+function cxP2(o) { return !cxClosed(o) && o.stage === '견적중'; }
 function cxTodo(o) { return cxP1(o) || cxP2(o); }
 function cxUrgentCount() { return CX.items.filter(cxTodo).length; }
 function cxUnit(v, unit) { return v && unit && !String(v).includes(unit) && /^[\d.~\s-]+$/.test(v) ? v + unit : v; }
@@ -4530,7 +4533,7 @@ function cxRenderList() {
     </div>
     ${nP1 || nP2 ? `<div class="cx-alert">
       ${nP1 ? `<button type="button" class="p1" data-f="첫 통화"><b>${nP1}</b> 첫 통화 필요<span>접수 후 아직 통화 전</span></button>` : ''}
-      ${nP2 ? `<button type="button" class="p2" data-f="계약 결정"><b>${nP2}</b> 계약 결정 대기<span>미팅·견적 후 확답 필요</span></button>` : ''}
+      ${nP2 ? `<button type="button" class="p2" data-f="견적 진행"><b>${nP2}</b> 견적 진행 중<span>견적 제출·확답 필요</span></button>` : ''}
     </div>` : `<div class="cx-ok">지금 꼭 연락할 고객이 없습니다.</div>`}
     ${nOver || nStale ? `<div class="cx-sub-alert">
       ${nOver ? `<button type="button" data-f="기한 지남">연락 기한 지남 <b>${nOver}</b></button>` : ''}
@@ -4538,7 +4541,7 @@ function cxRenderList() {
     </div>` : ''}
     <div class="f"><input type="text" id="cxQ" placeholder="이름·연락처·지역 검색" value="${esc(CX.q)}"></div>
     <div class="filters">
-      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '오늘 할 일' || k === '진행중' || k === '전체') ? `<button class="chip ${['첫 통화', '계약 결정'].includes(k) && n ? 'warn' : ''} ${k === '★ 별표' ? 'star-chip' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
+      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '오늘 할 일' || k === '진행중' || k === '전체') ? `<button class="chip ${['첫 통화', '견적 진행'].includes(k) && n ? 'warn' : ''} ${k === '★ 별표' ? 'star-chip' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
     </div>
     <section class="panel" id="cxRows">
       ${cxRowsHtml(list)}
@@ -4558,11 +4561,11 @@ function cxRenderList() {
 }
 
 function cxRowsHtml(list) {
-  if (!list.length) return `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '오늘 할 일' ? '첫 통화와 계약 결정 대기 고객이 모두 처리되었습니다.' : CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`;
+  if (!list.length) return `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '오늘 할 일' ? '첫 통화와 견적 진행 고객이 모두 처리되었습니다.' : CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`;
   return list.map(o => {
     const due = cxDue(o);
-    const flag = cxP1(o) ? `첫 통화 D+${cxDays(o)}` : cxP2(o) ? '계약 결정 대기' : '';
-    const soft = !flag && cxOver(o) ? `기한 ${due.text}` : !flag && cxStale(o) ? '기록 없음' : '';
+    const flag = cxP1(o) ? `첫 통화 D+${cxDays(o)}` : cxP2(o) ? '견적 진행 중' : '';
+    const soft = !flag && cxWait(o) ? '확답 대기' : !flag && cxOver(o) ? `기한 ${due.text}` : !flag && cxStale(o) ? '기록 없음' : '';
     return `<button class="cr-row cx-row ${flag ? 'urgent' : ''} ${cxP2(o) ? 'p2' : ''} ${o.star ? 'starred' : ''}" data-id="${esc(o.id)}">
       <span class="cr-id">${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(2, 10).replace(/-/g, '.'))} (D+${cxDays(o)})</span>
       <span class="cr-title">${o.star ? '<span class="star">★</span>' : ''}${esc(o.name)}${o.star ? `<span class="tag star-tag">${esc(o.star)}</span>` : ''}${flag ? `<span class="flag ${cxP2(o) ? 'amber' : ''}">${esc(flag)}</span>` : ''}${soft ? `<span class="flag soft">${esc(soft)}</span>` : ''}${o.siteCode ? `<span class="tag">${esc(o.siteCode)}</span>` : ''}</span>
@@ -4579,7 +4582,7 @@ function cxBindRows() {
 
 function cxFilteredList() {
   const q = CX.q.trim().toLowerCase();
-  const rank = o => cxP1(o) ? 0 : cxP2(o) ? 1 : cxOver(o) ? 3 : cxStale(o) ? 4 : cxClosed(o) ? 9 : 5;
+  const rank = o => cxP1(o) ? 0 : cxP2(o) ? 1 : cxOver(o) ? 3 : cxStale(o) ? 4 : cxWait(o) ? 6 : cxClosed(o) ? 9 : 5;
   return CX.items.filter(cxGroups()[CX.filter]).filter(o => !q || [o.name, o.phone, o.location, o.id].join(' ').toLowerCase().includes(q))
     .sort((a, b) => rank(a) - rank(b) || String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999')) || String(b.createdAt).localeCompare(String(a.createdAt)));
 }
@@ -4587,7 +4590,8 @@ function cxGroups() {
   return {
     '오늘 할 일': cxTodo,
     '첫 통화': cxP1,
-    '계약 결정': cxP2,
+    '견적 진행': cxP2,
+    '확답 대기': cxWait,
     진행중: o => !cxClosed(o),
     '★ 별표': o => !!o.star,
     '기한 지남': cxOver,
@@ -4758,7 +4762,8 @@ function cxOpenInner(id) {
   const actOpts = [...new Set([...(o.nextAction && !M.actions.includes(o.nextAction) ? [o.nextAction] : []), ...M.actions])]
     .map(a => `<option ${a === o.nextAction ? 'selected' : ''}>${esc(a)}</option>`).join('');
   const warn = cxP1(o) ? `접수 후 ${cxDays(o)}일째 통화 기록이 없습니다. 통화 후 바로 아래에 기록을 남겨주세요.`
-    : cxP2(o) ? `미팅·견적 후 계약 결정을 기다리는 고객입니다. 확답을 받거나 다음 연락 시점을 정해주세요.`
+    : cxP2(o) ? `견적을 준비·제출 중인 고객입니다. 견적 제출 후 확답을 받거나 다음 연락 시점을 정해주세요.`
+    : cxWait(o) ? `미팅 후 확답을 기다리는 고객입니다. 할 일 숫자에서는 빠지고, 2주마다 담당자에게 메일로 다시 알려드립니다.`
     : cxOver(o) ? `다음 연락 기한이 ${due.text}. 연락하고 기록을 남기거나 기한을 다시 정하세요.`
     : cxStale(o) ? `${M.staleDays}일 넘게 기록이 없습니다. 진행 상황을 확인해 주세요.` : '';
 
