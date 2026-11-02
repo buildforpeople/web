@@ -814,6 +814,15 @@
   .pr-btn { border: 0; border-radius: 8px; padding: 10px 20px; font-weight: 700; background: #283618; color: #fff; cursor: pointer; font: inherit; font-weight: 700; }
   .pr-btn.ghost { background: #fff; color: #283618; border: 1px solid var(--border); }
   .pr-btn:disabled { opacity: .5; }
+  .pr-btn.sm { padding: 7px 12px; font-size: 12px; font-weight: 600; }
+  .pr-addfiles { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pr-addfiles .pr-hint { flex-basis: 100%; }
+  .pr-addlist { flex-basis: 100%; display: flex; flex-direction: column; gap: 5px; }
+  .pr-addchip { display: flex; align-items: center; gap: 8px; font-size: 12px; background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  .pr-addchip .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pr-addchip .kd { color: #857F66; flex-shrink: 0; }
+  .pr-addchip button { background: none; border: 0; cursor: pointer; color: #857F66; font-size: 13px; line-height: 1; padding: 0 2px; }
+  .pr-addchip button:hover { color: #c0392b; }
   .pr-lb { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 500; display: flex; align-items: center; gap: 8px; padding: 20px; }
   .lb-s { flex: 1; height: 100%; display: grid; place-items: center; min-width: 0; }
   .lb-s img { max-width: 100%; max-height: 100%; border-radius: 6px; }
@@ -1013,6 +1022,7 @@
             <option>가설</option>
             <option>기초</option>
             <option>목구조/토대</option>
+            <option>RC골조</option>
             <option>창호</option>
             <option>외부도어</option>
             <option>내부도어</option>
@@ -2007,11 +2017,18 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.pr-lb')) prClose(); });
 
   function prRender(d) {
-    const it = d.item, can = d.canEdit;
+    const it = d.item;
+    const adm = !!d.canEdit; // 관리자: 상태·처리일·공무확인·메모까지 수정
+    const isOwner = !!(currentUser && currentUser.name && it.requester && it.requester === currentUser.name);
+    const ownerEdit = !adm && isOwner && it.status !== '완료'; // 본인 요청 건 · 입금 완료 전
+    const can = adm || ownerEdit;
     const won = n => Number(n || 0).toLocaleString('ko-KR') + '원';
     const inp = (id, v, type) => can ? `<input class="pr-in" id="${id}" type="${type || 'text'}" value="${escapeHtml(v)}">` : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
     const sel = (id, opts, v) => can ? `<select class="pr-in" id="${id}">${opts.map(o => `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select>` : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
+    const inpA = (id, v, type) => adm ? inp(id, v, type) : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
+    const selA = (id, opts, v) => adm ? sel(id, opts, v) : `<div class="pr-val">${escapeHtml(v) || '—'}</div>`;
     const cats = [...document.querySelectorAll('select[name="category"] option')].map(o => o.value).filter(Boolean);
+    const ownerSites = (() => { const s = (currentUser && currentUser.requestSites) ? currentUser.requestSites.slice() : []; if (it.site && s.indexOf(it.site) < 0) s.unshift(it.site); return s; })();
     const statuses = (currentUser && currentUser.statuses) || ['요청', '처리중', '완료', '보류', '취소'];
     const imgs = it.files.filter(f => f.type.startsWith('image/'));
     prSheet(`
@@ -2026,12 +2043,21 @@
         ${it.files.length ? `<div class="pr-thumbs">${it.files.map(f => `
           <button type="button" class="pr-thumb" data-fid="${escapeHtml(f.id)}" title="${escapeHtml(f.kind)}">
             <span>${escapeHtml(f.kind)}</span></button>`).join('')}</div>` : '<div class="pr-hint">첨부된 파일이 없습니다.</div>'}
+        ${can ? `
+        <div class="pr-addfiles">
+          <input type="file" id="prAddQuoteInput" multiple accept="image/*,.pdf,.xlsx,.xls,.csv" style="display:none">
+          <input type="file" id="prAddTaxInput"   multiple accept="image/*,.pdf,.xlsx,.xls,.csv" style="display:none">
+          <button type="button" class="pr-btn ghost sm" id="prAddQuoteBtn">＋ 견적서·명세서 추가</button>
+          <button type="button" class="pr-btn ghost sm" id="prAddTaxBtn">＋ 세금계산서 추가</button>
+          <div class="pr-addlist" id="prAddList"></div>
+          <div class="pr-hint">추가한 파일은 아래 [저장]을 눌러야 업로드됩니다.</div>
+        </div>` : ''}
       </div>
 
       <div class="pr-card">
-        <h4>요청 내용 ${can ? '<span class="pr-hint">· 수정 가능</span>' : ''}</h4>
+        <h4>요청 내용 ${adm ? '<span class="pr-hint">· 수정 가능</span>' : ownerEdit ? '<span class="pr-hint">· 본인 요청 건 — 입금 완료 전까지 수정 가능</span>' : ''}</h4>
         <div class="pr-grid">
-          <label>현장</label>${can ? sel('fSite', d.sites, it.site) : `<div class="pr-val">${escapeHtml(it.site)}</div>`}
+          <label>현장</label>${can ? sel('fSite', adm ? d.sites : ownerSites, it.site) : `<div class="pr-val">${escapeHtml(it.site)}</div>`}
           <label>공종</label>${sel('fCat', cats.includes(it.category) ? cats : [it.category, ...cats], it.category)}
           <label>지출구분</label>${sel('fExp', ['재료비', '노무비', '경비'], it.expType)}
           <label>거래처명</label>${inp('fVendor', it.vendor)}
@@ -2044,12 +2070,12 @@
       </div>
 
       <div class="pr-card">
-        <h4>처리</h4>
+        <h4>처리 ${ownerEdit ? '<span class="pr-hint">· 회계 담당자만 수정</span>' : ''}</h4>
         <div class="pr-grid">
-          <label>상태</label>${sel('fStatus', statuses, it.status)}
-          <label>처리일</label>${inp('fDone', it.doneDate, 'date')}
-          <label>공무 확인</label>${can ? `<label class="pr-check"><input type="checkbox" id="fConfirm" ${it.confirmed ? 'checked' : ''}> 확인함</label>` : `<div class="pr-val">${it.confirmed ? '확인함' : '—'}</div>`}
-          <label>메모</label>${can ? `<textarea class="pr-in" id="fMemo" rows="2">${escapeHtml(it.memo)}</textarea>` : `<div class="pr-val">${escapeHtml(it.memo) || '—'}</div>`}
+          <label>상태</label>${selA('fStatus', statuses, it.status)}
+          <label>처리일</label>${inpA('fDone', it.doneDate, 'date')}
+          <label>공무 확인</label>${adm ? `<label class="pr-check"><input type="checkbox" id="fConfirm" ${it.confirmed ? 'checked' : ''}> 확인함</label>` : `<div class="pr-val">${it.confirmed ? '확인함' : '—'}</div>`}
+          <label>메모</label>${adm ? `<textarea class="pr-in" id="fMemo" rows="2">${escapeHtml(it.memo)}</textarea>` : `<div class="pr-val">${escapeHtml(it.memo) || '—'}</div>`}
         </div>
       </div>
 
@@ -2079,22 +2105,55 @@
       };
     });
     if (can) {
+      // 파일 추가 첨부 (저장 시 함께 업로드)
+      const addStore = { quote: [], tax: [] };
+      const addList = document.getElementById('prAddList');
+      const renderAdd = () => {
+        addList.innerHTML = [
+          ...addStore.quote.map((f, i) => ({ f, i, kind: '견적서·명세서', k: 'quote' })),
+          ...addStore.tax.map((f, i) => ({ f, i, kind: '세금계산서', k: 'tax' })),
+        ].map(x => `<div class="pr-addchip"><span class="kd">${x.kind}</span><span class="nm">${escapeHtml(x.f.name)}</span>
+          <span class="kd">${(x.f.size / 1024).toFixed(0)}KB</span>
+          <button type="button" data-k="${x.k}" data-i="${x.i}" title="제거">✕</button></div>`).join('');
+        addList.querySelectorAll('button[data-k]').forEach(b => {
+          b.onclick = () => { addStore[b.dataset.k].splice(Number(b.dataset.i), 1); renderAdd(); };
+        });
+      };
+      const wireAdd = (btnId, inputId, key) => {
+        const input = document.getElementById(inputId);
+        document.getElementById(btnId).onclick = () => input.click();
+        input.onchange = () => { addStore[key] = addStore[key].concat(Array.from(input.files)); input.value = ''; renderAdd(); };
+      };
+      wireAdd('prAddQuoteBtn', 'prAddQuoteInput', 'quote');
+      wireAdd('prAddTaxBtn', 'prAddTaxInput', 'tax');
+
       const a = document.getElementById('fAmount');
       a.oninput = () => { document.getElementById('fAmountRead').textContent = won(String(a.value).replace(/[^\d.-]/g, '')); };
-      document.getElementById('fStatus').onchange = e => {
+      const stEl = document.getElementById('fStatus');
+      if (stEl) stEl.onchange = e => {
         if (e.target.value === '완료' && !document.getElementById('fDone').value) document.getElementById('fDone').value = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
       };
+      // 관리자 전용 필드가 화면에 없으면(소장 수정) 기존 값 그대로 전송
+      const gv = (id, fb) => { const el = document.getElementById(id); return el ? (el.type === 'checkbox' ? el.checked : el.value) : fb; };
       document.getElementById('prSave').onclick = async e => {
-        const btn = e.target; btn.disabled = true; btn.textContent = '저장 중...';
+        const btn = e.target; btn.disabled = true;
         try {
-          const r = await api({ action: 'update', sheet: it.sheet, row: it.row, docId: it.docId, fields: {
-            site: document.getElementById('fSite').value, category: document.getElementById('fCat').value,
-            expType: document.getElementById('fExp').value, vendor: document.getElementById('fVendor').value,
-            item: document.getElementById('fItem').value, amount: document.getElementById('fAmount').value,
-            taxYn: document.getElementById('fTax').value, bank: document.getElementById('fBank').value,
-            account: document.getElementById('fAccount').value, status: document.getElementById('fStatus').value,
-            doneDate: document.getElementById('fDone').value, memo: document.getElementById('fMemo').value,
-            confirmed: document.getElementById('fConfirm').checked } });
+          let addQuote = [], addTax = [];
+          if (addStore.quote.length || addStore.tax.length) {
+            btn.textContent = '파일 업로드 중...';
+            addQuote = await Promise.all(addStore.quote.map(fileToBase64));
+            addTax   = await Promise.all(addStore.tax.map(fileToBase64));
+          }
+          btn.textContent = '저장 중...';
+          const r = await api({ action: 'update', sheet: it.sheet, row: it.row, docId: it.docId,
+            addQuoteFiles: addQuote, addTaxFiles: addTax, fields: {
+            site: gv('fSite', it.site), category: gv('fCat', it.category),
+            expType: gv('fExp', it.expType), vendor: gv('fVendor', it.vendor),
+            item: gv('fItem', it.item), amount: gv('fAmount', it.amount),
+            taxYn: gv('fTax', it.taxYn), bank: gv('fBank', it.bank),
+            account: gv('fAccount', it.account), status: gv('fStatus', it.status),
+            doneDate: gv('fDone', it.doneDate), memo: gv('fMemo', it.memo),
+            confirmed: gv('fConfirm', !!it.confirmed) } });
           if (r.authError) { prClose(); showLogin(r.message); return; }
           if (r.status !== 'ok') throw new Error(r.message);
           // 목록 갱신
