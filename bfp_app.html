@@ -239,6 +239,25 @@
   .vw-frame-wrap { margin-top: 12px; padding: 0; overflow: hidden; }
   .vw-frame { display: block; width: 100%; height: min(72vh, 760px); border: 0; background: #000; }
   .vw-note { padding: 8px 12px; font-size: 12px; color: var(--muted); }
+  .iv-alerts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .iv-alerts button { border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+  .iv-alerts button b { font-size: 16px; margin-right: 4px; }
+  .iv-alerts button.warn b { color: #E0A72E; } .iv-alerts button.bad b { color: #E07B6A; }
+  .iv-alerts button[aria-pressed="true"] { border-color: var(--ink); }
+  .iv-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .iv-tools input, .iv-tools select { flex: 1; min-width: 160px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 8px; padding: 9px 12px; font: inherit; }
+  .iv-group { padding: 8px 16px 6px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); background: var(--raise); }
+  .iv-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .iv-row:hover { background: var(--raise); }
+  .iv-main { flex: 1; min-width: 0; }
+  .iv-main b { font-size: 14.5px; } .iv-main small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .iv-tag { font-family: ui-monospace, Menlo, monospace; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--raise); border: 1px solid var(--line-strong); margin-right: 6px; }
+  .iv-qty { font-variant-numeric: tabular-nums; color: var(--text); min-width: 36px; text-align: right; }
+  .iv-flag { font-size: 11px; padding: 1px 7px; border-radius: 999px; margin-left: 6px; background: rgba(224,167,46,.15); color: #E0A72E; }
+  .iv-flag.bad { background: rgba(224,123,106,.15); color: #E07B6A; } .iv-flag.out { background: rgba(127,167,216,.15); color: #7FA7D8; }
+  .iv-act { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+  .iv-rules h4 { margin: 14px 0 6px; font-size: 14px; } .iv-rules ul { margin: 0; padding-left: 18px; } .iv-rules li { margin: 3px 0; font-size: 13px; line-height: 1.5; }
+  .iv-rules .lead { font-size: 13px; color: var(--text); background: var(--raise); padding: 10px 12px; border-radius: 8px; }
   .fb-frame { display: block; width: 100%; border: 0; border-radius: 12px; background: var(--bg); min-height: 420px; }
 
   .cr-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
@@ -945,6 +964,26 @@
   .ca-fclear:hover { background: rgba(255,255,255,.06); }
   .ca-bar { background: rgba(255,255,255,.08); }
   .ca-bar i { background: var(--accent); }
+.ci-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.ci-nav{display:flex;align-items:center;gap:6px}.ci-nav .btn{padding:6px 12px}.ci-nav input{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:7px 8px}
+.ci-wd{color:var(--muted);font-size:13px}.ci-total{font-size:14px}.ci-total b{font-size:24px;margin-right:2px}.ci-total small{color:var(--muted)}
+.ci-trades{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%}.ci-trades span{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.ci-table td,.ci-table th{white-space:nowrap}.ci-table a{color:inherit}
+.ci-recent{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.lb-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.lb-filter input,.lb-filter select{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:7px 8px}
+.lb-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}.lb-tiles div{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px}
+.lb-tiles small{display:block;color:var(--muted);font-size:12px}.lb-tiles b{font-size:21px;margin-right:4px}.lb-tiles span{font-size:12px;color:var(--muted)}.lb-tiles .warn b{color:#E0A72E}
+.lb-table td,.lb-table th{white-space:nowrap}.lb-table td small{display:block;color:var(--muted);font-size:11.5px}.lb-table .r{text-align:right;white-space:nowrap}.lb-click{cursor:pointer}.lb-click:hover td{background:rgba(255,255,255,.03)}
+.lb-flag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(224,167,46,.15);color:#E0A72E;margin:1px 3px 1px 0;white-space:nowrap}
+.lb-sh-title{padding:10px 14px;font-weight:700;border-bottom:1px solid var(--line)}
+.lb-sheet{border-collapse:collapse;font-size:12px;min-width:100%}.lb-sheet th,.lb-sheet td{border:1px solid var(--line);padding:5px 4px;text-align:center;min-width:30px}
+.lb-sheet th{color:var(--muted);font-weight:500}.lb-sheet th.we{color:#E07B6A}.lb-sheet .nm{text-align:left;min-width:120px;position:sticky;left:0;background:var(--surface)}.lb-sheet .nm small{display:block;color:var(--muted);font-size:11px}
+.lb-sheet .r{text-align:right;min-width:60px;white-space:nowrap}.lb-sheet td[data-rec]{cursor:pointer}.lb-sheet td.no,.lb-k.no{background:rgba(224,123,106,.18)}.lb-sheet td.ed,.lb-k.ed{text-decoration:underline}
+.lb-sheet tr.tot td{font-weight:700;background:rgba(127,127,127,.12)}.lb-k{padding:0 4px;border-radius:3px}
+.lb-gs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.lb-rates{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.lb-rates label{display:flex;align-items:center;gap:8px}.lb-rates span{flex:1;font-size:13.5px}.lb-rates span small{display:block;color:var(--muted);font-size:11px}
+.lb-rates input{width:110px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:7px 8px;text-align:right}
+@media(max-width:760px){.lb-tiles{grid-template-columns:repeat(2,1fr)}.lb-tiles b{font-size:18px}}
 </style>
 </head>
 <body>
@@ -982,8 +1021,8 @@
 <script>const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일' };
-const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'payreq', 'card', 'board', 'fin', 'detail', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', inv: '창고·장비', labor: '인원출력' };
+const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'inv', 'sikgu', 'master'];
 const TAB_GROUPS = { cx: '상담·설계', info: '시공', payreq: '재정', detail: '회사' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
@@ -1102,7 +1141,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est'].includes(t);
+  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
   renderTab();
 }
 
@@ -1115,6 +1154,8 @@ function renderTab() {
   if (S.tab === 'detail') return renderDetailTab();
   if (S.tab === 'card') return renderCardTab();
   if (S.tab === 'board') return renderBoardTab();
+  if (S.tab === 'inv') return renderInvTab();
+  if (S.tab === 'labor') return renderLaborTab();
   if (S.tab === 'est') return renderEstTab();
   if (S.tab === 'design') return renderDesignTab();
   if (S.tab === 'site') return renderSiteTab();
@@ -1159,6 +1200,188 @@ async function renderEstTab() {
     if (S.tab !== 'est') return;
   }
   fbFrame(fbDoc(FB.estHtml, null));
+}
+
+const IV = { items: [], meta: null, loaded: false, q: '', cat: '', place: '', flag: '', urls: {} };
+function ivMonths(ym) { if (!/^\d{4}-\d{2}/.test(ym || '')) return 0; const [y, m] = ym.split('-').map(Number); const n = new Date(); return (n.getFullYear() - y) * 12 + (n.getMonth() + 1 - m); }
+function ivFlags(o) {
+  const f = [], keep = (IV.meta && IV.meta.keepMonths) || 24;
+  if (o.status === '대여중') f.push({ k: 'out', t: `대여중 · ${o.rentSite} · ${o.rentBy}${o.rentAt ? ' · ' + dayDiff(o.rentAt, today()) + '일째' : ''}` });
+  if (o.status === '수리 필요') f.push({ k: 'bad', t: '수리 필요' });
+  if (o.cat === '기한 한정 자재' && ivMonths(o.inMonth) >= keep) f.push({ k: 'bad', t: '입고 2년 경과 · 폐기' });
+  else if (['공구', '창고 자재', '현장 비품'].includes(o.cat) && o.status !== '대여중') {
+    const last = o.lastUsed ? o.lastUsed.slice(0, 7) : o.inMonth;
+    if (ivMonths(last) >= keep) f.push({ k: 'warn', t: '2년 미사용 · 처분 검토' });
+  }
+  return f;
+}
+const IV_FILTERS = {
+  out: ['대여중', o => o.status === '대여중', ''],
+  old: ['2년 미사용·경과', o => ivFlags(o).some(f => /2년/.test(f.t)), 'warn'],
+  fix: ['수리 필요', o => o.status === '수리 필요', 'bad']
+};
+async function renderInvTab() {
+  if (!IV.loaded) {
+    $('main').innerHTML = '<div class="loading">창고·장비 목록을 불러오는 중...</div>';
+    try { const d = await api({ action: 'iv_list' }); IV.items = d.items; IV.meta = d; IV.loaded = true; }
+    catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'inv') return;
+  }
+  const M = IV.meta;
+  const places = [...new Set([...M.places, ...IV.items.map(o => o.place).filter(Boolean)])];
+  const q = IV.q.trim().toLowerCase();
+  const list = IV.items.filter(o => (!IV.cat || o.cat === IV.cat) && (!IV.place || o.place === IV.place || o.rentSite === IV.place)
+    && (!IV.flag || IV_FILTERS[IV.flag][1](o))
+    && (!q || [o.tag, o.name, o.brand, o.note, o.owner, o.place, o.rentSite, o.rentBy, o.sub].join(' ').toLowerCase().includes(q)));
+  const groups = M.cats.map(c => [c, list.filter(o => (o.cat || '기타') === c)]).filter(g => g[1].length);
+  $('main').innerHTML = `
+    <div class="cr-bar"><h2>창고·장비 <span class="cr-sub" style="font-weight:500">${IV.items.length}개 품목</span></h2>
+      <button class="btn ghost" type="button" id="ivRules">보관 기준</button>
+      ${M.canEdit ? '<button class="btn" type="button" id="ivAdd">+ 등록</button>' : ''}</div>
+    ${M.canEdit ? '' : '<div class="hint" style="margin:-4px 0 10px">조회 전용입니다. 물품 등록·반출·반납은 창고 태블릿에서 합니다.</div>'}
+    <div class="iv-alerts">${Object.entries(IV_FILTERS).map(([k, [lb, fn, cls]]) => { const n = IV.items.filter(fn).length;
+      return `<button type="button" class="${n ? cls : ''}" data-flag="${k}" aria-pressed="${IV.flag === k}"><b>${n}</b>${lb}</button>`; }).join('')}</div>
+    <div class="iv-tools">
+      <input type="search" id="ivQ" placeholder="품목·번호·브랜드·현장 검색" value="${esc(IV.q)}">
+      <select id="ivCat"><option value="">전체 분류</option>${M.cats.map(c => `<option ${c === IV.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+      <select id="ivPlace"><option value="">전체 장소</option>${places.map(c => `<option ${c === IV.place ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    </div>
+    <section class="panel" style="padding:0">${groups.length ? groups.map(([c, rows]) => `<div class="iv-group">${esc(c)} · ${rows.length}</div>` + rows.map(o => {
+      const fl = ivFlags(o);
+      const canRent = M.canEdit && o.cat === '공구';
+      return `<div class="iv-row" data-id="${esc(o.id)}">
+        <div class="iv-main"><b>${o.tag ? `<span class="iv-tag">${esc(o.tag)}</span>` : ''}${esc(o.name)}</b>${fl.map(f => `<span class="iv-flag ${f.k}">${esc(f.t)}</span>`).join('')}
+          <small>${[o.sub, o.brand, o.status !== '대여중' ? o.place : '', o.owner, o.note].filter(Boolean).map(esc).join(' · ')}</small></div>
+        <span class="iv-qty">${o.qty === '' ? '' : o.qty + '개'}</span>
+        ${canRent ? (o.status === '대여중' ? `<button type="button" class="btn ghost iv-act" data-ret="${esc(o.id)}">반납</button>` : `<button type="button" class="btn iv-act" data-out="${esc(o.id)}">반출</button>`) : ''}
+      </div>`; }).join('')).join('') : '<div class="empty"><h3>해당하는 물품이 없습니다</h3></div>'}</section>`;
+  $('ivQ').oninput = e => { IV.q = e.target.value; clearTimeout(IV._t); IV._t = setTimeout(() => { renderInvTab().then(() => { const i = $('ivQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }, 250); };
+  $('ivCat').onchange = e => { IV.cat = e.target.value; renderInvTab(); };
+  $('ivPlace').onchange = e => { IV.place = e.target.value; renderInvTab(); };
+  $('main').querySelectorAll('[data-flag]').forEach(b => b.onclick = () => { IV.flag = IV.flag === b.dataset.flag ? '' : b.dataset.flag; renderInvTab(); });
+  $('main').querySelectorAll('.iv-row').forEach(r => r.onclick = e => { if (e.target.closest('button')) return; ivForm(IV.items.find(x => x.id === r.dataset.id)); });
+  $('main').querySelectorAll('[data-out]').forEach(b => b.onclick = () => ivRentForm(IV.items.find(x => x.id === b.dataset.out)));
+  $('main').querySelectorAll('[data-ret]').forEach(b => b.onclick = () => ivReturnForm(IV.items.find(x => x.id === b.dataset.ret)));
+  $('ivRules').onclick = ivRules;
+  if ($('ivAdd')) $('ivAdd').onclick = () => ivForm(null);
+}
+function ivReplace(item) { const i = IV.items.findIndex(x => x.id === item.id); if (i >= 0) IV.items[i] = item; else IV.items.push(item); }
+function ivSiteOpts() {
+  return `<option value="">현장 선택</option>` + S.sites.filter(s => !/본사/.test(s.name)).map(s => `<option value="${esc(s.code + ' ' + s.name)}">${esc(s.code + ' ' + s.name)}</option>`).join('') + '<option value="기타">기타(직접 입력)</option>';
+}
+function ivRentForm(o) {
+  openSheet(`반출 · ${esc(o.tag)} ${esc(o.name)}`, '어느 현장에서 누가 쓰는지 남겨 주세요', `
+    <div class="card">
+      <div class="f"><label for="ivRS">사용 현장</label><select id="ivRS">${ivSiteOpts()}</select><input type="text" id="ivRS2" placeholder="현장 직접 입력" hidden></div>
+      <div class="f"><label for="ivRB">사용자</label><input type="text" id="ivRB" value="${esc(S.me.name)}"></div>
+    </div>
+    <div class="actions"><button class="btn ghost" type="button" id="ivRC">닫기</button><button class="btn" type="button" id="ivRG">반출</button></div>`);
+  $('ivRS').onchange = () => { $('ivRS2').hidden = $('ivRS').value !== '기타'; };
+  $('ivRC').onclick = closeSheet;
+  $('ivRG').onclick = e => submitting(e.target, async () => {
+    const site = $('ivRS').value === '기타' ? $('ivRS2').value : $('ivRS').value;
+    const d = await api({ action: 'iv_rent', id: o.id, site, by: $('ivRB').value });
+    ivReplace(d.item); closeSheet(); renderInvTab(); toast('반출 기록했습니다');
+  });
+}
+function ivReturnForm(o) {
+  openSheet(`반납 · ${esc(o.tag)} ${esc(o.name)}`, `${esc(o.rentSite)} · ${esc(o.rentBy)} 님 사용`, `
+    <div class="card"><div class="f"><label for="ivRP">보관 장소</label><select id="ivRP">${IV.meta.places.map(p => `<option ${p === o.place ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div>
+      <div class="f"><label for="ivRB">반납자</label><input type="text" id="ivRB" value="${esc(S.me.name)}"></div></div>
+    <div class="actions"><button class="btn ghost" type="button" id="ivRC">닫기</button><button class="btn" type="button" id="ivRG">반납</button></div>`);
+  $('ivRC').onclick = closeSheet;
+  $('ivRG').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'iv_return', id: o.id, place: $('ivRP').value, by: $('ivRB').value, site: o.rentSite });
+    ivReplace(d.item); closeSheet(); renderInvTab(); toast('반납했습니다');
+  });
+}
+async function ivPhotoUrl(id, fid, thumb) {
+  const k = (thumb ? 't' : 'f') + fid;
+  if (IV.urls[k]) return IV.urls[k];
+  const d = await api({ action: 'iv_photo', id, fileId: fid, thumb: !!thumb });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return IV.urls[k] = URL.createObjectURL(new Blob([arr], { type: d.type }));
+}
+function ivForm(o) {
+  const M = IV.meta, edit = M.canEdit, x = o || { cat: IV.cat || '창고 자재', status: '보관중', qty: 1, place: '사무실 창고', inMonth: today().slice(0, 7), photos: [] };
+  const removed = [];
+  const subOpts = c => (M.subs[c] || []).map(v => `<option ${v === x.sub ? 'selected' : ''}>${esc(v)}</option>`).join('');
+  const fl = o ? ivFlags(o) : [];
+  const body = openSheet(o ? `${o.tag ? esc(o.tag) + ' ' : ''}${esc(o.name)}` : '물품 등록', o ? `${esc(o.id)} · 수정 ${esc(o.by || '')} ${esc(String(o.updatedAt || '').slice(0, 16))}` : '보관 기준에 맞는 품목만 등록해 주세요', `
+    ${fl.length ? `<div class="cx-warn">${fl.map(f => esc(f.t)).join(' · ')}</div>` : ''}
+    <div class="card">
+      <div class="cx-when">
+        <div class="f"><label for="ivC">분류</label><select id="ivC" ${edit ? '' : 'disabled'}>${M.cats.map(c => `<option ${c === x.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+        <div class="f" id="ivSW"><label for="ivS">세부 (보관 기준)</label><select id="ivS" ${edit ? '' : 'disabled'}>${subOpts(x.cat)}</select></div>
+      </div>
+      <div class="f"><label for="ivN">품목</label><input type="text" id="ivN" value="${esc(x.name || '')}" ${edit ? '' : 'readonly'} placeholder="예: 스텐 L앙카, 기밀테이프"></div>
+      <div class="cx-when">
+        <div class="f"><label for="ivB">브랜드·모델·규격</label><input type="text" id="ivB" value="${esc(x.brand || '')}" ${edit ? '' : 'readonly'}></div>
+        <div class="f"><label for="ivQn">수량</label><input type="number" id="ivQn" min="0" value="${esc(x.qty)}" ${edit ? '' : 'readonly'}></div>
+      </div>
+      <div class="cx-when">
+        <div class="f"><label for="ivP">보관 장소</label><input type="text" id="ivP" list="ivPL" value="${esc(x.place || '')}" ${edit ? '' : 'readonly'}><datalist id="ivPL">${M.places.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
+        <div class="f"><label for="ivSt">상태</label><select id="ivSt" ${edit && x.status !== '대여중' ? '' : 'disabled'}>${M.statuses.map(c => `<option ${c === x.status ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+      </div>
+      <div class="cx-when">
+        <div class="f"><label for="ivIn">입고 연월</label><input type="month" id="ivIn" value="${esc(x.inMonth || '')}" ${edit ? '' : 'readonly'}></div>
+        <div class="f"><label for="ivT">관리번호</label><input type="text" id="ivT" value="${esc(x.tag || '')}" placeholder="공구는 자동 (T-01)" ${edit ? '' : 'readonly'}></div>
+      </div>
+      <div class="f"><label for="ivO">사용자·담당</label><input type="text" id="ivO" value="${esc(x.owner || '')}" ${edit ? '' : 'readonly'}></div>
+      <div class="f"><label for="ivNt">내용</label><textarea id="ivNt" rows="2" ${edit ? '' : 'readonly'}>${esc(x.note || '')}</textarea></div>
+      <div class="hint" id="ivHint"></div>
+    </div>
+    <div class="card"><h4>사진</h4>
+      ${(x.photos || []).length ? `<div class="thumbs" id="ivOld">${x.photos.map(p => `<div class="thumb-wrap"><button type="button" class="thumb" data-p="${esc(p.id)}"></button>${edit ? `<button type="button" class="thumb-x" data-rm="${esc(p.id)}">×</button>` : ''}</div>`).join('')}</div>` : ''}
+      ${edit ? '<input type="file" id="ivF" accept="image/*" multiple>' : ''}</div>
+    <div class="actions">
+      ${o && M.canDelete ? '<button class="btn danger" type="button" id="ivDel">삭제</button>' : ''}
+      <button class="btn ghost" type="button" id="ivX">닫기</button>${edit ? '<button class="btn" type="button" id="ivSave">저장</button>' : ''}</div>`);
+  const hint = () => {
+    const c = $('ivC').value, subs = M.subs[c] || [];
+    $('ivSW').hidden = !subs.length;
+    if (subs.length && !subs.includes($('ivS').value)) $('ivS').innerHTML = subs.map(v => `<option>${esc(v)}</option>`).join('');
+    $('ivHint').textContent = c === '기한 한정 자재' ? '미개봉 신품만 보관합니다. 입고 연월 기준 2년이 지나면 폐기 대상으로 표시됩니다.'
+      : c === '창고 자재' ? '기준 품목만 보관합니다. 한 평당 가치 3만원 이하·특정 색상·현장 맞춤 잔여분·짝 없는 부속은 보관하지 않습니다.'
+      : c === '공구' ? '관리번호가 자동으로 붙고, 목록에서 반출·반납을 기록할 수 있습니다.' : '';
+  };
+  hint(); $('ivC').onchange = hint;
+  (x.photos || []).forEach(p => { const b = body.querySelector(`[data-p="${p.id}"]`); if (b) { ivPhotoUrl(x.id, p.id, true).then(u => b.style.backgroundImage = `url("${u}")`).catch(() => {}); b.onclick = () => ivPhotoUrl(x.id, p.id).then(u => window.open(u, '_blank')); } });
+  body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
+  $('ivX').onclick = closeSheet;
+  if ($('ivSave')) $('ivSave').onclick = e => submitting(e.target, async () => {
+    const fields = { cat: $('ivC').value, sub: $('ivSW').hidden ? '' : $('ivS').value, name: $('ivN').value, brand: $('ivB').value, qty: $('ivQn').value,
+      place: $('ivP').value, status: $('ivSt').value, inMonth: $('ivIn').value, tag: $('ivT').value, owner: $('ivO').value, note: $('ivNt').value };
+    const d = await api({ action: 'iv_save', id: o ? o.id : '', fields, photos: $('ivF') ? await readFiles($('ivF')) : [], removePhotos: removed });
+    ivReplace(d.item); closeSheet(); renderInvTab(); toast('저장했습니다');
+  });
+  if ($('ivDel')) $('ivDel').onclick = e => submitting(e.target, async () => {
+    if (!confirm('이 물품을 목록에서 지울까요?')) return;
+    await api({ action: 'iv_delete', id: o.id });
+    IV.items = IV.items.filter(y => y.id !== o.id); closeSheet(); renderInvTab(); toast('지웠습니다');
+  });
+}
+function ivRules() {
+  openSheet('창고 보관 기준', '입고 판단 · 보관 가능 품목 · 장소', `<div class="card iv-rules">
+    <div class="lead"><b>용도와 활용 가치가 분명한 대표 품목만 보관합니다.</b> 기준 외 자재는 현장에서 바로 판매(당근)·나눔·반품·폐기합니다. 차지하는 한 평당 가치가 3만원 이하면 처분. "다시 가지러 올 가치가 있나?", "여러 현장에서 반복해 쓰나?"를 확인하세요.</div>
+    <h4>보관 가능 품목</h4><ul>
+      <li><b>공구</b> — 개별 번호, 반출 시 사용자·현장 기록</li><li><b>기초</b> — 스텐 L앙카</li>
+      <li><b>골조</b> — 구조용 못, 공학목재(허리높이 이상 헤더 활용 가능한 크기부터), 구조목(종류별)</li>
+      <li><b>전기</b> — 공통 조명·스위치, 전선 1롤</li><li><b>기밀·방수</b> — 기밀테이프, 로플렉스, 투습방수지, 자착식 방수시트</li>
+      <li><b>내장목공</b> — 매거진 피스, 마이너스 천장몰딩·걸레받이</li><li><b>욕실</b> — 유가, 수전류(자주 쓰는 모델만)</li>
+      <li><b>방통</b> — 메쉬망(지오그리드)</li><li><b>도어 하드웨어</b> — 문고리·경첩·레일·호차, 세트가 맞는 것만</li>
+      <li><b>단열재</b> — 글라스울·미네랄울만 (EPS·XPS는 다른 현장으로 넘기거나 판매)</li></ul>
+    <h4>보관 장소</h4><ul><li><b>사무실 창고</b> — 상태 좋은 목재, 소·중형 자재, 공구, 작고 가치 있는 자재</li>
+      <li><b>상하동 컨테이너</b> — 가설재(BT아시바·펜스·안전모), 사다리, 우마, 현장 사무실용(냉장고·난로·열풍기·책상·의자), 부피 큰 품목</li></ul>
+    <h4>기한 한정 (미개봉 신품만, 2년 지나면 폐기)</h4><ul><li>케미컬·폼류 — 실리콘, 목공본드, 우레탄폼, 폼본드</li><li>타일·말통류 — 줄눈·접착제, 핸디코트, 퍼티, 방수액</li></ul>
+    <h4>보관 금지</h4><ul><li>특정 색상 내외장재·지붕재(벽돌·페인트·슁글·타일) → 판매</li><li>석고보드 등 이동 중 손상 우려 → 판매</li>
+      <li>세면대·양변기 등 고가·대형 → 제조사 반품 기한 내 처리</li><li>3만원 이하·부피 큰 몰탈, OSB·SSB → 판매</li>
+      <li>특정 사이즈 창호 등 현장 맞춤 잔여분 → 판매·폐기</li><li>MDF 몰딩·합판 자투리, 짝 없는 도어 부속</li>
+      <li>페인트·신나·스테인 등 도료</li><li>철물점에서 늘 살 수 있는 일반 자재 소량(마대 등)</li></ul>
+    <h4>운영</h4><ul><li>입고 시 연·월 표시 → 매년 연말 재고정리, <b>2년 미사용 품목은 폐기</b></li><li>공구는 반출·반납을 이 화면(창고 태블릿)에서 기록</li></ul>
+  </div><div class="actions"><button class="btn" type="button" id="ivRulesOk">확인</button></div>`);
+  $('ivRulesOk').onclick = closeSheet;
 }
 
 const DYK = { items: [], i: 0, timer: null };
@@ -1252,7 +1475,7 @@ function renderSiteTab() {
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
   const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공지', '스펙북', '360 VIEW']
-    : ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
+    : ['대시보드', '현장보고', '출역', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
   $('main').innerHTML = `
@@ -1266,7 +1489,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '공정표', '변경공사', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
@@ -1280,6 +1503,7 @@ function renderSiteTab() {
   }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
   if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
+  if (S.siteSub === '출역') { CI.data = null; ciRender(s.code); return; }
   if (S.siteSub === '변경공사') { CR.mode = CR.wantAll ? 'all' : 'site'; CR.wantAll = false; renderChangeTab(); return; }
   if (S.siteSub === '현장보고') {
     rpLoad(s.code).then(() => {
@@ -1716,6 +1940,266 @@ function dtForm(o) {
 }
 
 const VW = { site: null, items: [], canEdit: false, open: null };
+const LB = { from: '', to: '', site: '', view: 'worker', data: null, key: '' };
+const LB_VIEWS = { worker: '작업자별', sheet: '출력표', site: '현장별', trade: '공종별' };
+function lbYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function lbMonth(off) { const n = new Date(); const a = new Date(n.getFullYear(), n.getMonth() + off, 1), b = new Date(n.getFullYear(), n.getMonth() + off + 1, 0); return [lbYmd(a), lbYmd(b)]; }
+function lbG(n) { return (Math.round(n * 100) / 100).toLocaleString('ko-KR'); }
+function lbDays(from, to) { const out = []; const d = new Date(from + 'T00:00:00'), e = new Date(to + 'T00:00:00'); while (d <= e) { out.push(lbYmd(d)); d.setDate(d.getDate() + 1); } return out; }
+function lbAgg(recs, keyFn) {
+  const m = new Map();
+  recs.forEach(r => { const k = keyFn(r); if (!m.has(k)) m.set(k, { key: k, recs: [], days: new Set(), heads: 0, g: 0, gx: 0, amount: 0, noOut: 0, noRate: 0, sites: new Set() });
+    const a = m.get(k); a.recs.push(r); a.days.add(r.date); a.heads += 1 + r.extra; a.g += r.g; a.gx += r.g * r.extra; a.amount += r.amount; a.sites.add(r.siteCode);
+    if (r.noOut) a.noOut++; if (!r.rate || (r.extra && !r.extraRate)) a.noRate++; });
+  return [...m.values()];
+}
+async function renderLaborTab(force) {
+  if (!LB.from) [LB.from, LB.to] = lbMonth(0);
+  const key = [LB.from, LB.to, LB.site].join('|');
+  if (force || !LB.data || LB.key !== key) {
+    $('main').innerHTML = '<div class="loading">불러오는 중...</div>';
+    try { LB.data = await api({ action: 'lb_data', from: LB.from, to: LB.to, siteCode: LB.site }); LB.key = key; }
+    catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'labor') return;
+  }
+  const D = LB.data, R = D.records;
+  const tot = lbAgg(R, () => 'all')[0] || { heads: 0, g: 0, gx: 0, amount: 0, noOut: 0, noRate: 0 };
+  const [m0a, m0b] = lbMonth(0), [m1a, m1b] = lbMonth(-1);
+  $('main').innerHTML = `
+    <div class="cr-bar"><h2>인원출력 <span class="cr-sub" style="font-weight:500">QR 출역 기록 기준</span></h2>
+      ${D.canRate ? '<button class="btn ghost" type="button" id="lbRate">노임 단가</button>' : ''}
+      <button class="btn ghost" type="button" id="lbCsv">엑셀 내려받기</button>
+      <button class="btn ghost" type="button" id="lbPrint">출력표 인쇄</button></div>
+    <section class="panel lb-filter">
+      <button type="button" class="chip" data-mon="0" aria-pressed="${LB.from === m0a && LB.to === m0b}">이번 달</button>
+      <button type="button" class="chip" data-mon="-1" aria-pressed="${LB.from === m1a && LB.to === m1b}">지난달</button>
+      <input type="date" id="lbFrom" value="${esc(LB.from)}"><span>~</span><input type="date" id="lbTo" value="${esc(LB.to)}">
+      <select id="lbSite"><option value="">전체 현장</option>${D.sites.map(s => `<option value="${esc(s.code)}" ${s.code === LB.site ? 'selected' : ''}>${esc(s.code)} ${esc(s.name)}</option>`).join('')}</select>
+    </section>
+    <div class="lb-tiles">
+      <div><small>연인원</small><b>${tot.heads.toLocaleString('ko-KR')}</b><span>명·일</span></div>
+      <div><small>총 공수</small><b>${lbG(tot.g + tot.gx)}</b><span>공수</span></div>
+      <div><small>노임 합계</small><b>${won(tot.amount)}</b><span>세전·단가 기준</span></div>
+      <div class="${tot.noOut ? 'warn' : ''}"><small>퇴근 미체크</small><b>${tot.noOut}</b><span>건 · 1공수로 계산</span></div>
+      <div class="${tot.noRate ? 'warn' : ''}"><small>단가 미설정</small><b>${tot.noRate}</b><span>건 · 노임 0원</span></div>
+    </div>
+    <div class="subnav">${Object.entries(LB_VIEWS).map(([k, v]) => `<button class="chip" data-view="${k}" aria-pressed="${LB.view === k}">${v}</button>`).join('')}</div>
+    <div id="lbBody">${R.length ? lbView(R) : '<section class="panel empty"><h3>이 기간에 출역 기록이 없습니다</h3>현장에 QR을 붙이면 작업자가 찍은 기록이 여기에 모입니다.</section>'}</div>`;
+  $('main').querySelectorAll('[data-mon]').forEach(b => b.onclick = () => { [LB.from, LB.to] = lbMonth(Number(b.dataset.mon)); renderLaborTab(); });
+  $('lbFrom').onchange = e => { LB.from = e.target.value; if (LB.to < LB.from) LB.to = LB.from; renderLaborTab(); };
+  $('lbTo').onchange = e => { LB.to = e.target.value; if (LB.to < LB.from) LB.from = LB.to; renderLaborTab(); };
+  $('lbSite').onchange = e => { LB.site = e.target.value; renderLaborTab(); };
+  $('main').querySelectorAll('[data-view]').forEach(b => b.onclick = () => { LB.view = b.dataset.view; renderLaborTab(); });
+  $('main').querySelectorAll('[data-wk]').forEach(b => b.onclick = () => lbWorker(b.dataset.wk));
+  $('main').querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(R.find(r => r.id === b.dataset.rec)));
+  if ($('lbRate')) $('lbRate').onclick = lbRates;
+  $('lbCsv').onclick = lbCsv;
+  $('lbPrint').onclick = lbPrint;
+}
+function lbView(R) {
+  const flag = a => `${a.noOut ? `<span class="lb-flag">퇴근 미체크 ${a.noOut}</span>` : ''}${a.noRate ? '<span class="lb-flag">단가 없음</span>' : ''}`;
+  if (LB.view === 'worker') {
+    const rows = lbAgg(R, r => r.key).sort((a, b) => b.g - a.g);
+    return `<section class="panel" style="padding:0"><div class="table-scroll"><table class="rp-table lb-table">
+      <tr><th>이름</th><th>공종</th><th>업체</th><th>현장</th><th class="r">작업일</th><th class="r">공수</th><th class="r">동반 공수</th><th class="r">일당</th><th class="r">노임</th><th></th></tr>
+      ${rows.map(a => { const r = a.recs[a.recs.length - 1]; return `<tr class="lb-click" data-wk="${esc(a.key)}"><td><b>${esc(r.name)}</b><small>${esc(r.phone)}</small></td><td>${esc([...new Set(a.recs.map(x => x.trade))].join(', '))}</td>
+        <td>${esc(r.company || '')}</td><td>${a.sites.size}</td><td class="r">${a.days.size}</td><td class="r">${lbG(a.g)}</td><td class="r">${a.gx ? lbG(a.gx) : ''}</td>
+        <td class="r">${r.rate ? r.rate.toLocaleString('ko-KR') : '–'}</td><td class="r"><b>${won(a.amount)}</b></td><td>${flag(a)}</td></tr>`; }).join('')}
+    </table></div></section>`;
+  }
+  if (LB.view === 'site' || LB.view === 'trade') {
+    const byS = LB.view === 'site', rows = lbAgg(R, r => byS ? r.siteCode : r.trade).sort((a, b) => b.amount - a.amount || b.g - a.g);
+    return `<section class="panel" style="padding:0"><div class="table-scroll"><table class="rp-table lb-table">
+      <tr><th>${byS ? '현장' : '공종'}</th><th class="r">작업자</th><th class="r">작업일</th><th class="r">연인원</th><th class="r">공수</th><th class="r">노임</th>${byS ? '<th>주요 공종</th>' : '<th class="r">기본 일당</th>'}<th></th></tr>
+      ${rows.map(a => { const r = a.recs[0]; const top = byS ? Object.entries(a.recs.reduce((m, x) => (m[x.trade] = (m[x.trade] || 0) + x.g * (1 + x.extra), m), {})).sort((x, y) => y[1] - x[1]).slice(0, 4).map(x => `${x[0]} ${lbG(x[1])}`).join(' · ') : '';
+        return `<tr><td><b>${esc(byS ? r.siteCode + ' ' + r.siteName : a.key)}</b></td><td class="r">${new Set(a.recs.map(x => x.key)).size}</td><td class="r">${a.days.size}</td><td class="r">${a.heads}</td>
+        <td class="r">${lbG(a.g + a.gx)}</td><td class="r"><b>${won(a.amount)}</b></td><td${byS ? '' : ' class="r"'}>${byS ? esc(top) : (LB.data.tradeRates[a.key] ? LB.data.tradeRates[a.key].toLocaleString('ko-KR') : '–')}</td><td>${flag(a)}</td></tr>`; }).join('')}
+    </table></div></section>`;
+  }
+  return lbSheetHtml(R, true);
+}
+function lbSheetHtml(R, live) {
+  const days = lbDays(LB.from, LB.to);
+  if (days.length > 31) return '<section class="panel empty"><h3>출력표는 31일 이내로 볼 수 있습니다</h3>기간을 한 달로 줄여 주세요.</section>';
+  return lbAgg(R, r => r.siteCode).map(S0 => {
+    const rows = [];
+    lbAgg(S0.recs, r => r.key + '|' + r.trade).forEach(a => {
+      const r = a.recs[0], byDay = {}; a.recs.forEach(x => byDay[x.date] = x);
+      rows.push({ label: r.name, sub: r.trade + (r.company ? ' · ' + r.company : ''), cells: days.map(d => byDay[d] ? { g: byDay[d].g, rec: byDay[d] } : null), g: a.g, amount: a.recs.reduce((s, x) => s + x.g * x.rate, 0) });
+      if (a.gx) rows.push({ label: r.name + ' 동반', sub: r.trade, cells: days.map(d => byDay[d] && byDay[d].extra ? { g: byDay[d].g * byDay[d].extra } : null), g: a.gx, amount: a.recs.reduce((s, x) => s + x.g * x.extra * x.extraRate, 0) });
+    });
+    const colTot = days.map((d, i) => rows.reduce((s, r) => s + (r.cells[i] ? r.cells[i].g : 0), 0));
+    return `<section class="panel" style="padding:0;margin-bottom:12px"><div class="lb-sh-title">${esc(S0.recs[0].siteCode)} ${esc(S0.recs[0].siteName)}</div><div class="table-scroll"><table class="lb-sheet">
+      <tr><th class="nm">작업자</th>${days.map(d => `<th class="${'06'.includes(String(new Date(d + 'T00:00:00').getDay())) ? 'we' : ''}">${Number(d.slice(8))}</th>`).join('')}<th class="r">공수</th><th class="r">노임</th></tr>
+      ${rows.map(r => `<tr><td class="nm"><b>${esc(r.label)}</b><small>${esc(r.sub)}</small></td>${r.cells.map(c => !c ? '<td></td>'
+        : `<td class="${c.rec && c.rec.noOut ? 'no' : ''}${c.rec && !c.rec.auto ? ' ed' : ''}" ${live && c.rec ? `data-rec="${esc(c.rec.id)}"` : ''}>${lbG(c.g)}</td>`).join('')}<td class="r"><b>${lbG(r.g)}</b></td><td class="r">${Math.round(r.amount).toLocaleString('ko-KR')}</td></tr>`).join('')}
+      <tr class="tot"><td class="nm">합계</td>${colTot.map(n => `<td>${n ? lbG(n) : ''}</td>`).join('')}<td class="r">${lbG(S0.g + S0.gx)}</td><td class="r">${S0.amount.toLocaleString('ko-KR')}</td></tr>
+    </table></div></section>`;
+  }).join('') + (live ? '<div class="hint">칸을 누르면 그날 공수를 고칠 수 있습니다. <span class="lb-k no">빨강</span> 퇴근 미체크 · <span class="lb-k ed">밑줄</span> 수동 수정</div>' : '');
+}
+function lbWorker(key) {
+  const recs = LB.data.records.filter(r => r.key === key), r0 = recs[recs.length - 1];
+  const body = openSheet(`${esc(r0.name)} 출역 내역`, `${esc(r0.phone)} · ${esc(LB.from)} ~ ${esc(LB.to)}`, `
+    <div class="card" style="padding:0"><div class="table-scroll"><table class="rp-table lb-table">
+      <tr><th>날짜</th><th>현장</th><th>공종</th><th>출근</th><th>퇴근</th><th class="r">공수</th><th class="r">노임</th><th></th></tr>
+      ${recs.map(r => `<tr class="lb-click" data-rec="${esc(r.id)}"><td>${esc(r.date.slice(5))}</td><td>${esc(r.siteName)}</td><td>${esc(r.trade)}${r.extra ? ` +${r.extra}` : ''}</td><td>${esc(r.inAt)}</td>
+        <td>${r.noOut ? '<span class="lb-flag">미체크</span>' : esc(r.outAt)}</td><td class="r">${lbG(r.g)}${r.auto ? '' : ' ✎'}</td><td class="r">${r.amount.toLocaleString('ko-KR')}</td><td><small>${esc(r.memo || '')}</small></td></tr>`).join('')}
+    </table></div></div>
+    <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button></div>`);
+  $('lbX').onclick = closeSheet;
+  body.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(recs.find(r => r.id === b.dataset.rec)));
+}
+function lbEdit(r) {
+  const opts = ['', '0', '0.5', '1', '1.5', '2'];
+  const cur = r.auto ? '' : String(r.g);
+  openSheet(`${esc(r.name)} · ${esc(r.date)}`, `${esc(r.siteName)} · ${esc(r.trade)}${r.extra ? ' · 동반 ' + r.extra + '명' : ''}`, `
+    <div class="card">
+      <p style="margin:0 0 10px">출근 ${esc(r.inAt)} · 퇴근 ${esc(r.outAt || '미체크')}${r.hours != null ? ` · 실근무 ${r.hours}시간` : ''}</p>
+      <div class="f"><label>공수</label><div class="lb-gs">${opts.map(v => `<button type="button" class="chip" data-g="${v}" aria-pressed="${v === cur}">${v === '' ? '자동' : v}</button>`).join('')}</div>
+        <div class="hint">자동: 점심 1시간 빼고 4.5시간 이하 0.5 · 10시간 이하 1 · 12.5시간 이하 1.5 · 그 이상 2공수. 퇴근 미체크는 1공수.</div></div>
+      <div class="f"><label for="lbMemo">비고</label><input type="text" id="lbMemo" value="${esc(r.memo || '')}" placeholder="예: 우천 조기 철수"></div>
+      ${r.editBy ? `<div class="hint">최근 수정 ${esc(r.editBy)}</div>` : ''}
+    </div>
+    <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button><button class="btn" type="button" id="lbSave">저장</button></div>`);
+  let pick = cur;
+  document.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { pick = b.dataset.g; document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  $('lbX').onclick = closeSheet;
+  $('lbSave').onclick = e => submitting(e.target, async () => { await api({ action: 'lb_set', id: r.id, gongsu: pick, memo: $('lbMemo').value }); closeSheet(); await renderLaborTab(true); toast('저장했습니다'); });
+}
+function lbRates() {
+  const D = LB.data, seen = new Map();
+  D.workerRates.forEach(w => seen.set(w.key, { key: w.key, name: w.name, rate: w.rate, trade: '' }));
+  D.records.forEach(r => { const w = seen.get(r.key) || { key: r.key, name: r.name, rate: 0 }; w.name = r.name; w.trade = r.trade; seen.set(r.key, w); });
+  const workers = [...seen.values()].sort((a, b) => String(a.trade).localeCompare(String(b.trade)) || a.name.localeCompare(b.name));
+  const body = openSheet('노임 단가', '공종 기본 일당과 작업자별 일당 · 1공수 기준 세전 금액', `
+    <div class="card"><h4>공종 기본 일당</h4><div class="hint" style="margin-bottom:8px">작업자 일당을 따로 정하지 않으면 이 금액으로 계산합니다. 도급 공종은 비워 두세요.</div>
+      <div class="lb-rates">${D.trades.map(t => `<label><span>${esc(t)}</span><input type="text" inputmode="numeric" data-tr="${esc(t)}" value="${D.tradeRates[t] ? D.tradeRates[t].toLocaleString('ko-KR') : ''}" placeholder="원"></label>`).join('')}</div></div>
+    <div class="card"><h4>작업자별 일당</h4><div class="hint" style="margin-bottom:8px">비우면 공종 기본 일당을 씁니다. 동반 인원은 항상 공종 기본 일당으로 계산합니다.</div>
+      <div class="lb-rates">${workers.map(w => `<label><span>${esc(w.name)}<small>${esc(w.trade || '')}</small></span><input type="text" inputmode="numeric" data-wk="${esc(w.key)}" data-nm="${esc(w.name)}" value="${w.rate ? w.rate.toLocaleString('ko-KR') : ''}" placeholder="기본"></label>`).join('') || '<div class="hint">기록된 작업자가 없습니다.</div>'}</div></div>
+    <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button><button class="btn" type="button" id="lbSave">저장</button></div>`);
+  body.querySelectorAll('input[inputmode=numeric]').forEach(i => i.oninput = () => { const n = i.value.replace(/\D/g, ''); i.value = n ? Number(n).toLocaleString('ko-KR') : ''; });
+  $('lbX').onclick = closeSheet;
+  $('lbSave').onclick = e => submitting(e.target, async () => {
+    const num = v => Number(String(v).replace(/\D/g, '')) || 0;
+    const tradeRates = {}; body.querySelectorAll('[data-tr]').forEach(i => { if (num(i.value)) tradeRates[i.dataset.tr] = num(i.value); });
+    Object.keys(D.tradeRates).forEach(t => { if (!D.trades.includes(t) && D.tradeRates[t]) tradeRates[t] = D.tradeRates[t]; });
+    const workerRates = []; body.querySelectorAll('input[data-wk]').forEach(i => { if (num(i.value)) workerRates.push({ key: i.dataset.wk, name: i.dataset.nm, rate: num(i.value) }); });
+    await api({ action: 'lb_rate', tradeRates, workerRates }); closeSheet(); await renderLaborTab(true); toast('단가를 저장했습니다');
+  });
+}
+function lbCsv() {
+  const R = LB.data.records; if (!R.length) { toast('내려받을 기록이 없습니다'); return; }
+  const q = v => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const head = ['날짜', '현장코드', '현장', '이름', '연락처', '공종', '업체', '출근', '퇴근', '본인 공수', '동반 인원', '일당', '동반 일당', '노임', '공수 방식', '비고'];
+  const lines = [head.join(',')].concat(R.map(r => [r.date, r.siteCode, r.siteName, r.name, r.phone, r.trade, r.company, r.inAt, r.outAt || '미체크', r.g, r.extra, r.rate, r.extraRate, r.amount, r.auto ? '자동' : '수정', r.memo].map(q).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = `인원출력_${LB.from}_${LB.to}${LB.site ? '_' + LB.site : ''}.csv`; document.body.appendChild(a); a.click(); a.remove();
+}
+function lbPrint() {
+  const R = LB.data.records; if (!R.length) { toast('인쇄할 기록이 없습니다'); return; }
+  if (lbDays(LB.from, LB.to).length > 31) { toast('출력표는 31일 이내로 인쇄할 수 있습니다'); return; }
+  const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>인원 출력표 ${esc(LB.from)} ~ ${esc(LB.to)}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;font-size:10px;color:#222;margin:14px}h1{font-size:15px;margin:0 0 4px}.sub{color:#555;margin-bottom:10px;font-size:11px}
+    .lb-sh-title{font-weight:700;font-size:12px;margin:12px 0 4px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 2px;text-align:center}
+    th{background:#F0F0EE}th.we{color:#C0392B}td.nm,th.nm{width:110px;text-align:left;padding-left:5px}td.nm small{display:block;color:#666}.r{text-align:right;width:62px;padding-right:4px}
+    td.no{background:#FDECEA}tr.tot td{background:#F7F7F5;font-weight:700}.hint,.table-scroll{all:unset}.table-scroll{display:block}
+    button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
+    @media print{button{display:none}@page{size:A4 landscape;margin:8mm}tr{break-inside:avoid}}
+  </style></head><body><button onclick="window.print()">인쇄</button><h1>인원 출력표</h1>
+  <div class="sub">${esc(LB.from)} ~ ${esc(LB.to)} · 공수 기준 · 노임은 세전 단가 기준 · 연한 빨강 칸은 퇴근 미체크(1공수 처리) · (주)사람사는집종합건설 · 출력 ${esc(today())}</div>
+  ${lbSheetHtml(R, false)}</body></html>`);
+  w.document.close();
+}
+const CI = { site: null, date: '', data: null };
+async function ciRender(code, date) {
+  const el = $('subBody'); if (!el) return;
+  date = date || (CI.site === code && CI.date) || today();
+  if (CI.site !== code || CI.date !== date || !CI.data) {
+    el.innerHTML = '<div class="loading">불러오는 중...</div>';
+    try { CI.data = await api({ action: 'ci_list', siteCode: code, date }); CI.site = code; CI.date = date; }
+    catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (S.tab !== 'site' || S.siteCode !== code || S.siteSub !== '출역' || !$('subBody')) return;
+  }
+  const d = CI.data, rows = d.items;
+  const total = rows.reduce((a, o) => a + 1 + (o.extra || 0), 0);
+  const byTrade = {}; rows.forEach(o => byTrade[o.trade] = (byTrade[o.trade] || 0) + 1 + (o.extra || 0));
+  const shift = n => { const x = new Date(CI.date + 'T00:00:00'); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+  const wd = s => '일월화수목금토'[new Date(s + 'T00:00:00').getDay()];
+  $('subBody').innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">출역 <span class="cr-sub" style="font-weight:500">QR로 작업자가 직접 체크</span></h2>
+      ${d.canEdit ? '<button class="btn ghost" type="button" id="ciQr">QR 인쇄</button>' : ''}</div>
+    <section class="panel ci-head">
+      <div class="ci-nav"><button type="button" class="btn ghost" id="ciPrev" aria-label="전날">‹</button>
+        <input type="date" id="ciDate" value="${esc(CI.date)}" max="${esc(d.today)}"><span class="ci-wd">${wd(CI.date)}</span>
+        <button type="button" class="btn ghost" id="ciNext" aria-label="다음날" ${CI.date >= d.today ? 'disabled' : ''}>›</button>
+        ${CI.date !== d.today ? '<button type="button" class="linkish" id="ciToday">오늘</button>' : ''}</div>
+      <div class="ci-total"><b>${total}</b>명${rows.length !== total ? ` <small>(체크 ${rows.length} · 동반 ${total - rows.length})</small>` : ''}</div>
+      <div class="ci-trades">${Object.keys(byTrade).sort((a, b) => byTrade[b] - byTrade[a]).map(t => `<span>${esc(t)} <b>${byTrade[t]}</b></span>`).join('')}</div>
+    </section>
+    ${rows.length ? `<section class="panel" style="padding:0"><div class="table-scroll"><table class="rp-table ci-table">
+      <tr><th>출근</th><th>퇴근</th><th>이름</th><th>연락처</th><th>공종</th><th>업체</th><th>동반</th>${d.canEdit ? '<th></th>' : ''}</tr>
+      ${rows.map(o => `<tr><td>${esc(o.inAt)}</td><td>${esc(o.outAt || '–')}</td><td><b>${esc(o.name)}</b></td><td><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></td>
+        <td>${esc(o.trade)}</td><td>${esc(o.company || '')}</td><td>${o.extra ? o.extra + '명' : ''}</td>${d.canEdit ? `<td><button type="button" class="linkish" data-del="${esc(o.id)}">삭제</button></td>` : ''}</tr>`).join('')}
+    </table></div></section>` : `<section class="panel empty"><h3>체크한 작업자가 없습니다</h3>${d.canEdit ? '"QR 인쇄"로 현장용 QR을 뽑아 출입구에 크게 붙여 두세요.' : ''}</section>`}
+    ${d.recent.length ? `<div class="ci-recent">최근 출역 ${d.recent.map(r => `<button type="button" class="chip" data-day="${esc(r.date)}" aria-pressed="${r.date === CI.date}">${esc(r.date.slice(5).replace('-', '/'))} <b>${r.n}</b></button>`).join('')}</div>` : ''}`;
+  const go = v => { if (v && v <= d.today) ciRender(code, v); };
+  $('ciPrev').onclick = () => go(shift(-1));
+  $('ciNext').onclick = () => go(shift(1));
+  $('ciDate').onchange = e => go(e.target.value);
+  if ($('ciToday')) $('ciToday').onclick = () => go(d.today);
+  $('subBody').querySelectorAll('[data-day]').forEach(b => b.onclick = () => go(b.dataset.day));
+  $('subBody').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    const o = rows.find(x => x.id === b.dataset.del);
+    if (!confirm(`${o.name} 님의 ${CI.date} 출역 기록을 지울까요?`)) return;
+    try { await api({ action: 'ci_delete', siteCode: code, id: o.id }); CI.data = null; ciRender(code, CI.date); toast('지웠습니다'); } catch (e) { toast(e.message); }
+  });
+  if ($('ciQr')) $('ciQr').onclick = () => ciQrSheet(code);
+}
+function ciQrSheet(code) {
+  const s = currentSite();
+  openSheet('현장 출역 QR', `${esc(s.code)} ${esc(s.name)}`, `
+    <div class="card"><p style="margin:0 0 8px">A4로 인쇄해 출입구·현장사무실에 크게 붙여 두세요. 작업자가 휴대폰 카메라로 찍으면 이름·연락처·공종을 넣고 출근·퇴근을 체크합니다. 앱 설치나 로그인은 필요 없습니다.</p>
+      <p class="hint" style="margin:0">QR 사진이 외부로 퍼졌다면 "QR 새로 만들기"를 누르세요. 예전 QR은 바로 쓸 수 없게 되니 새로 인쇄해 붙여야 합니다.</p></div>
+    <div class="actions"><button class="btn danger" type="button" id="ciRenew">QR 새로 만들기</button><button class="btn ghost" type="button" id="ciX">닫기</button><button class="btn" type="button" id="ciPrint">인쇄</button></div>`);
+  $('ciX').onclick = closeSheet;
+  const run = renew => async e => {
+    if (renew && !confirm('예전 QR은 더 이상 쓸 수 없습니다. 새로 만들까요?')) return;
+    const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
+    w.document.write('<p style="font-family:sans-serif">QR 만드는 중...</p>');
+    try { const [d] = await Promise.all([api({ action: 'ci_qr', siteCode: code, renew }), ciQrLib()]); ciPoster(w, d); closeSheet(); }
+    catch (x) { w.close(); toast(x.message); }
+  };
+  $('ciPrint').onclick = run(false);
+  $('ciRenew').onclick = run(true);
+}
+function ciQrLib() {
+  if (window.qrcode) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; sc.onload = res; sc.onerror = () => rej(new Error('QR 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.')); document.head.appendChild(sc); });
+}
+function ciPoster(w, d) {
+  const q = qrcode(0, 'M'); q.addData(d.url); q.make();
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>출역 QR ${esc(d.site.code)} ${esc(d.site.name)}</title>
+<style>
+body{font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;margin:0;color:#111;text-align:center}
+.pg{width:190mm;margin:0 auto;padding:14mm 0}
+.top{font-size:15pt;letter-spacing:.08em;color:#444}h1{font-size:46pt;margin:4mm 0 2mm}.site{font-size:22pt;font-weight:700;margin-bottom:8mm}
+#qr svg{width:130mm;height:130mm}
+.how{font-size:17pt;line-height:1.6;margin-top:8mm}.how b{background:#111;color:#fff;padding:0 3mm;border-radius:2mm}
+.foot{margin-top:10mm;font-size:11pt;color:#666}
+button{margin:12px;padding:10px 22px;background:#000;color:#fff;border:0;border-radius:6px;font-size:15px}
+@media print{button{display:none}@page{size:A4 portrait;margin:0}}
+</style></head><body><button onclick="window.print()">인쇄</button><div class="pg">
+<div class="top">사람사는집 현장 출역</div><h1>출근·퇴근 QR 체크</h1><div class="site">${esc(d.site.name)}</div>
+<div id="qr">${q.createSvgTag({ cellSize: 8, margin: 2, scalable: true })}</div>
+<div class="how">휴대폰 <b>카메라</b>로 찍고<br>이름·연락처·공종을 입력하세요<br>출근할 때 한 번, 퇴근할 때 한 번</div>
+<div class="foot">(주)사람사는집종합건설 · 처음 한 번만 입력하면 다음부터는 버튼 하나로 체크됩니다</div></div>
+
+</body></html>`);
+  w.document.close();
+}
 async function vwRender(code) {
   const el = $('subBody'); if (!el) return;
   if (VW.site !== code) {
