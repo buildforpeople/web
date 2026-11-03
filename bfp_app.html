@@ -1033,6 +1033,7 @@
 .ovg-wrap{overflow-x:auto}@media(max-width:640px){.ovg{min-width:560px}.ovw-row{grid-template-columns:64px repeat(7,1fr)}.ovw-wx small{font-size:10px}.ovk b{font-size:21px}}
 .pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}
 .pf-stds{margin-top:4px}.pf-oc2{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}.pf-oc2 input{width:72px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
+.rp-done{display:flex;flex-direction:column;gap:6px}.rp-done .check{font-size:14px}
 </style>
 </head>
 <body>
@@ -1612,18 +1613,20 @@ async function ovRenderSite(el) {
   const top = tradeRank.slice(0, 6).map(x => x[0]);
   const colOf = t => { const i = top.indexOf(t); return i >= 0 ? OVC[i] : OVC_OTHER; };
   const totalPeople = tradeRank.reduce((a, x) => a + x[1], 0);
-  const wsum = tasks.reduce((a, t) => a + (t.days || 1), 0);
+  const useW = tasks.some(t => t.w > 0), wt = t => useW ? (t.w || 0) : (t.days || 1);
+  const wsum = tasks.reduce((a, t) => a + wt(t), 0);
+  const planAt = w => tasks.reduce((a, t) => { const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, w) + 1; return a + wt(t) * Math.max(0, Math.min(1, done / tot)); }, 0) / (wsum || 1) * 100;
   const taskAct = (t, w) => {
     if (t.status === '완료' && (!t.doneDate || t.doneDate <= w)) return 1;
-    const ev = (t.ev || []).filter(x => x <= w);
+    const ev = (t.ev || []).filter(x => x <= w), last = ev[ev.length - 1];
+    const later = tasks.filter(o => o !== t && o.start > t.start && o.g !== t.g).some(o => (o.ev || []).some(x => x <= w && (!last || x > ovAdd(last, 2))));
+    if (ev.length && later && ovAdd(last, 3) <= w) return 1;
+    if (!ev.length && later && t.end < w) return 1;
+    if (ev.length && ovAdd(t.end, 7) <= w) return 1;
     if (!ev.length) return w >= td && t.progress ? t.progress / 100 : 0;
-    const last = ev[ev.length - 1];
-    if (w > t.end && tasks.some(o => o !== t && o.start > t.start && (o.ev || []).some(x => x > last && x <= w))) return 1;
-    const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, last < w ? last : w) + 1;
-    return Math.max(0.1, Math.min(0.95, done / tot));
+    return Math.max(0.1, Math.min(0.95, ev.length / Math.max(1, t.days || 1)));
   };
-  const actualAt = w => tasks.reduce((a, t) => a + (t.days || 1) * taskAct(t, w), 0) / (wsum || 1) * 100;
-  const planAt = w => tasks.reduce((a, t) => { const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, w) + 1; return a + (t.days || 1) * Math.max(0, Math.min(1, done / tot)); }, 0) / (wsum || 1) * 100;
+  const actualAt = w => tasks.reduce((a, t) => a + wt(t) * taskAct(t, w), 0) / (wsum || 1) * 100;
   const prog = tasks.length ? Math.round(actualAt(td)) : null, plan = tasks.length ? Math.round(planAt(td)) : null;
   const total = s.startDate && s.endDate ? dayDiff(s.startDate, s.endDate) : 0, left = s.endDate ? dayDiff(td, s.endDate) : null;
   const periodPct = total > 0 ? Math.max(0, Math.min(100, dayDiff(s.startDate, td) / total * 100)) : 0;
@@ -1649,7 +1652,7 @@ async function ovRenderSite(el) {
   el.innerHTML = `
     <div class="ovk-row">
       ${kpi('공사기간', left == null ? '미정' : left >= 0 ? `${left}일 남음` : `${-left}일 경과`, s.startDate ? `${s.startDate.replace(/-/g, '.')} ~ ${(s.endDate || '').replace(/-/g, '.')}` : '착공일을 마스터에 입력하세요', bar(periodPct))}
-      ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p · 현장보고 기준`, prog == null ? bar(0) : bar(prog, plan))}
+      ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p · ${d.weightBy || '공사 일수'} 가중`, prog == null ? bar(0) : bar(prog, plan))}
       ${kpi('누적 작업자수', `${totalPeople.toLocaleString('ko-KR')}명`, '현장보고·QR 출역 기준', `<div class="ovk-bar seg">${tradeRank.map(([t, n]) => `<i style="width:${n / (totalPeople || 1) * 100}%;background:${colOf(t)}" data-tip="${esc(t)} ${n}명"></i>`).join('')}</div>`)}
       ${kpi('최근 현장보고', L ? `${md(L.date)} (${rpDow(L.date)})` : '없음', L ? (gap === 0 ? '오늘 작성' : `${gap}일 전 · 누적 ${d.reportCount}건`) : '첫 보고를 작성하세요', `<div class="ovk-bar ${gap >= 3 ? 'warn' : ''}"><i style="width:${L ? Math.max(8, 100 - gap * 25) : 0}%"></i></div>`)}
     </div>
@@ -4147,6 +4150,7 @@ function rpForm(item, date) {
     </div>
 
     <div class="card">
+      <div class="f" id="rDoneWrap" hidden><label>오늘 끝난 공정 <span class="hint">체크하면 공정표에 '완료'로 기록되고 공정률에 바로 반영됩니다</span></label><div id="rDone" class="rp-done"></div></div>
       <div class="f"><label for="rTomorrow">명일 작업내용</label><textarea id="rTomorrow" rows="3" placeholder="예: 도장 작업 마무리 / 타일자재 현장반입">${esc(item ? item.tomorrow : '')}</textarea></div>
       <div class="f"><label for="rNote">특이사항 (선택)</label><textarea id="rNote" rows="2">${esc(item ? item.note : '')}</textarea></div>
     </div>
@@ -4167,6 +4171,13 @@ function rpForm(item, date) {
       <div class="f" style="margin-top:10px"><input type="file" id="rPhotos" multiple accept="image/*" capture="environment"></div>
     </div>
     <div class="actions sticky"><button class="btn ghost" type="button" id="rClose">닫기</button><button class="btn" type="button" id="rSave">${editing ? '수정 저장' : '보고 등록'}</button></div>`);
+  api({ action: 'sc_get', siteCode: s.code }).then(g => {
+    const d0 = (editing ? item.date : $('rDate').value) || today();
+    const cand = (g.tasks || []).filter(t => t.status !== '완료' && t.start && t.start <= ovAdd(d0, 3) && !/^\[자재\]/.test(t.name)).slice(0, 12);
+    if (!cand.length || !$('rDone') || g.canEdit === false) return;
+    $('rDone').innerHTML = cand.map(t => `<label class="check"><input type="checkbox" value="${esc(t.id)}"> ${esc(t.name)} <span class="hint">${esc(String(t.start).slice(5))}~${esc(String(t.end).slice(5))}</span></label>`).join('');
+    $('rDoneWrap').hidden = false;
+  }).catch(() => {});
   const rpWx = async (force) => {
     const d = $('rDate').value; if (!d || !$('rWx')) return;
     if (!force && ($('rTmin').value !== '' || $('rTmax').value !== '')) return;
@@ -4227,7 +4238,10 @@ function rpForm(item, date) {
       tomorrow: $('rTomorrow').value, note: $('rNote').value, work, materials, equipment,
       photoRefs: await rpUploadPhotos($('rPhotos'), s.code, editing ? item.date : $('rDate').value, e.target), removePhotos: removed
     });
-    RP.site = null; OV.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast(editing ? '수정했습니다' : '현장보고를 등록했습니다');
+    const doneIds = [...body.querySelectorAll('#rDone input:checked')].map(x => x.value), dDate = editing ? item.date : $('rDate').value;
+    for (const id of doneIds) { try { await api({ action: 'sc_task', id, fields: { status: '완료', doneDate: dDate } }); } catch (x) {} }
+    if (doneIds.length) SC.site = null;
+    RP.site = null; OV.site = null; closeSheet(); await rpLoad(S.siteCode); renderSiteTab(); toast((editing ? '수정했습니다' : '현장보고를 등록했습니다') + (doneIds.length ? ` · 공정 ${doneIds.length}건 완료` : ''));
   });
 }
 
