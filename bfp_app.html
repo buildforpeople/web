@@ -990,6 +990,47 @@
 .iv-tbl .num{text-align:right;width:64px;font-variant-numeric:tabular-nums;white-space:nowrap}.iv-tbl .nm b{font-weight:600}.iv-tbl .br{color:var(--muted);font-size:12px;margin-left:6px}
 .iv-tbl .grp td{background:rgba(127,127,127,.08);color:var(--muted);font-size:12px;font-weight:600;padding:6px 12px}.iv-tbl .dim{color:var(--muted)}.iv-tbl .out,.iv-tbl .site{color:#7FA7D8}.iv-tbl .out{font-weight:700}.iv-tbl .zero{color:#E07B6A;font-weight:700}
 @media(max-width:640px){.iv-tbl{font-size:13px}.iv-tbl td,.iv-tbl th{padding:8px 7px}.iv-tbl .num{width:40px}.iv-tbl .br{display:block;margin:0}}
+.ovx-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;padding:18px;margin-bottom:12px}
+.ovx-hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}.ovx-hero h3{margin:2px 0;font-size:22px;color:var(--ink)}
+.ovx-wx{font-size:14px;font-weight:500;color:var(--muted);margin-left:6px}.ovx-k{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px;letter-spacing:.02em}.ovx-k.warn{color:var(--red)}
+.ovx-badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--red-soft);color:var(--red);white-space:nowrap}
+.ovx-sec{margin-bottom:14px}.ovx-work{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}.ovx-work:last-child{border-bottom:0}.ovx-work em{font-style:normal;color:var(--muted);font-size:12.5px}
+.ovx-chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--green-soft);color:var(--accent,#7DBA98);white-space:nowrap}
+.ovx-ul{margin:0;padding-left:18px}.ovx-ul li{margin:3px 0}.ovx-ul.dot li::marker{color:var(--amber)}
+.ovx-mosaic{display:grid;gap:6px;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);min-height:260px}
+.ovx-mosaic .thumb{aspect-ratio:auto;width:100%;height:100%;position:relative;cursor:zoom-in}.ovx-mosaic .thumb:first-child{grid-column:span 2;grid-row:span 2}
+.ovx-mosaic.n1 .thumb{grid-column:1/-1;grid-row:1/-1}.ovx-mosaic.n2 .thumb{grid-row:span 2;grid-column:span 2}
+.ovx-more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.5);color:#fff;font-size:20px;font-weight:700}
+.ovx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.ovx-stat{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 16px}.ovx-stat span{display:block;font-size:12px;color:var(--muted)}
+.ovx-stat b{display:block;font-size:24px;margin:2px 0;color:var(--ink);font-variant-numeric:tabular-nums}.ovx-stat b i{font-style:normal;font-size:13px;color:var(--muted);margin-left:2px}.ovx-stat b.warn{color:var(--red)}.ovx-stat small{color:var(--muted);font-size:12px}
+.ovx-cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px;align-items:start}
+.ovx-row{display:grid;grid-template-columns:52px 64px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 4px;color:inherit;font:inherit;cursor:pointer}
+.ovx-row:hover{background:rgba(127,127,127,.06)}.ovx-date b{display:block;font-size:14px;color:var(--ink)}.ovx-date small,.ovx-w small{display:block;font-size:11.5px;color:var(--muted)}
+.ovx-w{font-size:16px}.ovx-body{min-width:0}.ovx-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:3px}.ovx-sum{display:block;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovx-meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.ovx-sl{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13.5px}.ovx-sl span{color:var(--muted);white-space:nowrap}.ovx-sl span.warn{color:var(--red)}
+.ovx-ev{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}.ovx-ev:last-child{border-bottom:0}.ovx-ev span{color:var(--muted);font-variant-numeric:tabular-nums}.ovx-ev p{margin:0}
+@media(max-width:900px){.ovx-hero,.ovx-cols{grid-template-columns:1fr}.ovx-mosaic{min-height:220px}.ovx-row{grid-template-columns:46px 48px minmax(0,1fr)}.ovx-meta{display:none}}
+.ovk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.ovk{padding:14px 18px 16px}.ovk-t{display:block;font-weight:700;font-size:14px;color:var(--ink)}.ovk small{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}.ovk b{display:block;font-size:26px;color:var(--ink);margin:2px 0 10px;font-variant-numeric:tabular-nums}
+.ovk-bar{position:relative;height:8px;border-radius:999px;background:var(--gray-soft);overflow:hidden;display:flex;gap:2px}.ovk-bar i{display:block;height:100%;background:#3987e5;border-radius:999px}.ovk-bar.seg i{border-radius:0}.ovk-bar.warn i{background:var(--red)}
+.ovk-bar em{position:absolute;top:-2px;width:2px;height:12px;background:var(--ink);opacity:.7}
+.ov2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;align-items:start}.ov2.r{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+.ovx-card{padding:16px 18px}.ovx-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.ovx-head h4{margin:0;font-size:15px;color:var(--ink)}.btn.sm{padding:5px 10px;font-size:12.5px}
+.ovx-mosaic{margin-bottom:14px;min-height:240px}
+.ovw{display:flex;flex-direction:column}.ovw-row{display:grid;grid-template-columns:96px repeat(7,1fr);align-items:center;border-bottom:1px solid var(--line);min-height:40px}
+.ovw-row>span{text-align:center}.ovw-row.hd span small{display:block;color:var(--muted);font-size:11.5px}.ovw-row.hd span b{font-size:16px}.ovw-row.hd span.on{background:var(--green-soft);border-radius:8px;padding:4px 0}
+.ovw-l{text-align:left!important;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px}.ovw-wx{font-size:16px}.ovw-wx small{display:block;font-size:11.5px;color:var(--text)}.ovw-wx small.rain{color:#7FA7D8}
+.ovw-track{grid-column:2/-1;position:relative;height:22px}.ovw-track i{position:absolute;top:3px;height:16px;border-radius:4px;background:rgba(57,135,229,.35);border:1px solid #3987e5}.ovw-track i.run{background:#3987e5}
+.ovw-empty{padding:30px 10px;text-align:center;color:var(--muted);font-size:13px}
+.ovg{width:100%;height:220px;display:block}.ovg-grid{stroke:var(--line);stroke-width:1}.ovg-ax{fill:var(--muted);font-size:11px}
+.ovg-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px}.ovg-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}.ovg-legend i.hatch{background:repeating-linear-gradient(45deg,rgba(57,135,229,.6) 0 2px,rgba(57,135,229,.12) 2px 5px)}
+.ovg-tip{position:fixed;z-index:50;display:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--text);pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:220px}
+.ovh{display:grid;grid-template-columns:110px 1fr 54px;gap:10px;align-items:center;padding:6px 0;font-size:13px}.ovh span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ovh span i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.ovh div{height:10px;background:var(--gray-soft);border-radius:999px}.ovh div b{display:block;height:100%;border-radius:999px}.ovh em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:1000px){.ovk-row{grid-template-columns:1fr 1fr}.ov2,.ov2.r{grid-template-columns:1fr}}
+.ovg-wrap{overflow-x:auto}@media(max-width:640px){.ovg{min-width:560px}.ovw-row{grid-template-columns:64px repeat(7,1fr)}.ovw-wx small{font-size:10px}.ovk b{font-size:21px}}
 </style>
 </head>
 <body>
@@ -1512,6 +1553,43 @@ const OV = { site: null, data: null, all: null, allAt: 0 };
 
 function ovBar(pct, cls) { return `<div class="bar"><i class="${cls || ''}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>`; }
 
+const OVC = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9'], OVC_OTHER = '#7a7874';
+function ovNice(m) { if (m <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(m))); const n = m / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+function ovYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function ovAdd(ymd, n) { const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() + n); return ovYmd(d); }
+function ovChart(cols, opt) {
+  const W = 640, H = 230, L = 34, R = 8, T = 10, B = 26, iw = W - L - R, ih = H - T - B;
+  const max = opt.max || ovNice(Math.max(1, ...cols.map(c => c.stack ? c.stack.reduce((a, s) => a + s.v, 0) : Math.max(c.v || 0, c.v2 || 0))));
+  const bw = iw / cols.length, y = v => T + ih - v / max * ih;
+  const ticks = [0, .2, .4, .6, .8, 1].map(f => f * max);
+  const every = Math.ceil(cols.length / 10);
+  let g = ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" class="ovg-grid"/><text x="${L - 6}" y="${y(t) + 4}" class="ovg-ax" text-anchor="end">${Math.round(t)}${opt.unit || ''}</text>`).join('');
+  cols.forEach((c, i) => {
+    const x0 = L + i * bw, w = Math.max(3, Math.min(opt.pair ? 16 : 22, bw * (opt.pair ? .34 : .6)));
+    const cx = x0 + bw / 2;
+    if (opt.pair) {
+      const hp = c.v2 / max * ih, ha = c.v / max * ih;
+      g += `<rect x="${cx - w - 1}" y="${T + ih - hp}" width="${w}" height="${hp}" rx="3" fill="url(#ovHatch)" stroke="#3987e5" stroke-opacity=".5"/>`;
+      g += `<rect x="${cx + 1}" y="${T + ih - ha}" width="${w}" height="${ha}" rx="3" fill="#3987e5"/>`;
+    } else if (c.stack) {
+      let acc = 0;
+      c.stack.forEach(sg => { if (!sg.v) return; const h = sg.v / max * ih; g += `<rect x="${cx - w / 2}" y="${T + ih - (acc + sg.v) / max * ih + 1}" width="${w}" height="${Math.max(1, h - 2)}" rx="2" fill="${sg.c}"/>`; acc += sg.v; });
+    } else if (c.v) {
+      const h = c.v / max * ih; g += `<rect x="${cx - w / 2}" y="${T + ih - h}" width="${w}" height="${h}" rx="3" fill="#3987e5"/>`;
+    }
+    g += `<rect x="${x0}" y="${T}" width="${bw}" height="${ih}" fill="transparent" data-tip="${esc(c.tip)}"/>`;
+    if (i % every === 0 || i === cols.length - 1) g += `<text x="${cx}" y="${H - 8}" class="ovg-ax" text-anchor="middle">${esc(c.label)}</text>`;
+  });
+  return `<div class="ovg-wrap"><svg viewBox="0 0 ${W} ${H}" class="ovg" preserveAspectRatio="none"><defs><pattern id="ovHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(57,135,229,.12)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#3987e5" stroke-opacity=".55" stroke-width="2"/></pattern></defs>${g}</svg></div>`;
+}
+function ovTip(root) {
+  let tip = $('ovTipBox'); if (!tip) { tip = document.createElement('div'); tip.id = 'ovTipBox'; tip.className = 'ovg-tip'; document.body.appendChild(tip); }
+  root.querySelectorAll('[data-tip]').forEach(r => {
+    r.onmouseenter = () => { tip.innerHTML = r.dataset.tip; tip.style.display = 'block'; };
+    r.onmousemove = e => { tip.style.left = Math.min(e.clientX + 14, innerWidth - 220) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; };
+    r.onmouseleave = () => { tip.style.display = 'none'; };
+  });
+}
 async function ovRenderSite(el) {
   const s = currentSite();
   if (OV.site !== s.code) {
@@ -1520,66 +1598,116 @@ async function ovRenderSite(el) {
     catch (e) { el.innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
     if (S.tab !== 'site' || S.siteCode !== s.code || S.siteSub !== '대시보드') return;
   }
-  const d = OV.data;
-  const isClient = S.me.role === 'client';
-  const lastGap = d.lastReportDate ? dayDiff(d.lastReportDate, today()) : null;
-  const labor = d.labor;
-  const dailyKeys = labor ? Object.keys(labor.daily).sort() : [];
-  const maxDaily = dailyKeys.length ? Math.max(...dailyKeys.map(k => labor.daily[k])) : 0;
-  const trades = labor ? Object.entries(labor.byTrade).sort((a, b) => b[1] - a[1]).slice(0, 6) : [];
-  const maxTrade = trades.length ? trades[0][1] : 0;
+  const d = OV.data, L = d.latest, td = today();
+  const md = x => x ? Number(x.slice(5, 7)) + '/' + Number(x.slice(8, 10)) : '';
+  const temp = r => r.tempMin !== '' && r.tempMin != null && r.tempMax !== '' && r.tempMax != null ? `${r.tempMin}~${r.tempMax}℃` : '';
+  const gap = L ? dayDiff(L.date, td) : null;
+  const tasks = (d.tasks || []).filter(t => t.start && t.end);
+  const ld = d.laborDaily || {};
+  const ldays = Object.keys(ld).sort();
+  const tradeTot = {}; ldays.forEach(k => Object.entries(ld[k]).forEach(([t, n]) => tradeTot[t] = (tradeTot[t] || 0) + n));
+  const tradeRank = Object.entries(tradeTot).sort((a, b) => b[1] - a[1]);
+  const top = tradeRank.slice(0, 6).map(x => x[0]);
+  const colOf = t => { const i = top.indexOf(t); return i >= 0 ? OVC[i] : OVC_OTHER; };
+  const totalPeople = tradeRank.reduce((a, x) => a + x[1], 0);
+  const wsum = tasks.reduce((a, t) => a + (t.days || 1), 0);
+  const actualAt = w => tasks.reduce((a, t) => a + (t.days || 1) * (t.status === '완료' && (!t.doneDate || t.doneDate <= w) ? 1 : w >= td ? (t.progress || 0) / 100 : 0), 0) / (wsum || 1) * 100;
+  const planAt = w => tasks.reduce((a, t) => { const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, w) + 1; return a + (t.days || 1) * Math.max(0, Math.min(1, done / tot)); }, 0) / (wsum || 1) * 100;
+  const prog = tasks.length ? Math.round(actualAt(td)) : null, plan = tasks.length ? Math.round(planAt(td)) : null;
+  const total = s.startDate && s.endDate ? dayDiff(s.startDate, s.endDate) : 0, left = s.endDate ? dayDiff(td, s.endDate) : null;
+  const periodPct = total > 0 ? Math.max(0, Math.min(100, dayDiff(s.startDate, td) / total * 100)) : 0;
+  const fc = d.forecast || [];
+  const week = Array.from({ length: 7 }, (_, i) => ovAdd(td, i));
+  const wkTasks = tasks.filter(t => t.status !== '완료' && t.start <= week[6] && t.end >= week[0]);
+  let pcols = [];
+  if (tasks.length) {
+    const first = tasks.reduce((m, t) => t.start < m ? t.start : m, tasks[0].start);
+    let w = ovAdd(first, (7 - new Date(first + 'T00:00:00').getDay()) % 7);
+    const end = td > s.endDate ? td : ovAdd(td, 0);
+    while (w <= end && pcols.length < 40) { pcols.push(w); w = ovAdd(w, 7); }
+    if (!pcols.length || pcols[pcols.length - 1] < td) pcols.push(td);
+    pcols = pcols.slice(-12).map(w => { const a = actualAt(w), p = planAt(w); return { label: md(w), v: a, v2: p, tip: `<b>${md(w)} 기준</b><br>계획 ${p.toFixed(0)}% · 실행 ${a.toFixed(0)}%` }; });
+  }
+  const dstart = ovAdd(td, -20), dcols = Array.from({ length: 21 }, (_, i) => ovAdd(dstart, i)).map(k => { const o = ld[k] || {}, n = Object.values(o).reduce((a, b) => a + b, 0); return { label: md(k), v: n, tip: `<b>${md(k)} (${rpDow(k)})</b><br>${n ? Object.entries(o).map(([t, c]) => `${esc(t)} ${c}명`).join('<br>') : '기록 없음'}` }; });
+  const wk0 = ldays.length ? ldays[0] : td; let wcols = [];
+  if (ldays.length) { let w = ovAdd(wk0, -((new Date(wk0 + 'T00:00:00').getDay() + 6) % 7)); while (w <= td) { const days = Array.from({ length: 7 }, (_, i) => ovAdd(w, i)); const agg = {}; days.forEach(k => Object.entries(ld[k] || {}).forEach(([t, n]) => { const key = top.includes(t) ? t : '기타'; agg[key] = (agg[key] || 0) + n; })); wcols.push({ label: md(w), stack: [...top, '기타'].map(t => ({ v: agg[t] || 0, c: t === '기타' ? OVC_OTHER : colOf(t) })), tip: `<b>${md(w)} 주</b><br>${Object.entries(agg).map(([t, n]) => `${esc(t)} ${n}명`).join('<br>') || '기록 없음'}` }); w = ovAdd(w, 7); } wcols = wcols.slice(-16); }
+  const kpi = (title, big, sub, bar) => `<section class="panel ovk"><span class="ovk-t">${title}</span><small>${sub}</small><b>${big}</b>${bar}</section>`;
+  const bar = (pct, mark) => `<div class="ovk-bar"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i>${mark != null ? `<em style="left:${Math.max(0, Math.min(100, mark))}%" title="계획"></em>` : ''}</div>`;
+  const legend = top.map(t => `<span><i style="background:${colOf(t)}"></i>${esc(t)}</span>`).join('') + (tradeRank.length > 6 ? `<span><i style="background:${OVC_OTHER}"></i>기타</span>` : '');
 
   el.innerHTML = `
-    <div class="ov-cards">
-      <section class="panel ov-card">
-        <span class="cr-id">최근 현장보고</span>
-        <b class="${lastGap !== null && lastGap >= 3 ? 'warn' : ''}">${d.lastReportDate ? esc(d.lastReportDate.slice(5).replace('-', '/')) : '없음'}</b>
-        <span class="cr-sub">${d.lastReportDate ? (lastGap === 0 ? '오늘 작성' : `${lastGap}일 전 · 누적 ${d.reportCount}건`) : '작성된 보고가 없습니다'}</span>
-      </section>
-      ${labor ? `<section class="panel ov-card"><span class="cr-id">이번 주 투입 인원</span><b>${labor.week}명</b>
-        <span class="cr-sub">누적 ${labor.total.toLocaleString('ko-KR')}명</span></section>` : ''}
-      ${d.cr ? `<section class="panel ov-card"><span class="cr-id">진행 중 변경요청</span>
-        <b class="${d.cr.open.length ? 'warn' : ''}">${d.cr.open.length}건</b>
-        <span class="cr-sub">완료 ${d.cr.done}건${d.cr.addAmount ? ` · 추가 ${won(d.cr.addAmount)}` : ''}</span></section>` : ''}
-      ${d.design ? `<section class="panel ov-card"><span class="cr-id">설계 일정</span>
-        <b class="${d.design.late ? 'warn' : ''}">${d.design.done}/${d.design.total} 완료</b>
-        <span class="cr-sub">${d.design.late ? `${d.design.late}건 지연` : '지연 없음'}</span></section>` : ''}
+    <div class="ovk-row">
+      ${kpi('공사기간', left == null ? '미정' : left >= 0 ? `${left}일 남음` : `${-left}일 경과`, s.startDate ? `${s.startDate.replace(/-/g, '.')} ~ ${(s.endDate || '').replace(/-/g, '.')}` : '착공일을 마스터에 입력하세요', bar(periodPct))}
+      ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p`, prog == null ? bar(0) : bar(prog, plan))}
+      ${kpi('누적 작업자수', `${totalPeople.toLocaleString('ko-KR')}명`, '현장보고·QR 출역 기준', `<div class="ovk-bar seg">${tradeRank.map(([t, n]) => `<i style="width:${n / (totalPeople || 1) * 100}%;background:${colOf(t)}" data-tip="${esc(t)} ${n}명"></i>`).join('')}</div>`)}
+      ${kpi('최근 현장보고', L ? `${md(L.date)} (${rpDow(L.date)})` : '없음', L ? (gap === 0 ? '오늘 작성' : `${gap}일 전 · 누적 ${d.reportCount}건`) : '첫 보고를 작성하세요', `<div class="ovk-bar ${gap >= 3 ? 'warn' : ''}"><i style="width:${L ? Math.max(8, 100 - gap * 25) : 0}%"></i></div>`)}
     </div>
 
-    ${labor && dailyKeys.length ? `<section class="panel ov-block">
-      <h4>최근 30일 투입 인원</h4>
-      <div class="rp-bars tall">${dailyKeys.map(k => `<i style="height:${maxDaily ? Math.max(6, labor.daily[k] / maxDaily * 100) : 0}%" title="${k} ${labor.daily[k]}명"></i>`).join('')}</div>
-      <div class="ov-axis"><span>${esc(dailyKeys[0].slice(5).replace('-', '/'))}</span><span>${esc(dailyKeys[dailyKeys.length - 1].slice(5).replace('-', '/'))}</span></div>
-    </section>` : ''}
+    <div class="ov2">
+      ${L ? `<section class="panel ovx-card">
+        <div class="ovx-head"><h4>최근 현장보고 <span class="cr-sub">${md(L.date)} (${rpDow(L.date)}) ${rpWeatherIcon(L.weather)} ${temp(L)} · ${esc(L.by || '')}</span></h4><button class="btn ghost sm" type="button" id="ovOpenLast">보고 열기</button></div>
+        <div class="ovx-mosaic n${Math.min(L.photos.length, 5)}">${L.photos.slice(0, 5).map((p, i) => `<button type="button" class="thumb" data-rid="${esc(L.id)}" data-pid="${esc(p.id)}" data-i="${i}">${i === 4 && L.photoCount > 5 ? `<span class="ovx-more">+${L.photoCount - 5}</span>` : ''}</button>`).join('')}</div>
+        ${L.work.length ? `<div class="ovx-sec"><span class="ovx-k">금일 작업</span>${L.work.map(w => `<div class="ovx-work"><span class="ovx-chip">${esc(w.label)}</span><span>${esc(w.work)}${w.count ? ` <em>${w.count}명</em>` : ''}</span></div>`).join('')}</div>` : ''}
+        ${L.tomorrow.length ? `<div class="ovx-sec"><span class="ovx-k">명일 작업</span><ul class="ovx-ul">${L.tomorrow.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+      </section>` : `<section class="panel empty"><h3>아직 현장보고가 없습니다</h3></section>`}
+      <section class="panel ovx-card">
+        <div class="ovx-head"><h4>주간 계획 <span class="cr-sub">오늘부터 7일</span></h4><button class="btn ghost sm" type="button" id="ovGoSc">공정표</button></div>
+        <div class="ovw">
+          <div class="ovw-row hd"><span></span>${week.map(k => `<span class="${k === td ? 'on' : ''}"><small>${rpDow(k)}</small><b>${Number(k.slice(8))}</b></span>`).join('')}</div>
+          <div class="ovw-row"><span class="ovw-l">날씨</span>${week.map(k => { const f = fc.find(x => x.date === k); return `<span class="ovw-wx">${f ? `${rpWeatherIcon(f.weather)}<small>${f.min}°/${f.max}°</small>${f.rain >= 50 ? `<small class="rain">☔${f.rain}%</small>` : ''}` : '<small>–</small>'}</span>`; }).join('')}</div>
+          ${wkTasks.length ? wkTasks.slice(0, 8).map(t => { const a = Math.max(0, dayDiff(week[0], t.start)), b = Math.min(6, dayDiff(week[0], t.end)); return `<div class="ovw-row"><span class="ovw-l" title="${esc(t.name)}">${esc(t.name)}</span><span class="ovw-track"><i style="left:${a / 7 * 100}%;width:${(b - a + 1) / 7 * 100}%" class="${t.status === '진행중' ? 'run' : ''}"></i></span></div>`; }).join('')
+            : `<div class="ovw-empty">${tasks.length ? '이번 주 예정된 공정이 없습니다' : '공정표를 만들면 주간 공정이 여기에 표시됩니다'}</div>`}
+        </div>
+      </section>
+    </div>
 
-    ${trades.length ? `<section class="panel ov-block"><h4>공종별 누적 인원</h4>
-      ${trades.map(([t, n]) => `<div class="ov-trade"><span>${esc(t)}</span>${ovBar(n / maxTrade * 100)}<b>${n}명</b></div>`).join('')}
-    </section>` : ''}
+    <div class="ov2">
+      <section class="panel ovx-card"><div class="ovx-head"><h4>공정 진척도 <span class="cr-sub">계획 대비 실행 (누적, 주 단위)</span></h4></div>
+        ${pcols.length ? `<div class="ovg-legend"><span><i class="hatch"></i>계획</span><span><i style="background:#3987e5"></i>실행</span></div>${ovChart(pcols, { pair: true, max: 100, unit: '%' })}` : '<div class="ovw-empty">공정표를 만들면 진척도가 그려집니다</div>'}
+      </section>
+      <section class="panel ovx-card"><div class="ovx-head"><h4>일별 투입 인원 <span class="cr-sub">최근 3주 · 누적 ${totalPeople.toLocaleString('ko-KR')}명</span></h4></div>
+        ${totalPeople ? ovChart(dcols, { unit: '' }) : '<div class="ovw-empty">현장보고 인원이나 QR 출역이 쌓이면 그려집니다</div>'}
+      </section>
+    </div>
 
-    ${d.cr && d.cr.open.length ? `<section class="panel ov-block"><h4>처리 대기 중인 변경요청</h4>
-      ${d.cr.open.map(c => `<div class="ov-line"><span class="st ${esc(c.status)}">${esc(c.status === '승인대기' ? '승인' : c.status)}</span>
-        <b>${esc(c.title)}</b><span class="cr-sub">${esc(c.id)}${c.costType === '추가' && c.amount ? ' · ' + won(c.amount) : ''}</span></div>`).join('')}
-      <button class="btn ghost" type="button" id="ovGoCr" style="margin-top:10px">변경요청 탭으로</button>
-    </section>` : ''}
+    ${totalPeople ? `<div class="ov2 r">
+      <section class="panel ovx-card"><div class="ovx-head"><h4>공종별 투입 인원</h4></div>
+        ${tradeRank.slice(0, 8).map(([t, n]) => `<div class="ovh"><span><i style="background:${colOf(t)}"></i>${esc(t)}</span><div><b style="width:${n / tradeRank[0][1] * 100}%;background:${colOf(t)}"></b></div><em>${n}명</em></div>`).join('')}
+      </section>
+      <section class="panel ovx-card"><div class="ovx-head"><h4>공종별 인원 흐름 <span class="cr-sub">주 단위</span></h4></div>
+        <div class="ovg-legend">${legend}</div>${ovChart(wcols, {})}
+      </section>
+    </div>` : ''}
 
-    ${d.design && d.design.next.length ? `<section class="panel ov-block"><h4>다가오는 설계 일정</h4>
-      ${d.design.next.map(i => `<div class="ov-line"><span class="tag">${esc(DS_KIND[i.kind] || '')}</span><b>${esc(i.title)}</b>
-        <span class="cr-sub">${esc(i.date.slice(5).replace('-', '/'))}${i.time ? ' ' + esc(i.time) : ''} · ${esc(dsDday(i.date).text)}</span></div>`).join('')}
-    </section>` : ''}
+    <div class="ov2 r">
+      <section class="panel ovx-card"><div class="ovx-head"><h4>작업 타임라인 <span class="cr-sub">최근 ${(d.timeline || []).length}건</span></h4><button class="btn ghost sm" type="button" id="ovGoRp">전체 보기</button></div>
+        ${(d.timeline || []).map(r => `<button type="button" class="ovx-row" data-open="${esc(r.id)}">
+          <span class="ovx-date"><b>${md(r.date)}</b><small>${rpDow(r.date)}</small></span>
+          <span class="ovx-w">${rpWeatherIcon(r.weather)}<small>${temp(r)}</small></span>
+          <span class="ovx-body">${r.trades.length ? `<span class="ovx-chips">${r.trades.map(t => `<span class="ovx-chip">${esc(t)}</span>`).join('')}</span>` : ''}<span class="ovx-sum">${esc(r.summary || '')}</span></span>
+          <span class="ovx-meta">${r.people ? `${r.people}명 · ` : ''}사진 ${r.photos}</span></button>`).join('') || '<div class="ovw-empty">보고가 없습니다</div>'}
+      </section>
+      <div class="ovx-side">
+        ${(d.events || []).length ? `<section class="panel ovx-card"><div class="ovx-head"><h4>현장 이벤트 <span class="cr-sub">방문·점검·반입</span></h4></div>
+          ${d.events.map(e => `<div class="ovx-ev"><span>${md(e.date)}</span><p>${esc(e.text)}</p></div>`).join('')}</section>` : ''}
+        ${d.cr ? `<section class="panel ovx-card"><div class="ovx-head"><h4>변경요청 <span class="cr-sub">진행 ${d.cr.open.length} · 완료 ${d.cr.done}</span></h4><button class="btn ghost sm" type="button" id="ovGoCr">변경공사</button></div>
+          ${d.cr.open.map(c => `<div class="ov-line"><span class="st ${esc(c.status)}">${esc(c.status === '승인대기' ? '승인' : c.status)}</span><b>${esc(c.title)}</b></div>`).join('') || '<div class="cr-sub">처리 대기 중인 요청이 없습니다</div>'}</section>` : ''}
+      </div>
+    </div>`;
 
-    ${d.recent.length ? `<section class="panel ov-block"><h4>최근 보고 사진</h4>
-      ${d.recent.map(r => `<div class="ov-report"><div class="cr-sub">${esc(r.date.slice(5).replace('-', '/'))} (${rpDow(r.date)}) ${rpWeatherIcon(r.weather)}</div>
-        <div class="thumbs">${r.photos.map(p => `<button type="button" class="thumb" data-rid="${esc(r.id)}" data-pid="${esc(p.id)}"></button>`).join('')}</div></div>`).join('')}
-      <button class="btn ghost" type="button" id="ovGoRp" style="margin-top:10px">현장보고 전체 보기</button>
-    </section>` : ''}`;
-
-  if ($('ovGoCr')) $('ovGoCr').onclick = () => { CR.mode = 'site'; S.siteSub = '변경공사'; selectTab('site'); };
+  if ($('ovOpenLast')) $('ovOpenLast').onclick = () => rpOpen(L.id);
+  el.querySelectorAll('[data-open]').forEach(b => b.onclick = () => rpOpen(b.dataset.open));
   if ($('ovGoRp')) $('ovGoRp').onclick = () => { S.siteSub = '현장보고'; renderSiteTab(); };
-  el.querySelectorAll('[data-pid]').forEach(b => {
-    const item = { id: b.dataset.rid };
-    rpPhotoUrl(item, b.dataset.pid).then(f => b.style.backgroundImage = `url("${f.url}")`).catch(() => {});
-    b.onclick = () => lightbox([b.dataset.pid], 0, id => rpPhotoUrl(item, id));
-  });
+  if ($('ovGoSc')) $('ovGoSc').onclick = () => { S.siteSub = '공정표'; renderSiteTab(); };
+  if ($('ovGoCr')) $('ovGoCr').onclick = () => { CR.mode = 'site'; S.siteSub = '변경공사'; selectTab('site'); };
+  ovTip(el);
+  if (L) {
+    const item = { id: L.id }, ids = L.photos.map(p => p.id);
+    el.querySelectorAll('.ovx-mosaic [data-pid]').forEach(b => {
+      rpPhotoUrl(item, b.dataset.pid).then(f => b.style.backgroundImage = `url("${f.url}")`).catch(() => {});
+      b.onclick = () => lightbox(ids, Number(b.dataset.i), id => rpPhotoUrl(item, id));
+    });
+  }
 }
 
 function ovGroupHtml(title, rows, prog) {
