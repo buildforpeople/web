@@ -613,6 +613,7 @@
   .pf-metric b small { font-size: 13px; font-weight: 600; margin-left: 4px; color: var(--muted); }
   .pf-metric.best { background: var(--green-soft); border-color: #3E5446; }
   .pf-metric.best b { color: var(--green); }
+  .pf-air-txt { font-size: 12.5px; color: var(--ink); margin-top: 10px; line-height: 1.5; }
   .pf-metric.good b { color: var(--green-2); }
   .pf-metric.bad { background: var(--red-soft); border-color: #6A3A35; }
   .pf-metric.bad b { color: var(--red); }
@@ -681,6 +682,7 @@
   .st-est { font-size: 10px; font-weight: 700; background: var(--gray-soft); color: var(--muted); border-radius: 4px; padding: 1px 5px; margin-left: 4px; vertical-align: 2px; }
   .st-txt { margin: 0 0 8px; font-size: 15px; line-height: 1.75; color: var(--ink); }
   .st-txt b { color: var(--green); }
+  .st-note { display: block; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
   .st-bars { margin-top: 12px; }
   .st-bar { display: grid; grid-template-columns: 110px 1fr 62px; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 6px; }
   .st-bar i { display: block; height: 10px; border-radius: 999px; background: var(--green-2); }
@@ -1534,7 +1536,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>다음 단계에서 이 화면을 채웁니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
@@ -1547,6 +1549,14 @@ function renderSiteTab() {
     return;
   }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
+  if (S.siteSub === '스펙북') {
+    $('subBody').innerHTML = '<div id="siBody"><div class="loading">선정 소재를 불러오는 중...</div></div>';
+    const show = () => { if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '스펙북') siRender(); };
+    if (SI.site === s.code) { show(); return; }
+    api({ action: 'si_list', siteCode: s.code }).then(d => { Object.assign(SI, { site: s.code, items: d.items, groups: d.groups, statuses: d.statuses, canEdit: d.canEdit }); show(); })
+      .catch(e => { if ($('siBody')) $('siBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+    return;
+  }
   if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
   if (S.siteSub === '출역') { CI.data = null; ciRender(s.code); return; }
   if (S.siteSub === '변경공사') { CR.mode = CR.wantAll ? 'all' : 'site'; CR.wantAll = false; renderChangeTab(); return; }
@@ -2792,10 +2802,11 @@ function pfSummary(el) {
       ${!hasAny ? '<div class="empty" style="padding:24px 0"><h3>아직 기록된 성능 데이터가 없습니다</h3>외피 구성·기밀 테스트·에너지 사용을 입력하면 이곳에 요약됩니다.</div>' : `
       <div class="pf-grid">
         <div class="pf-metric ${ag ? ag.c : ''}">
-          <span class="cr-id">기밀 성능 (ACH50)</span>
-          <b>${air ? Number(air.ach50).toFixed(2) : '—'}<small>회/h</small></b>
-          <span class="cr-sub">${ag ? esc(ag.t) : '미측정'}${air ? ' · ' + esc(air.date) + ' ' + esc(air.stage) : ''}</span>
-          ${air ? pfBar(Math.min(100, (air.ach50 / 3) * 100), ag.c, ['0.6', '1.5', '3.0']) : ''}
+          <span class="cr-id">기밀 성능 · 100점 만점</span>
+          <b>${air ? pfAirScore(air.ach50) : '—'}<small>${air ? '점' : ''}</small></b>
+          <span class="cr-sub">${air ? `실측 ${Number(air.ach50).toFixed(2)}회/h (ACH50) · ` : ''}${ag ? esc(ag.t) : '미측정'}${air ? ' · ' + esc(air.date) + ' ' + esc(air.stage) : ''}</span>
+          ${air ? pfBar(pfAirScore(air.ach50), ag.c, [['아파트', 75], ['패시브 94', 94]]) : ''}
+          ${air ? `<div class="pf-air-txt">${esc(pfAirText(air.ach50))}</div>` : ''}
         </div>
         <div class="pf-metric ${eg ? eg.c : ''}">
           <span class="cr-id">연간 1차에너지 소요량</span>
@@ -2837,8 +2848,16 @@ function pfSummary(el) {
 }
 
 function pfBar(pct, cls, marks) {
-  return `<div class="pf-bar ${cls || ''}"><i style="width:${pct}%"></i>${(marks || []).map((m, i) => `<em style="left:${[23, 50, 100][i]}%" data-m="${esc(m)}"></em>`).join('')}</div>`;
+  return `<div class="pf-bar ${cls || ''}"><i style="width:${pct}%"></i>${(marks || []).map((m, i) => Array.isArray(m) ? `<em style="left:${m[1]}%" data-m="${esc(m[0])}"></em>` : `<em style="left:${[23, 50, 100][i]}%" data-m="${esc(m)}"></em>`).join('')}</div>`;
 }
+function pfAirScore(v) { v = Number(v); return v > 0 ? Math.max(0, Math.round((100 - v * 10) * 10) / 10) : null; }
+function pfAirLeak(v) { return Math.round(Number(v) * 100); }
+function pfAirText(v) {
+  const L = pfAirLeak(v);
+  return L <= 100 ? `집 안팎에 우산이 뒤집힐 만한 바람이 1시간 불어도, 집 안 공기 100L 중 ${L}L만 틈새로 빠져나갈 만큼 꼼꼼한 집`
+    : `집 안팎에 우산이 뒤집힐 만한 바람이 1시간 불면, 집 안 공기 100L 기준 ${L.toLocaleString('ko-KR')}L(${(L / 100).toFixed(1)}번 통째로)가 틈새로 빠져나가는 집`;
+}
+const PF_AIR_RULE = '고기밀 주택: 약 1회(100L) 이하 교환 (90점/100) · 신축 아파트: 약 2~3회(200~300L) 교환 (70~80점/100) · 우풍 있는 집: 10회(1,000L) 이상 교환 (0점/100, 낙제)';
 
 function pfEnvList(el) {
   const d = PF.d, list = d.env || [];
@@ -2970,7 +2989,7 @@ function pfAirList(el) {
     ${list.length ? `<section class="panel">${list.map(a => { const g = pfAirGrade(a.ach50);
       return `<button class="cr-row" data-air="${esc(a.id)}">
         <span class="cr-id">${esc(a.date)} · ${esc(a.stage)}${a.agency ? ' · ' + esc(a.agency) : ''}</span>
-        <span class="cr-title">ACH50 ${Number(a.ach50).toFixed(2)} 회/h</span>
+        <span class="cr-title">${pfAirScore(a.ach50)}점 · ACH50 ${Number(a.ach50).toFixed(2)} 회/h</span>
         ${a.note ? `<span class="cr-sub">${esc(a.note)}</span>` : ''}
         <span class="cr-right"><span class="st pf-${g.c}">${esc(g.t)}</span>${(a.files || []).length ? `<span class="cr-wait">첨부 ${(a.files || []).length}</span>` : ''}</span>
       </button>`; }).join('')}</section>` : `<section class="panel empty"><h3>측정 기록이 없습니다</h3>${d.canEdit ? '중간(골조) 단계와 준공 시 두 번 측정하면 추이를 볼 수 있습니다.' : ''}</section>`}`;
@@ -2985,6 +3004,7 @@ function pfAirOpen(id) {
   const body = openSheet(`ACH50 ${Number(a.ach50).toFixed(2)}`, `${esc(a.date)} · ${esc(a.stage)}`, `
     <div class="card"><dl class="kv">
       <dt>측정값</dt><dd><b>${Number(a.ach50).toFixed(2)}</b> 회/h · ${esc(g.t)}</dd>
+      <dt>점수</dt><dd><b>${pfAirScore(a.ach50)}점</b> / 100<div class="cr-sub">${esc(pfAirText(a.ach50))}</div></dd>
       <dt>측정일</dt><dd>${esc(a.date)}</dd><dt>구분</dt><dd>${esc(a.stage)}</dd>
       <dt>측정기관</dt><dd>${esc(a.agency || '—')}</dd>
       <dt>실내 체적</dt><dd>${a.volume ? esc(a.volume) + ' ㎥' : '—'}</dd>
@@ -3152,6 +3172,7 @@ function pfPrint() {
     .big{display:flex;gap:12px;margin-bottom:14px}.big div{flex:1;border:1px solid #ddd;border-radius:8px;padding:12px 14px;background:#F5F5F3}
     .big span{font-size:11px;color:#8C8C88;display:block}.big b{font-size:24px;color:#000000;display:block;margin:2px 0}
     .big em{font-style:normal;font-size:12px;color:#2F5D46;font-weight:600}
+    .airnote{font-size:12px;line-height:1.6;margin:-6px 0 18px;padding:10px 12px;background:#F5F5F3;border-radius:6px}.airnote span{color:#8C8C88;font-size:11px}
     .ft{margin-top:24px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#888;display:flex;justify-content:space-between}
     button{margin-bottom:14px;padding:9px 22px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
 </style></head><body><button onclick="window.print()">인쇄</button>
@@ -3160,10 +3181,11 @@ function pfPrint() {
     <div class="sub">${esc(s.code)}${s.endDate ? ' · 준공 ' + esc(s.endDate) : ''}${s.area ? ' · 연면적 ' + s.area + '㎡ (' + Math.round(s.area / 3.3058) + '평)' : ''}${s.struct ? ' · ' + esc(s.struct) : ''}${s.type ? ' · ' + esc(s.type) : ''}</div>
 
     <div class="big">
-      <div><span>기밀 성능 ACH50</span><b>${air ? Number(air.ach50).toFixed(2) : '—'}</b><em>${ag ? esc(ag.t) : '미측정'}</em></div>
+      <div><span>기밀 성능 (100점 만점)</span><b>${air ? pfAirScore(air.ach50) + '점' : '—'}</b><em>${air ? `ACH50 ${Number(air.ach50).toFixed(2)}회 · ` : ''}${ag ? esc(ag.t) : '미측정'}</em></div>
       <div><span>연간 1차에너지</span><b>${st && st.primary ? st.primary : '—'}</b><em>${eg ? esc(eg.t) : '데이터 부족'}</em></div>
       <div><span>월 평균 에너지 비용</span><b>${st ? Math.round(st.costMonth).toLocaleString('ko-KR') : '—'}</b><em>원 / 월</em></div>
     </div>
+    ${air ? `<div class="airnote"><b>기밀 ${pfAirScore(air.ach50)}점의 뜻</b> — ${esc(pfAirText(air.ach50))}<br><span>${esc(PF_AIR_RULE)}</span></div>` : ''}
 
     <h2>외피 성능 (열관류율 U, W/㎡·K)</h2>
     <table>${['지붕', '외벽', '최하층바닥', '창호', '현관문'].map(p => {
@@ -3285,14 +3307,12 @@ function stRender(el) {
     ${pf ? `<section class="st-block alt">
       <h3>이 집의 성능</h3>
       <div class="st-row">
-        ${pf.ach50 ? big(pf.ach50.toFixed(2), '회/h', '기밀 성능 (ACH50)', pf.ach50 <= 0.6 ? '패시브하우스 기준 충족' : pf.ach50 <= 1.5 ? '매우 우수' : '양호') : ''}
+        ${pf.ach50 ? big(String(pfAirScore(pf.ach50)), '점', '기밀 성능 (100점 만점)', `ACH50 ${pf.ach50.toFixed(2)}회 · ` + (pf.ach50 <= 0.6 ? '패시브하우스 기준 충족' : pf.ach50 <= 1.5 ? '매우 우수' : '양호')) : ''}
         ${pf.primary ? big(stN(pf.primary), 'kWh/㎡', '연간 1차에너지', `일반 신축의 약 ${Math.round(pf.primary / 210 * 100)}%`) : ''}
         ${pf.saveKwhYear ? big(stN(pf.saveKwhYear), 'kWh', '해마다 덜 쓰는 에너지', `소나무 ${stN(pf.savePines)}그루 몫`) : ''}
       </div>
-      ${pf.ach50 ? `<p class="st-txt"><b>ACH50 ${pf.ach50.toFixed(2)}회</b>는, 초속 9m쯤 되는 센 바람이 집을 사방에서 밀어붙일 때
-        집 안 공기가 한 시간에 ${pf.ach50.toFixed(2)}번 바뀐다는 뜻입니다. 일반 아파트가 2~3회,
-        틈이 많은 오래된 집은 5회를 넘기기도 합니다. 숫자가 작을수록 틈이 적어, 겨울에 외풍이 없고 난방비가 덜 듭니다.
-        ${pf.ach50 <= 0.6 ? '이 집은 <b>세계 패시브하우스 기준인 0.6회</b>를 넘지 않았습니다.' : ''}</p>` : ''}
+      ${pf.ach50 ? `<p class="st-txt"><b>기밀 ${pfAirScore(pf.ach50)}점</b> — ${esc(pfAirText(pf.ach50))}.
+        ${pf.ach50 <= 0.6 ? '세계 패시브하우스 기준(0.6회, 94점)보다 꼼꼼합니다.' : ''}<span class="st-note">${esc(PF_AIR_RULE)}</span></p>` : ''}
       ${pf.saveKwhYear ? `<p class="st-txt">같은 크기의 일반 신축과 비교하면 해마다 <b>${stN(pf.saveKwhYear)}kWh</b>를 덜 씁니다.
         이산화탄소로 바꾸면 연 ${stN(pf.saveCo2Year, 1)}톤, 소나무 ${stN(pf.savePines)}그루를 매년 심는 것과 같습니다.</p>` : ''}
     </section>` : ''}
