@@ -1090,6 +1090,7 @@ async function start() {
   try {
     const d = await api({ action: 'me' });
     Object.assign(S, { me: d.user, tabs: d.tabs, links: d.links, sites: d.sites, badges: d.badges || {} });
+    kbApply(d.kb || {});
     $('loginView').hidden = true;
     $('appView').hidden = false;
     $('loginMsg').style.color = '';
@@ -1348,9 +1349,7 @@ function ivForm(o) {
     const c = $('ivC').value, subs = M.subs[c] || [];
     $('ivSW').hidden = !subs.length;
     if (subs.length && !subs.includes($('ivS').value)) $('ivS').innerHTML = subs.map(v => `<option>${esc(v)}</option>`).join('');
-    $('ivHint').textContent = c === '기한 한정 자재' ? '미개봉 신품만 보관합니다. 입고 연월 기준 2년이 지나면 폐기 대상으로 표시됩니다.'
-      : c === '창고 자재' ? '기준 품목만 보관합니다. 한 평당 가치 3만원 이하·특정 색상·현장 맞춤 잔여분·짝 없는 부속은 보관하지 않습니다.'
-      : c === '공구' ? '관리번호가 자동으로 붙고, 목록에서 반출·반납을 기록할 수 있습니다.' : '';
+    $('ivHint').textContent = (KB.ivHints || {})[c] || '';
   };
   hint(); $('ivC').onchange = hint;
   (x.photos || []).forEach(p => { const b = body.querySelector(`[data-p="${p.id}"]`); if (b) { ivPhotoUrl(x.id, p.id, true).then(u => b.style.backgroundImage = `url("${u}")`).catch(() => {}); b.onclick = () => ivPhotoUrl(x.id, p.id).then(u => window.open(u, '_blank')); } });
@@ -1369,27 +1368,16 @@ function ivForm(o) {
   });
 }
 function ivRules() {
-  openSheet('창고 보관 기준', '입고 판단 · 보관 가능 품목 · 장소', `<div class="card iv-rules">
-    <div class="lead"><b>용도와 활용 가치가 분명한 대표 품목만 보관합니다.</b> 기준 외 자재는 현장에서 바로 판매(당근)·나눔·반품·폐기합니다. 차지하는 한 평당 가치가 3만원 이하면 처분. "다시 가지러 올 가치가 있나?", "여러 현장에서 반복해 쓰나?"를 확인하세요.</div>
-    <h4>보관 가능 품목</h4><ul>
-      <li><b>공구</b> — 개별 번호, 반출 시 사용자·현장 기록</li><li><b>기초</b> — 스텐 L앙카</li>
-      <li><b>골조</b> — 구조용 못, 공학목재(허리높이 이상 헤더 활용 가능한 크기부터), 구조목(종류별)</li>
-      <li><b>전기</b> — 공통 조명·스위치, 전선 1롤</li><li><b>기밀·방수</b> — 기밀테이프, 로플렉스, 투습방수지, 자착식 방수시트</li>
-      <li><b>내장목공</b> — 매거진 피스, 마이너스 천장몰딩·걸레받이</li><li><b>욕실</b> — 유가, 수전류(자주 쓰는 모델만)</li>
-      <li><b>방통</b> — 메쉬망(지오그리드)</li><li><b>도어 하드웨어</b> — 문고리·경첩·레일·호차, 세트가 맞는 것만</li>
-      <li><b>단열재</b> — 글라스울·미네랄울만 (EPS·XPS는 다른 현장으로 넘기거나 판매)</li></ul>
-    <h4>보관 장소</h4><ul><li><b>사무실 창고</b> — 상태 좋은 목재, 소·중형 자재, 공구, 작고 가치 있는 자재</li>
-      <li><b>상하동 컨테이너</b> — 가설재(BT아시바·펜스·안전모), 사다리, 우마, 현장 사무실용(냉장고·난로·열풍기·책상·의자), 부피 큰 품목</li></ul>
-    <h4>기한 한정 (미개봉 신품만, 2년 지나면 폐기)</h4><ul><li>케미컬·폼류 — 실리콘, 목공본드, 우레탄폼, 폼본드</li><li>타일·말통류 — 줄눈·접착제, 핸디코트, 퍼티, 방수액</li></ul>
-    <h4>보관 금지</h4><ul><li>특정 색상 내외장재·지붕재(벽돌·페인트·슁글·타일) → 판매</li><li>석고보드 등 이동 중 손상 우려 → 판매</li>
-      <li>세면대·양변기 등 고가·대형 → 제조사 반품 기한 내 처리</li><li>3만원 이하·부피 큰 몰탈, OSB·SSB → 판매</li>
-      <li>특정 사이즈 창호 등 현장 맞춤 잔여분 → 판매·폐기</li><li>MDF 몰딩·합판 자투리, 짝 없는 도어 부속</li>
-      <li>페인트·신나·스테인 등 도료</li><li>철물점에서 늘 살 수 있는 일반 자재 소량(마대 등)</li></ul>
-    <h4>운영</h4><ul><li>입고 시 연·월 표시 → 매년 연말 재고정리, <b>2년 미사용 품목은 폐기</b></li><li>공구는 반출·반납을 이 화면(창고 태블릿)에서 기록</li></ul>
-  </div><div class="actions"><button class="btn" type="button" id="ivRulesOk">확인</button></div>`);
+  openSheet('창고 보관 기준', '입고 판단 · 보관 가능 품목 · 장소', `<div class="card iv-rules">${KB.ivRules || ''}</div><div class="actions"><button class="btn" type="button" id="ivRulesOk">확인</button></div>`);
   $('ivRulesOk').onclick = closeSheet;
 }
 
+let KB = {};
+function kbApply(k) {
+  KB = k;
+  DS_TPL = k.dsTpl || []; DS_WEEKS = k.dsWeeks || 28; PF_U_LIMIT = k.pfU || {};
+  PF_GAS_KWH = (k.pfConst || {}).gasKwh || 0; PF_LPG_KWH = (k.pfConst || {}).lpgKwh || 0; PF_PE = (k.pfConst || {}).pe || { elec: 0, gas: 0 };
+}
 const DYK = { items: [], i: 0, timer: null };
 async function dykLoad() {
   if (S.me.role === 'client') return;
@@ -2063,7 +2051,7 @@ function lbEdit(r) {
     <div class="card">
       <p style="margin:0 0 10px">출근 ${esc(r.inAt)} · 퇴근 ${esc(r.outAt || '미체크')}${r.hours != null ? ` · 실근무 ${r.hours}시간` : ''}</p>
       <div class="f"><label>공수</label><div class="lb-gs">${opts.map(v => `<button type="button" class="chip" data-g="${v}" aria-pressed="${v === cur}">${v === '' ? '자동' : v}</button>`).join('')}</div>
-        <div class="hint">자동: 점심 1시간 빼고 4.5시간 이하 0.5 · 10시간 이하 1 · 12.5시간 이하 1.5 · 그 이상 2공수. 퇴근 미체크는 1공수.</div></div>
+        <div class="hint">${esc(KB.lbRule || '')}</div></div>
       <div class="f"><label for="lbMemo">비고</label><input type="text" id="lbMemo" value="${esc(r.memo || '')}" placeholder="예: 우천 조기 철수"></div>
       ${r.editBy ? `<div class="hint">최근 수정 ${esc(r.editBy)}</div>` : ''}
     </div>
@@ -2541,21 +2529,20 @@ function scPrint() {
 }
 
 const PF = { site: null, d: null, loading: false, tab: '성능 요약' };
-const PF_U_LIMIT = { '지붕': 0.150, '외벽': 0.170, '최하층바닥': 0.220, '창호': 1.000, '현관문': 1.400 };
+let PF_U_LIMIT = {};
 
 function pfAirGrade(v) {
   v = Number(v);
   if (!(v > 0)) return null;
-  return v <= 0.6 ? { t: '패시브하우스 기준 충족', c: 'best' } : v <= 1.0 ? { t: '매우 우수', c: 'good' }
-    : v <= 1.5 ? { t: '우수', c: 'good' } : v <= 3.0 ? { t: '양호', c: 'ok' }
-    : v <= 5.0 ? { t: '보통', c: 'ok' } : { t: '개선 필요', c: 'bad' };
+  const g = (KB.pfAir || []).find(x => v <= x[0]) || (KB.pfAir || []).slice(-1)[0];
+  return g ? { t: g[1], c: g[2] } : null;
 }
 function pfEnGrade(v) {
   if (!(v > 0)) return null;
-  return v <= 90 ? { t: '패시브 수준', c: 'best' } : v <= 120 ? { t: '우수 (협회 인증 수준)', c: 'good' }
-    : v <= 180 ? { t: '양호', c: 'ok' } : v <= 260 ? { t: '보통 (일반 신축 수준)', c: 'ok' } : { t: '개선 여지', c: 'bad' };
+  const g = (KB.pfEn || []).find(x => v <= x[0]) || (KB.pfEn || []).slice(-1)[0];
+  return g ? { t: g[1], c: g[2] } : null;
 }
-const PF_GAS_KWH = 10.55, PF_LPG_KWH = 13.9, PF_PE = { elec: 2.75, gas: 1.10 };
+let PF_GAS_KWH = 0, PF_LPG_KWH = 0, PF_PE = { elec: 0, gas: 0 };
 
 function pfEnergyStat(d) {
   const rows = d.energy || [], area = Number(d.site.area) || 0;
@@ -3970,6 +3957,7 @@ function rpForm(item, date) {
         <div class="f"><label>기온 (최저/최고)</label><div style="display:flex;gap:6px"><input type="number" id="rTmin" placeholder="최저" value="${esc(item ? item.tempMin : '')}"><input type="number" id="rTmax" placeholder="최고" value="${esc(item ? item.tempMax : '')}"></div></div>
       </div>
       <div class="f"><span class="lb">날씨</span>${segHtml('rW', RP.meta.weather, item ? item.weather : '맑음')}</div>
+      <div class="hint" id="rWx"></div>
     </div>
 
     <div class="card">
@@ -4000,6 +3988,21 @@ function rpForm(item, date) {
       <div class="f" style="margin-top:10px"><input type="file" id="rPhotos" multiple accept="image/*" capture="environment"></div>
     </div>
     <div class="actions sticky"><button class="btn ghost" type="button" id="rClose">닫기</button><button class="btn" type="button" id="rSave">${editing ? '수정 저장' : '보고 등록'}</button></div>`);
+  const rpWx = async (force) => {
+    const d = $('rDate').value; if (!d || !$('rWx')) return;
+    if (!force && ($('rTmin').value !== '' || $('rTmax').value !== '')) return;
+    $('rWx').textContent = '날씨 불러오는 중...';
+    try {
+      const w = await api({ action: 'rp_weather', siteCode: s.code, date: d });
+      if (!$('rWx') || $('rDate').value !== d) return;
+      if (w.day) {
+        $('rTmin').value = w.day.min; $('rTmax').value = w.day.max;
+        body.querySelectorAll('[data-seg="rW"] button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === w.day.weather));
+      }
+      $('rWx').textContent = (w.day ? `현장 위치 기준 자동 입력 · ` : '') + (w.next ? `내일(${w.next.date.slice(5).replace('-', '/')}) ${w.next.weather} ${w.next.min}~${w.next.max}℃` : '');
+    } catch (x) { if ($('rWx')) $('rWx').textContent = x.message; }
+  };
+  if (!editing) { rpWx(false); $('rDate').addEventListener('change', () => rpWx(true)); }
 
   bindSegs(body);
   const removed = [];
@@ -4261,20 +4264,8 @@ function cmMount(type, id) {
 }
 
 const DS = { site: null, plan: null, items: [], canEdit: false, loading: false };
-const DS_WEEKS = 28;
-const DS_TPL = [
-  ['설계', 1, 1, '킥오프 미팅', 'meeting'], ['설계', 1, 3, '현장답사 · 법규 확인 · 배치/평면 설계', 'work'],
-  ['설계', 4, 4, '배치·평면 초안 송부 (온라인)', 'deadline'], ['설계', 5, 7, '서면 피드백 수정 2회', 'work'],
-  ['설계', 7, 7, '배치·평면 확정 미팅', 'meeting'], ['설계', 8, 10, '3D 모델링 작업', 'work'],
-  ['설계', 11, 11, '3D 투시도 초안 미팅', 'meeting'], ['설계', 12, 14, '서면 피드백 수정 2회', 'work'],
-  ['설계', 14, 14, '건축 설계 완료 · 자금조달계획 점검', 'deadline'], ['견적', 15, 16, '허가도면 기준 견적 작업', 'work'],
-  ['견적', 17, 17, '견적 제출 미팅', 'meeting'], ['견적', 18, 20, '견적 조정', 'work'],
-  ['계약·착공준비', 21, 21, '공사 계약 미팅', 'meeting'], ['계약·착공준비', 21, 21, '인테리어 셀렉 미팅', 'meeting'],
-  ['계약·착공준비', 22, 22, '인허가(건축/개발행위/착공) 신청', 'deadline'], ['계약·착공준비', 22, 22, '실시설계 시작', 'work'],
-  ['계약·착공준비', 23, 24, '조명·전열·인테리어 디자인 초안', 'work'], ['계약·착공준비', 25, 25, '인테리어 디자인 초안 송부', 'deadline'],
-  ['계약·착공준비', 26, 26, '서면 피드백 1회 → 인테리어 확정', 'deadline'], ['계약·착공준비', 27, 28, '인테리어 변동 견적 조정', 'work'],
-  ['계약·착공준비', 28, 28, '공사 착공', 'deadline']
-];
+let DS_WEEKS = 28;
+let DS_TPL = [];
 const DS_KIND = { meeting: '미팅', deadline: '마감', work: '작업' };
 
 function dsMonday(str) { const d = new Date(str + 'T00:00:00'); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return d; }
