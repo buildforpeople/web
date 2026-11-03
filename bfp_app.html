@@ -1034,6 +1034,9 @@
 .pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}
 .pf-stds{margin-top:4px}.pf-oc2{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}.pf-oc2 input{width:72px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .rp-done{display:flex;flex-direction:column;gap:6px}.rp-done .check{font-size:14px}
+.sc-asks{padding:14px 18px;margin-bottom:12px;border:1px solid rgba(224,167,46,.45)!important}.sc-asks h4{margin:0 0 8px;font-size:14px;color:var(--ink)}
+.sc-ask{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.sc-ask:first-of-type{border-top:0}
+.sc-ask-b{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.sc-ask-b input{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:5px 6px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -1593,6 +1596,23 @@ function ovTip(root) {
     r.onmouseleave = () => { tip.style.display = 'none'; };
   });
 }
+function scOverdue(tasks) { const td = today(); return (tasks || []).filter(t => t.id && t.status !== '완료' && t.end && t.end < td && !/^\[자재\]|반입|양생|해체/.test(t.name)); }
+function scAskHtml(list) {
+  return list.map(t => `<div class="sc-ask" data-ask="${esc(t.id)}"><div><b>${esc(t.name)}</b> 공정이 끝났나요? <span class="hint">예정 종료 ${esc(String(t.end).slice(5).replace('-', '/'))}</span></div>
+    <div class="sc-ask-b"><button type="button" class="btn sm" data-yes="${esc(t.id)}">끝났어요</button><input type="date" class="sc-ask-d" value="${esc(t.end)}" max="${today()}" title="끝난 날">
+    <button type="button" class="btn ghost sm" data-no="${esc(t.id)}">아직이에요</button><input type="date" class="sc-ask-n" value="${ovAdd(today(), 3)}" min="${today()}" title="새 예상 종료일" hidden></div></div>`).join('');
+}
+function scAskBind(root, after) {
+  root.querySelectorAll('[data-yes]').forEach(b => b.onclick = async () => {
+    const box = b.closest('.sc-ask'), dd = box.querySelector('.sc-ask-d').value;
+    try { await api({ action: 'sc_task', id: b.dataset.yes, fields: { status: '완료', doneDate: dd } }); box.remove(); SC.site = null; OV.site = null; toast('완료로 기록했습니다'); if (after) after(); } catch (e) { toast(e.message); }
+  });
+  root.querySelectorAll('[data-no]').forEach(b => b.onclick = async () => {
+    const box = b.closest('.sc-ask'), n = box.querySelector('.sc-ask-n');
+    if (n.hidden) { n.hidden = false; b.textContent = '이 날짜로 연장'; return; }
+    try { await api({ action: 'sc_task', id: b.dataset.no, fields: { status: '진행중', end: n.value } }); box.remove(); SC.site = null; OV.site = null; toast('예상 종료일을 바꿨습니다'); if (after) after(); } catch (e) { toast(e.message); }
+  });
+}
 async function ovRenderSite(el) {
   const s = currentSite();
   if (OV.site !== s.code) {
@@ -1649,7 +1669,9 @@ async function ovRenderSite(el) {
   const bar = (pct, mark) => `<div class="ovk-bar"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i>${mark != null ? `<em style="left:${Math.max(0, Math.min(100, mark))}%" title="계획"></em>` : ''}</div>`;
   const legend = top.map(t => `<span><i style="background:${colOf(t)}"></i>${esc(t)}</span>`).join('') + (tradeRank.length > 6 ? `<span><i style="background:${OVC_OTHER}"></i>기타</span>` : '');
 
+  const od = S.me.role !== 'client' ? scOverdue(d.tasks) : [];
   el.innerHTML = `
+    ${od.length ? `<section class="panel sc-asks"><h4>확인이 필요한 공정 <span class="cr-sub">예정 종료일이 지났습니다</span></h4>${scAskHtml(od.slice(0, 4))}</section>` : ''}
     <div class="ovk-row">
       ${kpi('공사기간', left == null ? '미정' : left >= 0 ? `${left}일 남음` : `${-left}일 경과`, s.startDate ? `${s.startDate.replace(/-/g, '.')} ~ ${(s.endDate || '').replace(/-/g, '.')}` : '착공일을 마스터에 입력하세요', bar(periodPct))}
       ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p · ${d.weightBy || '공사 일수'} 가중`, prog == null ? bar(0) : bar(prog, plan))}
@@ -1715,6 +1737,7 @@ async function ovRenderSite(el) {
   if ($('ovGoSc')) $('ovGoSc').onclick = () => { S.siteSub = '공정표'; renderSiteTab(); };
   if ($('ovGoCr')) $('ovGoCr').onclick = () => { CR.mode = 'site'; S.siteSub = '변경공사'; selectTab('site'); };
   ovTip(el);
+  scAskBind(el, () => { OV.site = null; ovRenderSite(el); });
   if (L) {
     const item = { id: L.id }, ids = L.photos.map(p => p.id);
     el.querySelectorAll('.ovx-mosaic [data-pid]').forEach(b => {
@@ -4150,6 +4173,7 @@ function rpForm(item, date) {
     </div>
 
     <div class="card">
+      <div class="sc-asks" id="rAsk" hidden></div>
       <div class="f" id="rDoneWrap" hidden><label>오늘 끝난 공정 <span class="hint">체크하면 공정표에 '완료'로 기록되고 공정률에 바로 반영됩니다</span></label><div id="rDone" class="rp-done"></div></div>
       <div class="f"><label for="rTomorrow">명일 작업내용</label><textarea id="rTomorrow" rows="3" placeholder="예: 도장 작업 마무리 / 타일자재 현장반입">${esc(item ? item.tomorrow : '')}</textarea></div>
       <div class="f"><label for="rNote">특이사항 (선택)</label><textarea id="rNote" rows="2">${esc(item ? item.note : '')}</textarea></div>
@@ -4173,7 +4197,9 @@ function rpForm(item, date) {
     <div class="actions sticky"><button class="btn ghost" type="button" id="rClose">닫기</button><button class="btn" type="button" id="rSave">${editing ? '수정 저장' : '보고 등록'}</button></div>`);
   api({ action: 'sc_get', siteCode: s.code }).then(g => {
     const d0 = (editing ? item.date : $('rDate').value) || today();
-    const cand = (g.tasks || []).filter(t => t.status !== '완료' && t.start && t.start <= ovAdd(d0, 3) && !/^\[자재\]/.test(t.name)).slice(0, 12);
+    const od = scOverdue(g.tasks);
+    if (od.length && $('rAsk') && g.canEdit !== false) { $('rAsk').innerHTML = scAskHtml(od.slice(0, 5)); $('rAsk').hidden = false; scAskBind($('rAsk')); }
+    const cand = (g.tasks || []).filter(t => t.status !== '완료' && t.start && t.start <= ovAdd(d0, 3) && !/^\[자재\]/.test(t.name) && !od.includes(t)).slice(0, 12);
     if (!cand.length || !$('rDone') || g.canEdit === false) return;
     $('rDone').innerHTML = cand.map(t => `<label class="check"><input type="checkbox" value="${esc(t.id)}"> ${esc(t.name)} <span class="hint">${esc(String(t.start).slice(5))}~${esc(String(t.end).slice(5))}</span></label>`).join('');
     $('rDoneWrap').hidden = false;
