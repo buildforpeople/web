@@ -978,12 +978,18 @@
 .lb-sh-title{padding:10px 14px;font-weight:700;border-bottom:1px solid var(--line)}
 .lb-sheet{border-collapse:collapse;font-size:12px;min-width:100%}.lb-sheet th,.lb-sheet td{border:1px solid var(--line);padding:5px 4px;text-align:center;min-width:30px}
 .lb-sheet th{color:var(--muted);font-weight:500}.lb-sheet th.we{color:#E07B6A}.lb-sheet .nm{text-align:left;min-width:120px;position:sticky;left:0;background:var(--surface)}.lb-sheet .nm small{display:block;color:var(--muted);font-size:11px}
-.lb-sheet .r{text-align:right;min-width:60px;white-space:nowrap}.lb-sheet td[data-rec]{cursor:pointer}.lb-sheet td.no,.lb-k.no{background:rgba(224,123,106,.18)}.lb-sheet td.ed,.lb-k.ed{text-decoration:underline}
+.lb-sheet .r{text-align:right;min-width:60px;white-space:nowrap}.lb-sheet td[data-rec]{cursor:pointer}.lb-sheet td.no,.lb-k.no{background:rgba(224,123,106,.18)}.lb-sheet td.rp,.lb-k.rp{background:rgba(63,122,92,.22)}.lb-sheet td.ed,.lb-k.ed{text-decoration:underline}
 .lb-sheet tr.tot td{font-weight:700;background:rgba(127,127,127,.12)}.lb-k{padding:0 4px;border-radius:3px}
 .lb-gs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .lb-rates{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.lb-rates label{display:flex;align-items:center;gap:8px}.lb-rates span{flex:1;font-size:13.5px}.lb-rates span small{display:block;color:var(--muted);font-size:11px}
 .lb-rates input{width:110px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:7px 8px;text-align:right}
 @media(max-width:760px){.lb-tiles{grid-template-columns:repeat(2,1fr)}.lb-tiles b{font-size:18px}}
+.iv-wrap{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:auto;max-height:calc(100vh - 260px)}
+.iv-tbl{width:100%;border-collapse:collapse;font-size:14px}.iv-tbl th{position:sticky;top:0;z-index:2;background:var(--surface);color:var(--muted);font-weight:600;font-size:12.5px;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.iv-tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.iv-tbl .iv-tr{cursor:pointer}.iv-tbl .iv-tr:hover td{background:rgba(127,127,127,.06)}
+.iv-tbl .num{text-align:right;width:64px;font-variant-numeric:tabular-nums;white-space:nowrap}.iv-tbl .nm b{font-weight:600}.iv-tbl .br{color:var(--muted);font-size:12px;margin-left:6px}
+.iv-tbl .grp td{background:rgba(127,127,127,.08);color:var(--muted);font-size:12px;font-weight:600;padding:6px 12px}.iv-tbl .dim{color:var(--muted)}.iv-tbl .out,.iv-tbl .site{color:#7FA7D8}.iv-tbl .out{font-weight:700}.iv-tbl .zero{color:#E07B6A;font-weight:700}
+@media(max-width:640px){.iv-tbl{font-size:13px}.iv-tbl td,.iv-tbl th{padding:8px 7px}.iv-tbl .num{width:40px}.iv-tbl .br{display:block;margin:0}}
 </style>
 </head>
 <body>
@@ -1242,24 +1248,24 @@ async function renderInvTab() {
     <div class="iv-alerts">${Object.entries(IV_FILTERS).map(([k, [lb, fn, cls]]) => { const n = IV.items.filter(fn).length;
       return `<button type="button" class="${n ? cls : ''}" data-flag="${k}" aria-pressed="${IV.flag === k}"><b>${n}</b>${lb}</button>`; }).join('')}</div>
     <div class="iv-tools">
-      <input type="search" id="ivQ" placeholder="품목·번호·브랜드·현장 검색" value="${esc(IV.q)}">
+      <input type="search" id="ivQ" placeholder="품목·사람·현장 검색" value="${esc(IV.q)}">
       <select id="ivCat"><option value="">전체 분류</option>${M.cats.map(c => `<option ${c === IV.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
       <select id="ivPlace"><option value="">전체 장소</option>${places.map(c => `<option ${c === IV.place ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
     </div>
-    <section class="panel" style="padding:0">${groups.length ? groups.map(([c, rows]) => `<div class="iv-group">${esc(c)} · ${rows.length}</div>` + rows.map(o => {
-      const fl = ivFlags(o);
-      const canRent = M.canEdit && o.cat === '공구';
-      return `<div class="iv-row" data-id="${esc(o.id)}">
-        <div class="iv-main"><b>${o.tag ? `<span class="iv-tag">${esc(o.tag)}</span>` : ''}${esc(o.name)}</b>${fl.map(f => `<span class="iv-flag ${f.k}">${esc(f.t)}</span>`).join('')}
-          <small>${[o.sub, o.brand, o.status !== '대여중' ? o.place : '', o.owner, o.note].filter(Boolean).map(esc).join(' · ')}</small></div>
-        <span class="iv-qty">${o.qty === '' ? '' : o.qty + '개'}</span>
-        ${canRent ? (o.status === '대여중' ? `<button type="button" class="btn ghost iv-act" data-ret="${esc(o.id)}">반납</button>` : `<button type="button" class="btn iv-act" data-out="${esc(o.id)}">반출</button>`) : ''}
-      </div>`; }).join('')).join('') : '<div class="empty"><h3>해당하는 물품이 없습니다</h3></div>'}</section>`;
+    <div class="iv-wrap">${groups.length ? `<table class="iv-tbl">
+      <thead><tr><th>품목</th><th class="num">수량</th><th class="num">대여중</th><th class="num">잔여</th><th>대여자</th><th>위치</th></tr></thead>
+      ${groups.map(([c, rows]) => `<tbody><tr class="grp"><td colspan="6">${esc(c)} <span class="dim">${rows.length}</span></td></tr>${rows.sort((a, b) => a.name.localeCompare(b.name, 'ko')).map(o => {
+        const rs = o.rentals || [], warn = ivFlags(o).filter(f => f.k !== 'out');
+        return `<tr class="iv-tr" data-id="${esc(o.id)}"><td class="nm"><b>${esc(o.name)}</b>${o.brand ? `<span class="br">${esc(o.brand)}</span>` : ''}${warn.map(f => `<span class="iv-flag ${f.k}">${esc(f.t)}</span>`).join('')}</td>
+          <td class="num">${o.qty === '' ? '–' : o.qty}</td><td class="num ${o.rented ? 'out' : 'dim'}">${o.rented || '–'}</td><td class="num ${o.remain === 0 ? 'zero' : ''}">${o.remain === '' || o.remain == null ? '–' : o.remain}</td>
+          <td>${rs.length ? rs.map(r => `<div>${esc(r.by)}${r.qty > 1 ? ` <span class="dim">×${r.qty}</span>` : ''}</div>`).join('') : '<span class="dim">–</span>'}</td>
+          <td>${rs.map(r => `<div class="site">${esc(r.site)}</div>`).join('')}${o.remain !== 0 || !rs.length ? `<div class="dim">${esc(o.place || '')}</div>` : ''}</td></tr>`; }).join('')}</tbody>`).join('')}
+    </table>` : '<div class="panel empty"><h3>해당하는 물품이 없습니다</h3></div>'}</div>`;
   $('ivQ').oninput = e => { IV.q = e.target.value; clearTimeout(IV._t); IV._t = setTimeout(() => { renderInvTab().then(() => { const i = $('ivQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }, 250); };
   $('ivCat').onchange = e => { IV.cat = e.target.value; renderInvTab(); };
   $('ivPlace').onchange = e => { IV.place = e.target.value; renderInvTab(); };
   $('main').querySelectorAll('[data-flag]').forEach(b => b.onclick = () => { IV.flag = IV.flag === b.dataset.flag ? '' : b.dataset.flag; renderInvTab(); });
-  $('main').querySelectorAll('.iv-row').forEach(r => r.onclick = e => { if (e.target.closest('button')) return; ivForm(IV.items.find(x => x.id === r.dataset.id)); });
+  $('main').querySelectorAll('.iv-tr').forEach(r => r.onclick = e => { if (e.target.closest('button')) return; ivForm(IV.items.find(x => x.id === r.dataset.id)); });
   $('main').querySelectorAll('[data-out]').forEach(b => b.onclick = () => ivRentForm(IV.items.find(x => x.id === b.dataset.out)));
   $('main').querySelectorAll('[data-ret]').forEach(b => b.onclick = () => ivReturnForm(IV.items.find(x => x.id === b.dataset.ret)));
   $('ivRules').onclick = ivRules;
@@ -1308,7 +1314,7 @@ function ivForm(o) {
   const removed = [];
   const subOpts = c => (M.subs[c] || []).map(v => `<option ${v === x.sub ? 'selected' : ''}>${esc(v)}</option>`).join('');
   const fl = o ? ivFlags(o) : [];
-  const body = openSheet(o ? `${o.tag ? esc(o.tag) + ' ' : ''}${esc(o.name)}` : '물품 등록', o ? `${esc(o.id)} · 수정 ${esc(o.by || '')} ${esc(String(o.updatedAt || '').slice(0, 16))}` : '보관 기준에 맞는 품목만 등록해 주세요', `
+  const body = openSheet(o ? esc(o.name) : '물품 등록', o ? `수정 ${esc(o.by || '')} ${esc(String(o.updatedAt || '').slice(0, 16))}` : '보관 기준에 맞는 품목만 등록해 주세요', `
     ${fl.length ? `<div class="cx-warn">${fl.map(f => esc(f.t)).join(' · ')}</div>` : ''}
     <div class="card">
       <div class="cx-when">
@@ -1326,7 +1332,7 @@ function ivForm(o) {
       </div>
       <div class="cx-when">
         <div class="f"><label for="ivIn">입고 연월</label><input type="month" id="ivIn" value="${esc(x.inMonth || '')}" ${edit ? '' : 'readonly'}></div>
-        <div class="f"><label for="ivT">관리번호</label><input type="text" id="ivT" value="${esc(x.tag || '')}" placeholder="공구는 자동 (T-01)" ${edit ? '' : 'readonly'}></div>
+        <input type="hidden" id="ivT" value="${esc(x.tag || '')}">
       </div>
       <div class="f"><label for="ivO">사용자·담당</label><input type="text" id="ivO" value="${esc(x.owner || '')}" ${edit ? '' : 'readonly'}></div>
       <div class="f"><label for="ivNt">내용</label><textarea id="ivNt" rows="2" ${edit ? '' : 'readonly'}>${esc(x.note || '')}</textarea></div>
@@ -1949,7 +1955,7 @@ function lbDays(from, to) { const out = []; const d = new Date(from + 'T00:00:00
 function lbAgg(recs, keyFn) {
   const m = new Map();
   recs.forEach(r => { const k = keyFn(r); if (!m.has(k)) m.set(k, { key: k, recs: [], days: new Set(), heads: 0, g: 0, gx: 0, amount: 0, noOut: 0, noRate: 0, sites: new Set() });
-    const a = m.get(k); a.recs.push(r); a.days.add(r.date); a.heads += 1 + r.extra; a.g += r.g; a.gx += r.g * r.extra; a.amount += r.amount; a.sites.add(r.siteCode);
+    const a = m.get(k); a.recs.push(r); a.days.add(r.date); a.heads += r.n; a.g += r.g; a.gx += r.g * r.extra; a.amount += r.amount; a.sites.add(r.siteCode);
     if (r.noOut) a.noOut++; if (!r.rate || (r.extra && !r.extraRate)) a.noRate++; });
   return [...m.values()];
 }
@@ -1966,7 +1972,7 @@ async function renderLaborTab(force) {
   const tot = lbAgg(R, () => 'all')[0] || { heads: 0, g: 0, gx: 0, amount: 0, noOut: 0, noRate: 0 };
   const [m0a, m0b] = lbMonth(0), [m1a, m1b] = lbMonth(-1);
   $('main').innerHTML = `
-    <div class="cr-bar"><h2>인원출력 <span class="cr-sub" style="font-weight:500">QR 출역 기록 기준</span></h2>
+    <div class="cr-bar"><h2>인원출력 <span class="cr-sub" style="font-weight:500">현장보고 입력 우선 · QR 체크 보조</span></h2>
       ${D.canRate ? '<button class="btn ghost" type="button" id="lbRate">노임 단가</button>' : ''}
       <button class="btn ghost" type="button" id="lbCsv">엑셀 내려받기</button>
       <button class="btn ghost" type="button" id="lbPrint">출력표 인쇄</button></div>
@@ -1984,6 +1990,7 @@ async function renderLaborTab(force) {
       <div class="${tot.noRate ? 'warn' : ''}"><small>단가 미설정</small><b>${tot.noRate}</b><span>건 · 노임 0원</span></div>
     </div>
     <div class="subnav">${Object.entries(LB_VIEWS).map(([k, v]) => `<button class="chip" data-view="${k}" aria-pressed="${LB.view === k}">${v}</button>`).join('')}</div>
+    ${D.ignored ? `<div class="hint" style="margin:-4px 0 10px">현장보고에 인원이 입력된 날은 소장님 입력을 기준으로 하고, 그날 QR 체크 ${D.ignored}건은 합계에서 뺐습니다.</div>` : ''}
     <div id="lbBody">${R.length ? lbView(R) : '<section class="panel empty"><h3>이 기간에 출역 기록이 없습니다</h3>현장에 QR을 붙이면 작업자가 찍은 기록이 여기에 모입니다.</section>'}</div>`;
   $('main').querySelectorAll('[data-mon]').forEach(b => b.onclick = () => { [LB.from, LB.to] = lbMonth(Number(b.dataset.mon)); renderLaborTab(); });
   $('lbFrom').onchange = e => { LB.from = e.target.value; if (LB.to < LB.from) LB.to = LB.from; renderLaborTab(); };
@@ -1991,7 +1998,7 @@ async function renderLaborTab(force) {
   $('lbSite').onchange = e => { LB.site = e.target.value; renderLaborTab(); };
   $('main').querySelectorAll('[data-view]').forEach(b => b.onclick = () => { LB.view = b.dataset.view; renderLaborTab(); });
   $('main').querySelectorAll('[data-wk]').forEach(b => b.onclick = () => lbWorker(b.dataset.wk));
-  $('main').querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(R.find(r => r.id === b.dataset.rec)));
+  if (D.canEdit) $('main').querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(R.find(r => r.id === b.dataset.rec)));
   if ($('lbRate')) $('lbRate').onclick = lbRates;
   $('lbCsv').onclick = lbCsv;
   $('lbPrint').onclick = lbPrint;
@@ -2002,7 +2009,7 @@ function lbView(R) {
     const rows = lbAgg(R, r => r.key).sort((a, b) => b.g - a.g);
     return `<section class="panel" style="padding:0"><div class="table-scroll"><table class="rp-table lb-table">
       <tr><th>이름</th><th>공종</th><th>업체</th><th>현장</th><th class="r">작업일</th><th class="r">공수</th><th class="r">동반 공수</th><th class="r">일당</th><th class="r">노임</th><th></th></tr>
-      ${rows.map(a => { const r = a.recs[a.recs.length - 1]; return `<tr class="lb-click" data-wk="${esc(a.key)}"><td><b>${esc(r.name)}</b><small>${esc(r.phone)}</small></td><td>${esc([...new Set(a.recs.map(x => x.trade))].join(', '))}</td>
+      ${rows.map(a => { const r = a.recs[a.recs.length - 1]; return `<tr class="lb-click" data-wk="${esc(a.key)}"><td><b>${esc(r.name)}</b><small>${r.src === 'rp' ? '현장보고 입력' : esc(r.phone)}</small></td><td>${esc([...new Set(a.recs.map(x => x.trade))].join(', '))}</td>
         <td>${esc(r.company || '')}</td><td>${a.sites.size}</td><td class="r">${a.days.size}</td><td class="r">${lbG(a.g)}</td><td class="r">${a.gx ? lbG(a.gx) : ''}</td>
         <td class="r">${r.rate ? r.rate.toLocaleString('ko-KR') : '–'}</td><td class="r"><b>${won(a.amount)}</b></td><td>${flag(a)}</td></tr>`; }).join('')}
     </table></div></section>`;
@@ -2016,7 +2023,7 @@ function lbView(R) {
         <td class="r">${lbG(a.g + a.gx)}</td><td class="r"><b>${won(a.amount)}</b></td><td${byS ? '' : ' class="r"'}>${byS ? esc(top) : (LB.data.tradeRates[a.key] ? LB.data.tradeRates[a.key].toLocaleString('ko-KR') : '–')}</td><td>${flag(a)}</td></tr>`; }).join('')}
     </table></div></section>`;
   }
-  return lbSheetHtml(R, true);
+  return lbSheetHtml(R, LB.data.canEdit);
 }
 function lbSheetHtml(R, live) {
   const days = lbDays(LB.from, LB.to);
@@ -2025,29 +2032,29 @@ function lbSheetHtml(R, live) {
     const rows = [];
     lbAgg(S0.recs, r => r.key + '|' + r.trade).forEach(a => {
       const r = a.recs[0], byDay = {}; a.recs.forEach(x => byDay[x.date] = x);
-      rows.push({ label: r.name, sub: r.trade + (r.company ? ' · ' + r.company : ''), cells: days.map(d => byDay[d] ? { g: byDay[d].g, rec: byDay[d] } : null), g: a.g, amount: a.recs.reduce((s, x) => s + x.g * x.rate, 0) });
+      rows.push({ label: r.name, sub: r.src === 'rp' ? '현장보고' : r.trade + (r.company ? ' · ' + r.company : ''), cells: days.map(d => byDay[d] ? { g: byDay[d].g, rec: byDay[d] } : null), g: a.g, amount: a.recs.reduce((s, x) => s + x.g * x.rate, 0) });
       if (a.gx) rows.push({ label: r.name + ' 동반', sub: r.trade, cells: days.map(d => byDay[d] && byDay[d].extra ? { g: byDay[d].g * byDay[d].extra } : null), g: a.gx, amount: a.recs.reduce((s, x) => s + x.g * x.extra * x.extraRate, 0) });
     });
     const colTot = days.map((d, i) => rows.reduce((s, r) => s + (r.cells[i] ? r.cells[i].g : 0), 0));
     return `<section class="panel" style="padding:0;margin-bottom:12px"><div class="lb-sh-title">${esc(S0.recs[0].siteCode)} ${esc(S0.recs[0].siteName)}</div><div class="table-scroll"><table class="lb-sheet">
       <tr><th class="nm">작업자</th>${days.map(d => `<th class="${'06'.includes(String(new Date(d + 'T00:00:00').getDay())) ? 'we' : ''}">${Number(d.slice(8))}</th>`).join('')}<th class="r">공수</th><th class="r">노임</th></tr>
       ${rows.map(r => `<tr><td class="nm"><b>${esc(r.label)}</b><small>${esc(r.sub)}</small></td>${r.cells.map(c => !c ? '<td></td>'
-        : `<td class="${c.rec && c.rec.noOut ? 'no' : ''}${c.rec && !c.rec.auto ? ' ed' : ''}" ${live && c.rec ? `data-rec="${esc(c.rec.id)}"` : ''}>${lbG(c.g)}</td>`).join('')}<td class="r"><b>${lbG(r.g)}</b></td><td class="r">${Math.round(r.amount).toLocaleString('ko-KR')}</td></tr>`).join('')}
+        : `<td class="${c.rec && c.rec.noOut ? 'no' : ''}${c.rec && !c.rec.auto ? ' ed' : ''}${c.rec && c.rec.src === 'rp' ? ' rp' : ''}" ${live && c.rec && c.rec.src === 'qr' ? `data-rec="${esc(c.rec.id)}"` : ''}>${lbG(c.g)}</td>`).join('')}<td class="r"><b>${lbG(r.g)}</b></td><td class="r">${Math.round(r.amount).toLocaleString('ko-KR')}</td></tr>`).join('')}
       <tr class="tot"><td class="nm">합계</td>${colTot.map(n => `<td>${n ? lbG(n) : ''}</td>`).join('')}<td class="r">${lbG(S0.g + S0.gx)}</td><td class="r">${S0.amount.toLocaleString('ko-KR')}</td></tr>
     </table></div></section>`;
-  }).join('') + (live ? '<div class="hint">칸을 누르면 그날 공수를 고칠 수 있습니다. <span class="lb-k no">빨강</span> 퇴근 미체크 · <span class="lb-k ed">밑줄</span> 수동 수정</div>' : '');
+  }).join('') + (live ? '<div class="hint">칸을 누르면 그날 공수를 고칠 수 있습니다. <span class="lb-k no">빨강</span> 퇴근 미체크 · <span class="lb-k ed">밑줄</span> 수동 수정 · <span class="lb-k rp">초록</span> 현장보고 입력(현장보고에서 수정)</div>' : '');
 }
 function lbWorker(key) {
   const recs = LB.data.records.filter(r => r.key === key), r0 = recs[recs.length - 1];
   const body = openSheet(`${esc(r0.name)} 출역 내역`, `${esc(r0.phone)} · ${esc(LB.from)} ~ ${esc(LB.to)}`, `
     <div class="card" style="padding:0"><div class="table-scroll"><table class="rp-table lb-table">
       <tr><th>날짜</th><th>현장</th><th>공종</th><th>출근</th><th>퇴근</th><th class="r">공수</th><th class="r">노임</th><th></th></tr>
-      ${recs.map(r => `<tr class="lb-click" data-rec="${esc(r.id)}"><td>${esc(r.date.slice(5))}</td><td>${esc(r.siteName)}</td><td>${esc(r.trade)}${r.extra ? ` +${r.extra}` : ''}</td><td>${esc(r.inAt)}</td>
+      ${recs.map(r => `<tr class="${r.src === 'qr' ? 'lb-click' : ''}" ${r.src === 'qr' ? `data-rec="${esc(r.id)}"` : ''}><td>${esc(r.date.slice(5))}</td><td>${esc(r.siteName)}</td><td>${esc(r.trade)}${r.extra ? ` +${r.extra}` : ''}${r.src === 'rp' ? ` ${r.n}명` : ''}</td><td>${r.src === 'rp' ? '현장보고' : esc(r.inAt)}</td>
         <td>${r.noOut ? '<span class="lb-flag">미체크</span>' : esc(r.outAt)}</td><td class="r">${lbG(r.g)}${r.auto ? '' : ' ✎'}</td><td class="r">${r.amount.toLocaleString('ko-KR')}</td><td><small>${esc(r.memo || '')}</small></td></tr>`).join('')}
     </table></div></div>
     <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button></div>`);
   $('lbX').onclick = closeSheet;
-  body.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(recs.find(r => r.id === b.dataset.rec)));
+  if (LB.data.canEdit) body.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(recs.find(r => r.id === b.dataset.rec)));
 }
 function lbEdit(r) {
   const opts = ['', '0', '0.5', '1', '1.5', '2'];
@@ -2069,7 +2076,7 @@ function lbEdit(r) {
 function lbRates() {
   const D = LB.data, seen = new Map();
   D.workerRates.forEach(w => seen.set(w.key, { key: w.key, name: w.name, rate: w.rate, trade: '' }));
-  D.records.forEach(r => { const w = seen.get(r.key) || { key: r.key, name: r.name, rate: 0 }; w.name = r.name; w.trade = r.trade; seen.set(r.key, w); });
+  D.records.filter(r => r.src === 'qr').forEach(r => { const w = seen.get(r.key) || { key: r.key, name: r.name, rate: 0 }; w.name = r.name; w.trade = r.trade; seen.set(r.key, w); });
   const workers = [...seen.values()].sort((a, b) => String(a.trade).localeCompare(String(b.trade)) || a.name.localeCompare(b.name));
   const body = openSheet('노임 단가', '공종 기본 일당과 작업자별 일당 · 1공수 기준 세전 금액', `
     <div class="card"><h4>공종 기본 일당</h4><div class="hint" style="margin-bottom:8px">작업자 일당을 따로 정하지 않으면 이 금액으로 계산합니다. 도급 공종은 비워 두세요.</div>
@@ -2090,8 +2097,8 @@ function lbRates() {
 function lbCsv() {
   const R = LB.data.records; if (!R.length) { toast('내려받을 기록이 없습니다'); return; }
   const q = v => { const s = String(v == null ? '' : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const head = ['날짜', '현장코드', '현장', '이름', '연락처', '공종', '업체', '출근', '퇴근', '본인 공수', '동반 인원', '일당', '동반 일당', '노임', '공수 방식', '비고'];
-  const lines = [head.join(',')].concat(R.map(r => [r.date, r.siteCode, r.siteName, r.name, r.phone, r.trade, r.company, r.inAt, r.outAt || '미체크', r.g, r.extra, r.rate, r.extraRate, r.amount, r.auto ? '자동' : '수정', r.memo].map(q).join(',')));
+  const head = ['출처', '날짜', '현장코드', '현장', '이름', '연락처', '공종', '업체', '출근', '퇴근', '공수', '인원', '일당', '동반 일당', '노임', '공수 방식', '비고'];
+  const lines = [head.join(',')].concat(R.map(r => [r.src === 'rp' ? '현장보고' : 'QR', r.date, r.siteCode, r.siteName, r.name, r.phone, r.trade, r.company, r.inAt, r.src === 'rp' ? '' : (r.outAt || '미체크'), r.g, r.n, r.rate, r.extraRate, r.amount, r.auto ? '자동' : '수정', r.memo].map(q).join(',')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = `인원출력_${LB.from}_${LB.to}${LB.site ? '_' + LB.site : ''}.csv`; document.body.appendChild(a); a.click(); a.remove();
@@ -2104,7 +2111,7 @@ function lbPrint() {
     body{font-family:"Malgun Gothic",sans-serif;font-size:10px;color:#222;margin:14px}h1{font-size:15px;margin:0 0 4px}.sub{color:#555;margin-bottom:10px;font-size:11px}
     .lb-sh-title{font-weight:700;font-size:12px;margin:12px 0 4px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 2px;text-align:center}
     th{background:#F0F0EE}th.we{color:#C0392B}td.nm,th.nm{width:110px;text-align:left;padding-left:5px}td.nm small{display:block;color:#666}.r{text-align:right;width:62px;padding-right:4px}
-    td.no{background:#FDECEA}tr.tot td{background:#F7F7F5;font-weight:700}.hint,.table-scroll{all:unset}.table-scroll{display:block}
+    td.no{background:#FDECEA}td.rp{background:#EAF3EE}tr.tot td{background:#F7F7F5;font-weight:700}.hint,.table-scroll{all:unset}.table-scroll{display:block}
     button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
     @media print{button{display:none}@page{size:A4 landscape;margin:8mm}tr{break-inside:avoid}}
   </style></head><body><button onclick="window.print()">인쇄</button><h1>인원 출력표</h1>
