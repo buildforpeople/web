@@ -417,16 +417,18 @@ document.addEventListener('DOMContentLoaded', (function() {
 
 const STORAGE_KEY = 'sslh_attendance_v1';
 
-const EMAIL_WHITELIST = {
-  'my.new.homeplace@gmail.com': 'admin',
-  'hgp0405@gmail.com': 'hong',
-  'buildforpeople.ksy@gmail.com': 'ko',
-  'buildforpeople.jg@gmail.com': 'jeon',
-  'buildforpeople.mg@gmail.com': 'cheon',
-  'buildforpeople.sa@gmail.com': 'choi',
-  'buildforpeople.dw@gmail.com': 'son',
-  'buildforpeople.sw@gmail.com': 'jang'
-};
+function empEmail(id) {
+  const e = (DB.employees || []).find((x => x.id === id));
+  return e && e.email || '';
+}
+
+function emailWhitelist() {
+  const m = {};
+  (DB.employees || []).forEach((e => {
+    if (e.email) m[String(e.email).toLowerCase()] = e.id;
+  }));
+  return m;
+}
 
 const HARDCODED_CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbwrItcMSMphJsb4i_nwqyKWF-SCOg_ocCRv2cY3ttq6_kBmcND0g8dnCc8_HjRTgl8X/exec';
 
@@ -468,7 +470,9 @@ async function dbLoadAll(tableList) {
   const data = await dbCall('get_all', tableList ? {
     tables: tableList
   } : {});
-  return data.tables;
+  if (!data) return {};
+  DB.adminConfig = data.adminConfig || null;
+  return data.tables || {};
 }
 
 async function dbInsert(table, row) {
@@ -513,97 +517,7 @@ async function dbBulkInsert(table, rows) {
 const LOGO_SRC = 'data:image/jpeg;base64,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';
 
 function defaultData() {
-  const employees = [ {
-    id: 'admin',
-    pw: '0524',
-    name: '임상혁',
-    role: 'admin',
-    position: '대표이사',
-    joinDate: '2021-05-24',
-    dept: '경영',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'hong',
-    pw: '0425',
-    name: '홍경표',
-    role: 'employee',
-    position: '현장관리',
-    joinDate: '2023-04-25',
-    dept: '시공',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'ko',
-    pw: '0317',
-    name: '고성윤',
-    role: 'employee',
-    position: '현장관리',
-    joinDate: '2025-03-17',
-    dept: '시공',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'jeon',
-    pw: '0126',
-    name: '전종건',
-    role: 'employee',
-    position: '현장관리',
-    joinDate: '2026-01-26',
-    dept: '시공',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'cheon',
-    pw: '1103',
-    name: '천민기',
-    role: 'employee',
-    position: '건축설계',
-    joinDate: '2025-11-03',
-    dept: '설계',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'lim',
-    pw: '1013',
-    name: '임혜령',
-    role: 'employee',
-    position: '브랜딩마케팅',
-    joinDate: '2025-10-13',
-    dept: 'CX',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'choi',
-    pw: '0410',
-    name: '최선아',
-    role: 'employee',
-    position: '건축설계',
-    joinDate: '2026-04-10',
-    dept: '설계',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'son',
-    pw: '0504',
-    name: '손동욱',
-    role: 'employee',
-    position: '공무',
-    joinDate: '2026-05-04',
-    dept: '행정',
-    birthday: null,
-    leaveRatio: 1
-  }, {
-    id: 'jang',
-    pw: '1103',
-    name: '장숭월',
-    role: 'admin',
-    position: '재무회계',
-    joinDate: '2025-11-03',
-    dept: '행정',
-    birthday: null,
-    leaveRatio: 1
-  } ];
+  const employees = [];
   return {
     employees: employees,
     requests: [],
@@ -644,156 +558,14 @@ function load() {
   if (!d.tenureNotifications) d.tenureNotifications = {};
   if (!d.cardStatements) d.cardStatements = [];
   if (!d.settings) d.settings = {};
-  const jang = d.employees.find((e => e.id === 'jang'));
-  if (jang) {
-    jang.name = '장숭월';
-    jang.role = 'admin';
-    jang.position = '재무회계';
-    jang.dept = '행정';
+  if (!d.secured_v1) {
+    d.employees = [];
+    d.secured_v1 = true;
   }
-  d.employees = d.employees.filter((e => e.id !== 'finance'));
-  if (!d.migrated_joindates_v1) {
-    const joinDates = {
-      admin: '2021-05-24',
-      hong: '2023-04-25',
-      ko: '2025-03-17',
-      jeon: '2026-01-26',
-      cheon: '2025-11-03',
-      lim: '2025-10-13',
-      choi: '2026-04-10',
-      son: '2026-05-04',
-      jang: '2025-11-03'
-    };
-    d.employees.forEach((e => {
-      if (joinDates[e.id]) e.joinDate = joinDates[e.id];
-    }));
-    d.migrated_joindates_v1 = true;
-  }
-  if (!d.migrated_dept_v2) {
-    const deptPos = {
-      hong: {
-        dept: '시공',
-        position: '현장관리'
-      },
-      ko: {
-        dept: '시공',
-        position: '현장관리'
-      },
-      jeon: {
-        dept: '시공',
-        position: '현장관리'
-      },
-      cheon: {
-        dept: '설계',
-        position: '건축설계'
-      },
-      choi: {
-        dept: '설계',
-        position: '건축설계'
-      },
-      lim: {
-        dept: 'CX',
-        position: '브랜딩마케팅'
-      },
-      son: {
-        dept: '행정',
-        position: '공무'
-      },
-      jang: {
-        dept: '행정',
-        position: '재무회계'
-      }
-    };
-    d.employees.forEach((e => {
-      if (deptPos[e.id]) {
-        e.dept = deptPos[e.id].dept;
-        e.position = deptPos[e.id].position;
-      }
-    }));
-    d.migrated_dept_v2 = true;
-  }
-  if (!d.migrated_pw_mmdd_v1) {
-    d.employees.forEach((e => {
-      if (e.pw === '1234' && e.joinDate) {
-        const parts = e.joinDate.split('-');
-        if (parts.length === 3) e.pw = parts[1] + parts[2];
-      }
-    }));
-    d.migrated_pw_mmdd_v1 = true;
-  }
-  if (!d.migrated_birthday_ratio_v1) {
-    d.employees.forEach((e => {
-      if (!('birthday' in e)) e.birthday = null;
-      if (!('leaveRatio' in e)) e.leaveRatio = 1;
-    }));
-    d.migrated_birthday_ratio_v1 = true;
-  }
-  if (!d.migrated_known_birthdays_v2) {
-    const extraBirthdays = {
-      jang: {
-        birthday: '1977-03-12',
-        birthdayLunar: true,
-        birthdayLunarLeap: false
-      },
-      choi: {
-        birthday: '1998-10-17',
-        birthdayLunar: false,
-        birthdayLunarLeap: false
-      },
-      son: {
-        birthday: '1985-01-05',
-        birthdayLunar: false,
-        birthdayLunarLeap: false
-      }
-    };
-    d.employees.forEach((e => {
-      if (!e.birthday && extraBirthdays[e.id]) {
-        Object.assign(e, extraBirthdays[e.id]);
-      }
-    }));
-    d.migrated_known_birthdays_v2 = true;
-  }
-  if (!d.migrated_known_birthdays_v3) {
-    const jeon = d.employees.find((e => e.id === 'jeon'));
-    if (jeon && !jeon.birthday) {
-      jeon.birthday = '1996-09-24';
-      jeon.birthdayLunar = false;
-      jeon.birthdayLunarLeap = false;
-    }
-    d.migrated_known_birthdays_v3 = true;
-  }
-  if (!d.migrated_jang_full_leave_v1) {
-    const jang = d.employees.find((e => e.id === 'jang'));
-    if (jang) jang.leaveRatio = 1;
-    d.migrated_jang_full_leave_v1 = true;
-  }
-  if (!d.migrated_known_birthdays_v4) {
-    const ko = d.employees.find((e => e.id === 'ko'));
-    if (ko) {
-      ko.birthdayLunar = true;
-      ko.birthdayLunarLeap = false;
-    }
-    const son = d.employees.find((e => e.id === 'son'));
-    if (son) {
-      son.birthday = '1984-12-24';
-      son.birthdayLunar = false;
-      son.birthdayLunarLeap = false;
-    }
-    d.migrated_known_birthdays_v4 = true;
-  }
-  if (!d.migrated_known_birthdays_v1) {
-    const knownBirthdays = {
-      admin: '1985-12-28',
-      hong: '1990-04-05',
-      ko: '1981-04-07',
-      cheon: '1991-11-28',
-      lim: '1991-11-19'
-    };
-    d.employees.forEach((e => {
-      if (!e.birthday && knownBirthdays[e.id]) e.birthday = knownBirthdays[e.id];
-    }));
-    d.migrated_known_birthdays_v1 = true;
-  }
+  if (!Array.isArray(d.employees)) d.employees = [];
+  d.employees.forEach((e => {
+    delete e.pw;
+  }));
   return d;
 }
 
@@ -1438,7 +1210,7 @@ function welfareCategoryName(cat, subcat) {
   return c.name;
 }
 
-function handleGoogleSignIn(response) {
+async function handleGoogleSignIn(response) {
   try {
     if (!response || !response.credential) {
       showLoginError('Google 응답을 받지 못했습니다.');
@@ -1448,13 +1220,25 @@ function handleGoogleSignIn(response) {
     if (parts.length !== 3) throw new Error('잘못된 토큰');
     const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
     const email = (payload.email || '').toLowerCase();
-    if (!email) {
-      showLoginError('이메일을 가져올 수 없습니다.');
-      return;
+    showLoader('로그인 확인 중...');
+    let data;
+    try {
+      const res = await fetch(HARDCODED_DB_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'get_all',
+          idToken: response.credential
+        })
+      });
+      data = await res.json();
+    } finally {
+      hideLoader();
     }
-    const empId = EMAIL_WHITELIST[email];
-    if (!empId) {
-      showLoginError('이 Google 계정(' + email + ')은 사람사는집에 등록되어 있지 않습니다. 관리자에게 문의해 주세요.');
+    if (!data || !data.success || !data.me) {
+      showLoginError(data && data.error === '등록되지 않은 계정입니다.' ? '이 Google 계정(' + email + ')은 사람사는집에 등록되어 있지 않습니다. 관리자에게 문의해 주세요.' : data && data.error || '로그인 확인에 실패했습니다.');
       if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
           window.google.accounts.id.disableAutoSelect();
@@ -1462,13 +1246,15 @@ function handleGoogleSignIn(response) {
       }
       return;
     }
-    const emp = DB.employees.find((e => e.id === empId));
+    DB.adminConfig = data.adminConfig || null;
+    applyTables(data.tables || {});
+    const emp = DB.employees.find((e => e.id === data.me.empId));
     if (!emp) {
-      showLoginError('직원 정보가 없습니다.');
+      showLoginError('직원 정보가 없습니다. 관리자에게 문의해 주세요.');
       return;
     }
     DB.session = {
-      empId: empId,
+      empId: emp.id,
       email: email,
       name: payload.name || emp.name,
       picture: payload.picture || null,
@@ -1490,6 +1276,8 @@ function showLoginError(msg) {
 
 function logout() {
   DB.session = null;
+  DB.employees = [];
+  DB.adminConfig = null;
   save(DB);
   _dbLoadedThisSession = false;
   ROLLING = {
@@ -1524,7 +1312,7 @@ async function checkTenureNotifications() {
   const url = HARDCODED_CALENDAR_URL;
   if (!url) return;
   const empIdToEmail = {};
-  Object.entries(EMAIL_WHITELIST).forEach((([email, id]) => {
+  Object.entries(emailWhitelist()).forEach((([email, id]) => {
     empIdToEmail[id] = email;
   }));
   function tenureBenefits(years) {
@@ -1575,7 +1363,7 @@ async function checkTenureNotifications() {
             },
             body: JSON.stringify({
               action: 'send_card_statement',
-              to: 'my.new.homeplace@gmail.com',
+              to: empEmail('admin'),
               subject: adminSubject,
               body: adminBody,
               attachments: [],
@@ -1583,7 +1371,7 @@ async function checkTenureNotifications() {
             })
           });
           const empEmail = empIdToEmail[emp.id];
-          if (empEmail && empEmail !== 'my.new.homeplace@gmail.com') {
+          if (empEmail && empEmail !== empEmail('admin')) {
             const empSubject = `🎊 ${emp.name}님, 근속 ${years}년 기념일이 다가옵니다!`;
             const empBody = `${emp.name}님, 축하드립니다! 🎉\n\n입사일: ${emp.joinDate}\n근속 ${years}년 도래일: ${anniversaryISO}\n(약 ${daysLeft}일 뒤)\n\n${benefits}\n\n앞으로도 함께 해주세요! 💪\n\n— 사람사는집 식구 앱에서 자동 발송`;
             try {
@@ -1654,7 +1442,7 @@ async function checkWelfareNotifications() {
     return;
   }
   const empIdToEmail = {};
-  Object.entries(EMAIL_WHITELIST).forEach((([email, id]) => {
+  Object.entries(emailWhitelist()).forEach((([email, id]) => {
     empIdToEmail[id] = email;
   }));
   const won = n => Number(n).toLocaleString() + '원';
@@ -1725,7 +1513,7 @@ async function checkWelfareNotifications() {
     const label = period === 'H1' ? '상반기 점검' : '소멸 임박';
     const rows = summary.sort(((a, b) => b.totalRemain - a.totalRemain)).map((s => `· ${s.emp.name} (${s.emp.position}) : ${won(s.totalRemain)}${s.totalRemain <= 0 ? ' — 소진, 미발송' : ''}`)).join('\n');
     const grand = summary.reduce(((s, x) => s + x.totalRemain), 0);
-    await send('my.new.homeplace@gmail.com', `[식구] ${year}년 복지혜택 잔여 알림 발송 완료 (${label})`, `${year}년 복지혜택 잔여 알림(${label})을 직원들에게 발송했습니다.\n\n직원별 잔여 혜택\n${rows}\n\n전체 잔여 합계: ${won(grand)}\n\n— 식구 앱에서 자동 발송`);
+    await send(empEmail('admin'), `[식구] ${year}년 복지혜택 잔여 알림 발송 완료 (${label})`, `${year}년 복지혜택 잔여 알림(${label})을 직원들에게 발송했습니다.\n\n직원별 잔여 혜택\n${rows}\n\n전체 잔여 합계: ${won(grand)}\n\n— 식구 앱에서 자동 발송`);
     const sentAt = Date.now();
     DB.tenureNotifications[adminKey] = sentAt;
     try {
@@ -1753,18 +1541,6 @@ async function renderApp() {
     location.reload();
     return;
   }
-  const emp = getEmployee(DB.session.empId);
-  if (!emp) {
-    logout();
-    return;
-  }
-  document.getElementById('loginView').classList.add('hidden');
-  document.getElementById('appView').classList.remove('hidden');
-  document.getElementById('userLabel').textContent = `${emp.name} (${emp.position})`;
-  const _tgBtn = document.getElementById('teamGoalBtn');
-  if (_tgBtn) _tgBtn.classList.remove('hidden');
-  document.getElementById('headerTitle').textContent = '식구';
-  document.getElementById('calendarSetupBtn').classList.add('hidden');
   if (!_dbLoadedThisSession) {
     showLoader('데이터 불러오는 중...');
     try {
@@ -1794,6 +1570,18 @@ async function renderApp() {
       return;
     }
   }
+  const emp = getEmployee(DB.session.empId);
+  if (!emp) {
+    logout();
+    return;
+  }
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('userLabel').textContent = `${emp.name} (${emp.position})`;
+  const _tgBtn = document.getElementById('teamGoalBtn');
+  if (_tgBtn) _tgBtn.classList.remove('hidden');
+  document.getElementById('headerTitle').textContent = '식구';
+  document.getElementById('calendarSetupBtn').classList.add('hidden');
   if (emp.role === 'admin') {
     renderAdmin(emp);
     checkTenureNotifications();
@@ -2380,7 +2168,7 @@ async function sendCardUsageBatch(empId) {
       },
       body: JSON.stringify({
         action: 'send_card_statement',
-        to: 'buildforpeople.sw@gmail.com',
+        to: empEmail('jang'),
         subject: subject,
         body: bodyText,
         attachments: attachments,
@@ -2619,11 +2407,11 @@ function showContractDetail(index) {
 }
 
 function getAnnualRaiseRate(monthlySalary) {
-  if (monthlySalary < 3e6) return .09;
-  if (monthlySalary < 4e6) return .07;
-  if (monthlySalary < 5e6) return .05;
-  if (monthlySalary < 6e6) return .03;
-  return .015;
+  const tiers = DB.adminConfig && DB.adminConfig.raiseTiers || [];
+  for (const t of tiers) {
+    if (t.below === null || monthlySalary < t.below) return t.rate;
+  }
+  return 0;
 }
 
 function projectSalaryAndBonus(initialMonthly, initialBonus, yearsFromNow) {
@@ -3770,7 +3558,7 @@ async function sendCondolencePayAlert(request) {
   const emp = getEmployee(request.empId);
   if (!url || !emp) return;
   const empIdToEmail = {};
-  Object.entries(EMAIL_WHITELIST).forEach((([email, id]) => {
+  Object.entries(emailWhitelist()).forEach((([email, id]) => {
     empIdToEmail[id] = email;
   }));
   const amount = CONDOLENCE_PAY[request.specialType];
@@ -3894,11 +3682,7 @@ async function deleteFromCalendar(eventId) {
   }
 }
 
-function openCalendarSetup() {
-  const currentUrl = DB.settings && DB.settings.calendarUrl || '';
-  const scriptCode = `const CALENDAR_ID = '82ce8a23dc28414410fd858c7e59676ed32af3b16293a0ee6a2c56a51b89562f@group.calendar.google.com';\n\nfunction doPost(e) {\n  try {\n    const data = JSON.parse(e.postData.contents);\n\n    // 1) 연차·반차 캘린더 등록\n    if (data.action === 'create') {\n      const cal = CalendarApp.getCalendarById(CALENDAR_ID);\n      if (!cal) throw new Error('캘린더를 찾을 수 없습니다');\n      const start = new Date(data.startDate);\n      const end = new Date(data.endDate);\n      end.setDate(end.getDate() + 1);\n      const event = cal.createAllDayEvent(data.title, start, end, {\n        description: data.description || ''\n      });\n      return json({ success: true, eventId: event.getId() });\n    }\n\n    // 2) 캘린더 이벤트 삭제\n    if (data.action === 'delete') {\n      const cal = CalendarApp.getCalendarById(CALENDAR_ID);\n      if (!cal) throw new Error('캘린더를 찾을 수 없습니다');\n      const event = cal.getEventById(data.eventId);\n      if (event) event.deleteEvent();\n      return json({ success: true });\n    }\n\n    // 3) 개인카드 사용내역 메일 발송 (첨부 이미지 포함)\n    if (data.action === 'send_card_statement') {\n      const attachments = (data.attachments || []).map(function(a) {\n        return Utilities.newBlob(\n          Utilities.base64Decode(a.data),\n          a.mimeType || 'image/jpeg',\n          a.filename || 'receipt.jpg'\n        );\n      });\n      GmailApp.sendEmail(data.to, data.subject, data.body, {\n        attachments: attachments,\n        name: '식구 앱'\n      });\n      return json({ success: true });\n    }\n\n    return json({ success: false, error: 'Unknown action: ' + data.action });\n  } catch (err) {\n    return json({ success: false, error: err.toString() });\n  }\n}\n\nfunction doGet() {\n  return ContentService.createTextOutput('식구 앱 연동 서비스 실행 중 (Calendar + Mail)');\n}\n\nfunction json(obj) {\n  return ContentService.createTextOutput(JSON.stringify(obj))\n    .setMimeType(ContentService.MimeType.JSON);\n}`;
-  showModal(`\n    <h3>Apps Script 연동 설정</h3>\n    <p style="color:var(--muted); font-size:13px; line-height:1.7; margin-bottom:14px;">\n      <b>두 가지 기능</b>을 하나의 Apps Script로 동시에 처리합니다:<br>\n      ① 연차·반차를 "사람사는집_근태" 공유 캘린더에 자동 등록<br>\n      ② 직원들의 <b>개인카드 사용내역 메일 발송</b> (장숭월 님께 첨부파일 포함)\n    </p>\n    <p style="padding:10px 14px; background:#fef3c7; border-radius:6px; font-size:12px; color:#92400e; line-height:1.6; margin-bottom:14px;">\n      ⚠️ <b>중요</b>: 아래 Apps Script를 배포하는 <b>Google 계정이 메일 발신자</b>가 됩니다. 개인카드 내역 메일이 자연스럽게 보이려면 <b>대표님 계정(buildforpeople.hr 등)</b>으로 배포하시는 걸 권장합니다. 장숭월 님 계정으로 배포하면 메일이 자기 자신한테 오는 상황이 됩니다.<br>\n      이미 캘린더 연동용으로 배포해두신 경우, 아래 새 코드로 <b>업데이트</b> 후 "새 버전으로 배포"하시면 두 기능이 함께 동작합니다.\n    </p>\n    <ol style="font-size:13px; line-height:1.9; color:var(--text); padding-left:20px; margin-bottom:14px;">\n      <li><a href="https://script.google.com" target="_blank" style="color:var(--primary);">script.google.com</a> 접속 → 기존 프로젝트 열기 (또는 새 프로젝트)</li>\n      <li>아래 코드를 <b>전체 복사</b>하여 붙여넣기 (기존 코드 있으면 덮어쓰기)</li>\n      <li>프로젝트 저장 → 우측 상단 <b>배포</b> → <b>배포 관리</b> → 기존 배포 옆 ✏️ → <b>새 버전</b> 선택 → 배포</li>\n      <li>유형: <b>웹 앱</b> · 다음 사용자로 실행: <b>나</b> · 액세스 권한: <b>모든 사용자</b></li>\n      <li>최초 1회 권한 승인 (Calendar + Gmail 액세스 허용)</li>\n      <li>생성된 <b>웹앱 URL</b>을 아래 칸에 붙여넣고 저장 (기존 URL이 있으면 새 URL로 교체)</li>\n    </ol>\n    <div style="background:#1e293b; color:#e2e8f0; padding:12px 14px; border-radius:6px; font-family:monospace; font-size:11px; white-space:pre; overflow-x:auto; margin-bottom:14px; max-height:280px;">${escapeHtml(scriptCode)}</div>\n    <div class="form-row">\n      <label>Apps Script 웹앱 URL (캘린더 + 메일 공용)</label>\n      <input type="text" id="calUrl" value="${escapeHtml(currentUrl)}" placeholder="https://script.google.com/macros/s/.../exec">\n    </div>\n    <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">\n    <h4 style="font-size:14px; margin-bottom:8px;">📋 계약 시트 연동 (별도 Apps Script)</h4>\n    <p style="font-size:11px; color:var(--muted); line-height:1.6; margin-bottom:10px;">\n      근로계약 정보를 Google Sheets에서 실시간 조회합니다. 보안상 <b>대표님 계정</b>에 별도의 Apps Script를 배포하시길 권장합니다. 배포 코드는 대표님께 별도로 전달드립니다.\n    </p>\n    <div class="form-row">\n      <label>계약 시트 Apps Script 웹앱 URL</label>\n      <input type="text" id="contractUrl" value="${escapeHtml(DB.settings && DB.settings.contractUrl || '')}" placeholder="https://script.google.com/macros/s/.../exec">\n    </div>\n    <div class="modal-actions">\n      <button class="btn-secondary" onclick="closeModal()">취소</button>\n      <button class="btn-primary" onclick="saveCalendarUrl()">저장</button>\n    </div>\n  `);
-}
+function openCalendarSetup() {}
 
 function saveCalendarUrl() {
   if (!DB.settings) DB.settings = {};
@@ -3909,33 +3693,6 @@ function saveCalendarUrl() {
   closeModal();
   alert('저장되었습니다.');
   renderApp();
-}
-
-function openPasswordModal() {
-  showModal(`\n    <h3>비밀번호 변경</h3>\n    <div class="form-row">\n      <label>현재 비밀번호</label>\n      <input type="password" id="pwCurrent">\n    </div>\n    <div class="form-row">\n      <label>새 비밀번호</label>\n      <input type="password" id="pwNew">\n    </div>\n    <div class="form-row">\n      <label>새 비밀번호 확인</label>\n      <input type="password" id="pwConfirm">\n    </div>\n    <div class="modal-actions">\n      <button class="btn-secondary" onclick="closeModal()">취소</button>\n      <button class="btn-primary" onclick="submitPasswordChange()">변경</button>\n    </div>\n  `);
-}
-
-function submitPasswordChange() {
-  const cur = document.getElementById('pwCurrent').value;
-  const nw = document.getElementById('pwNew').value;
-  const cf = document.getElementById('pwConfirm').value;
-  const emp = getEmployee(DB.session.empId);
-  if (emp.pw !== cur) {
-    alert('현재 비밀번호가 일치하지 않습니다.');
-    return;
-  }
-  if (!nw || nw.length < 4) {
-    alert('새 비밀번호는 4자 이상이어야 합니다.');
-    return;
-  }
-  if (nw !== cf) {
-    alert('새 비밀번호 확인이 일치하지 않습니다.');
-    return;
-  }
-  emp.pw = nw;
-  save(DB);
-  closeModal();
-  alert('비밀번호가 변경되었습니다.');
 }
 
 async function decideRequest(id, status) {
@@ -3962,7 +3719,7 @@ async function decideRequest(id, status) {
 
 function openEmployeeModal(id) {
   const e = id ? getEmployee(id) : null;
-  showModal(`\n    <h3>${e ? '직원 정보 수정' : '직원 추가'}</h3>\n    <div class="form-row"><label>ID (로그인)</label><input id="empId" value="${e?.id || ''}" ${e ? 'readonly' : ''}></div>\n    <div class="form-row"><label>이름</label><input id="empName" value="${e?.name || ''}"></div>\n    <div class="form-row"><label>부서</label><input id="empDept" value="${e?.dept || ''}"></div>\n    <div class="form-row"><label>직책</label><input id="empPos" value="${e?.position || ''}"></div>\n    <div class="form-row"><label>입사일</label><input type="date" id="empJoin" value="${e?.joinDate || ''}"></div>\n    <div class="form-row">\n      <label>생일 (생일연차용 · 선택)</label>\n      <div style="display:flex; gap:8px; margin-bottom:6px;">\n        <button type="button" id="bdaySolar" class="${e?.birthdayLunar ? 'btn-secondary' : 'btn-primary'}" onclick="setBirthdayType(false)" style="flex:1; font-size:12px; padding:6px;">양력</button>\n        <button type="button" id="bdayLunar" class="${e?.birthdayLunar ? 'btn-primary' : 'btn-secondary'}" onclick="setBirthdayType(true)" style="flex:1; font-size:12px; padding:6px;">음력</button>\n      </div>\n      <input type="date" id="empBirthday" value="${e?.birthday || ''}">\n      <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:11px;">\n        <input type="checkbox" id="empBirthdayLunarLeap" ${e?.birthdayLunarLeap ? 'checked' : ''} style="width:auto;"> 윤달 (음력 선택 시에만 해당)\n      </label>\n      <div id="bdayPreview" style="font-size:11px; color:var(--muted); margin-top:6px;"></div>\n    </div>\n    <div class="form-row"><label>연차 비율 (파트타임은 0.6 등)</label><input type="number" id="empLeaveRatio" step="0.1" min="0" max="1" value="${e?.leaveRatio !== undefined ? e.leaveRatio : 1}"></div>\n    <div class="form-row"><label>권한</label>\n      <select id="empRole">\n        <option value="employee" ${e?.role === 'employee' ? 'selected' : ''}>직원</option>\n        <option value="admin" ${e?.role === 'admin' ? 'selected' : ''}>관리자</option>\n      </select>\n    </div>\n    <div class="form-row"><label>비밀번호 ${e ? '(변경 시 입력)' : '(빈칸이면 입사월일 4자리로 자동 설정)'}</label><input type="text" id="empPw" value=""></div>\n    <div class="modal-actions">\n      <button class="btn-secondary" onclick="closeModal()">취소</button>\n      <button class="btn-primary" onclick="saveEmployee('${id || ''}')">저장</button>\n    </div>\n  `);
+  showModal(`\n    <h3>${e ? '직원 정보 수정' : '직원 추가'}</h3>\n    <div class="form-row"><label>ID (로그인)</label><input id="empId" value="${e?.id || ''}" ${e ? 'readonly' : ''}></div>\n    <div class="form-row"><label>이름</label><input id="empName" value="${e?.name || ''}"></div>\n    <div class="form-row"><label>부서</label><input id="empDept" value="${e?.dept || ''}"></div>\n    <div class="form-row"><label>직책</label><input id="empPos" value="${e?.position || ''}"></div>\n    <div class="form-row"><label>입사일</label><input type="date" id="empJoin" value="${e?.joinDate || ''}"></div>\n    <div class="form-row"><label>구글 로그인 이메일</label><input type="email" id="empEmail" value="${e?.email || ''}"><div style="font-size:11px; color:var(--muted); margin-top:4px;">새 직원은 식구 DB·근로계약 Apps Script의 EMAIL_TO_EMP에도 추가해야 로그인됩니다.</div></div>\n    <div class="form-row">\n      <label>생일 (생일연차용 · 선택)</label>\n      <div style="display:flex; gap:8px; margin-bottom:6px;">\n        <button type="button" id="bdaySolar" class="${e?.birthdayLunar ? 'btn-secondary' : 'btn-primary'}" onclick="setBirthdayType(false)" style="flex:1; font-size:12px; padding:6px;">양력</button>\n        <button type="button" id="bdayLunar" class="${e?.birthdayLunar ? 'btn-primary' : 'btn-secondary'}" onclick="setBirthdayType(true)" style="flex:1; font-size:12px; padding:6px;">음력</button>\n      </div>\n      <input type="date" id="empBirthday" value="${e?.birthday || ''}">\n      <label style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:11px;">\n        <input type="checkbox" id="empBirthdayLunarLeap" ${e?.birthdayLunarLeap ? 'checked' : ''} style="width:auto;"> 윤달 (음력 선택 시에만 해당)\n      </label>\n      <div id="bdayPreview" style="font-size:11px; color:var(--muted); margin-top:6px;"></div>\n    </div>\n    <div class="form-row"><label>연차 비율 (파트타임은 0.6 등)</label><input type="number" id="empLeaveRatio" step="0.1" min="0" max="1" value="${e?.leaveRatio !== undefined ? e.leaveRatio : 1}"></div>\n    <div class="form-row"><label>권한</label>\n      <select id="empRole">\n        <option value="employee" ${e?.role === 'employee' ? 'selected' : ''}>직원</option>\n        <option value="admin" ${e?.role === 'admin' ? 'selected' : ''}>관리자</option>\n      </select>\n    </div>\n    <div class="modal-actions">\n      <button class="btn-secondary" onclick="closeModal()">취소</button>\n      <button class="btn-primary" onclick="saveEmployee('${id || ''}')">저장</button>\n    </div>\n  `);
   _birthdayLunarFlag = !!(e && e.birthdayLunar);
   setTimeout((() => {
     const bday = document.getElementById('empBirthday');
@@ -4005,14 +3762,14 @@ function updateBirthdayPreview() {
   }
 }
 
-function saveEmployee(existingId) {
+async function saveEmployee(existingId) {
   const id = document.getElementById('empId').value.trim();
   const name = document.getElementById('empName').value.trim();
   const dept = document.getElementById('empDept').value.trim();
   const position = document.getElementById('empPos').value.trim();
   const joinDate = document.getElementById('empJoin').value;
+  const email = document.getElementById('empEmail').value.trim().toLowerCase();
   const role = document.getElementById('empRole').value;
-  const pw = document.getElementById('empPw').value;
   const birthday = document.getElementById('empBirthday').value || null;
   const birthdayLunar = _birthdayLunarFlag;
   const birthdayLunarLeap = document.getElementById('empBirthdayLunarLeap').checked;
@@ -4022,44 +3779,47 @@ function saveEmployee(existingId) {
     alert('ID, 이름, 입사일은 필수입니다.');
     return;
   }
-  if (existingId) {
-    const e = getEmployee(existingId);
-    Object.assign(e, {
-      name: name,
-      dept: dept,
-      position: position,
-      joinDate: joinDate,
-      role: role,
-      birthday: birthday,
-      birthdayLunar: birthdayLunar,
-      birthdayLunarLeap: birthdayLunarLeap,
-      leaveRatio: leaveRatio
-    });
-    if (pw) e.pw = pw;
-  } else {
-    if (getEmployee(id)) {
-      alert('이미 존재하는 ID입니다.');
-      return;
-    }
-    const parts = joinDate.split('-');
-    const defaultPw = parts.length === 3 ? parts[1] + parts[2] : '0000';
-    DB.employees.push({
-      id: id,
-      pw: pw || defaultPw,
-      name: name,
-      role: role,
-      position: position,
-      joinDate: joinDate,
-      dept: dept,
-      birthday: birthday,
-      birthdayLunar: birthdayLunar,
-      birthdayLunarLeap: birthdayLunarLeap,
-      leaveRatio: leaveRatio
-    });
+  if (!existingId && getEmployee(id)) {
+    alert('이미 존재하는 ID입니다.');
+    return;
   }
-  save(DB);
-  closeModal();
-  renderAdminBody();
+  const existing = existingId ? getEmployee(existingId) : null;
+  const sort = existing ? existing.sort || 0 : DB.employees.reduce(((m, e) => Math.max(m, Number(e.sort) || 0)), 0) + 1;
+  const row = {
+    id: id,
+    name: name,
+    role: role,
+    position: position,
+    dept: dept,
+    joinDate: joinDate,
+    leaveRatio: leaveRatio,
+    email: email,
+    sort: sort
+  };
+  showLoader('저장 중...');
+  try {
+    await dbUpsert('employees', 'id', row);
+    await dbUpsert('birthdays', 'empId', {
+      empId: id,
+      birthday: birthday || '',
+      lunar: birthdayLunar,
+      leap: birthdayLunarLeap
+    });
+    const local = Object.assign({}, row, {
+      birthday: birthday,
+      birthdayLunar: birthdayLunar,
+      birthdayLunarLeap: birthdayLunarLeap
+    });
+    if (existing) Object.assign(existing, local); else DB.employees.push(local);
+    save(DB);
+    hideLoader();
+    closeModal();
+    showToast('저장 완료', 'success');
+    renderAdminBody();
+  } catch (err) {
+    hideLoader();
+    alert('저장 실패: ' + err.message);
+  }
 }
 
 async function deleteEmployee(id) {
@@ -4070,6 +3830,7 @@ async function deleteEmployee(id) {
     for (const r of toDelete) {
       await dbDelete('requests', 'id', r.id);
     }
+    await dbDelete('employees', 'id', id);
     DB.employees = DB.employees.filter((e => e.id !== id));
     DB.requests = DB.requests.filter((r => r.empId !== id));
     save(DB);
@@ -4080,17 +3841,6 @@ async function deleteEmployee(id) {
     hideLoader();
     alert('삭제 실패: ' + err.message);
   }
-}
-
-function resetPassword(id) {
-  const e = getEmployee(id);
-  if (!e) return;
-  const parts = (e.joinDate || '').split('-');
-  const newPw = parts.length === 3 ? parts[1] + parts[2] : '0000';
-  if (!confirm(`${e.name} 님의 비밀번호를 입사월일(${newPw})로 초기화하시겠습니까?`)) return;
-  e.pw = newPw;
-  save(DB);
-  alert(`${e.name} 님의 비밀번호가 ${newPw}(으)로 초기화되었습니다. 해당 직원에게 전달해 주세요.`);
 }
 
 function statusBadge(s) {
@@ -4123,7 +3873,7 @@ const CEO_EMP_ID = 'admin';
 
 const ROLLING_OPEN_DAYS = 60;
 
-const ROLLING_CLOSE_DAYS = 10;
+const ROLLING_CLOSE_DAYS = 1;
 
 let ROLLING = {
   loaded: false,
@@ -4153,7 +3903,7 @@ function ymdLocal(d) {
 function rollingTargets(fromDays, toDays) {
   const today = new Date;
   today.setHours(0, 0, 0, 0);
-  const withEmail = new Set(Object.values(EMAIL_WHITELIST));
+  const withEmail = new Set(Object.values(emailWhitelist()));
   const out = [];
   DB.employees.forEach((e => {
     if (e.id === CEO_EMP_ID || !withEmail.has(e.id) || !e.joinDate) return;
@@ -4520,7 +4270,7 @@ function tgToday() {
 }
 
 function tgMembers() {
-  const withEmail = new Set(Object.values(EMAIL_WHITELIST));
+  const withEmail = new Set(Object.values(emailWhitelist()));
   return DB.employees.filter((e => withEmail.has(e.id)));
 }
 
@@ -4826,6 +4576,42 @@ function showToast(msg, type) {
 }
 
 function applyTables(tables) {
+  const isTrue = v => v === true || v === 'TRUE' || v === 'true';
+  if (tables.employees) {
+    const prev = {};
+    (DB.employees || []).forEach((e => {
+      prev[e.id] = e;
+    }));
+    DB.employees = tables.employees.filter((e => e.id)).sort(((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0))).map((e => {
+      const p = prev[String(e.id)] || {};
+      return {
+        id: String(e.id),
+        name: String(e.name || ''),
+        role: e.role === 'admin' ? 'admin' : 'employee',
+        position: String(e.position || ''),
+        dept: String(e.dept || ''),
+        joinDate: String(e.joinDate || ''),
+        leaveRatio: e.leaveRatio === '' || e.leaveRatio === null || e.leaveRatio === undefined ? 1 : Number(e.leaveRatio),
+        email: String(e.email || '').toLowerCase(),
+        sort: Number(e.sort) || 0,
+        birthday: p.birthday || null,
+        birthdayLunar: !!p.birthdayLunar,
+        birthdayLunarLeap: !!p.birthdayLunarLeap,
+        legacyLeaveUsed: p.legacyLeaveUsed || 0,
+        legacyBirthdayUsed: !!p.legacyBirthdayUsed
+      };
+    }));
+  }
+  if (tables.birthdays) {
+    tables.birthdays.forEach((b => {
+      const emp = DB.employees.find((e => e.id === String(b.empId)));
+      if (emp) {
+        emp.birthday = b.birthday ? String(b.birthday) : null;
+        emp.birthdayLunar = isTrue(b.lunar);
+        emp.birthdayLunarLeap = isTrue(b.leap);
+      }
+    }));
+  }
   if (tables.requests) {
     DB.requests = tables.requests;
     DB.requests.forEach((r => {
