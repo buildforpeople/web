@@ -449,6 +449,10 @@
   .rp-cal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .rp-cal-top b { font-size: 16px; }
   .rp-cal-top .linkish { margin: 0; }
+  .dr-sign { display: flex; gap: 14px; align-items: center; }
+  .dr-sign-box { width: 120px; height: 64px; border: 1px dashed var(--line); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; flex: none; }
+  .dr-sign-box img { max-width: 108px; max-height: 54px; }
+  .dr-sign .linkish { margin: 0; font-size: 13px; }
   .rp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
   .rp-grid.head { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 4px; }
   .rp-cell { min-height: 58px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 4px 5px; text-align: left; display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); }
@@ -2493,7 +2497,7 @@ function scDday(t) {
 }
 
 function scRender(el) {
-  if (!SC.cond || !SC.tasks.length) return scCreateForm(el);
+  if (!SC.tasks.length) return scCreateForm(el);
   const ts = SC.tasks;
   const total = ts.reduce((s, t) => s + t.days, 0);
   const doneDays = ts.reduce((s, t) => s + t.days * (t.progress / 100), 0);
@@ -4036,6 +4040,7 @@ function rpRender(el) {
   el.innerHTML = `
     <div class="cr-bar"><h2 style="font-size:17px">현장보고</h2>
       <button class="btn ghost" type="button" id="rpPrint">주간 인쇄</button>
+      ${!isClient ? '<button class="btn ghost" type="button" id="rpDaily">작업일보 출력</button>' : ''}
       ${canWrite ? '<button class="btn" type="button" id="rpNew">+ 보고 작성</button>' : ''}</div>
 
     ${stat ? `<section class="panel rp-stat">
@@ -4070,6 +4075,7 @@ function rpRender(el) {
   $('rpPrev').onclick = () => { RP.month = rpShiftMonth(month, -1); rpRender(el); };
   $('rpNext').onclick = () => { RP.month = rpShiftMonth(month, 1); rpRender(el); };
   $('rpPrint').onclick = rpPrintForm;
+  if ($('rpDaily')) $('rpDaily').onclick = drForm;
   if ($('rpNew')) $('rpNew').onclick = () => rpForm(null, today());
   el.querySelectorAll('.rp-cell[data-date]').forEach(b => b.onclick = () => {
     const r = byDate[b.dataset.date];
@@ -4364,6 +4370,341 @@ function rpPrintWeek(startMon) {
   if (!w) { toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
   w.document.write(html); w.document.close();
   closeSheet();
+}
+
+const DR = { sign: null, lib: null };
+function drLib() {
+  if (window.ExcelJS) return Promise.resolve();
+  if (DR.lib) return DR.lib;
+  const load = src => new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+  DR.lib = load('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js')
+    .catch(() => load('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'))
+    .catch(() => { DR.lib = null; throw new Error('엑셀 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'); });
+  return DR.lib;
+}
+
+function drSignHtml(s) {
+  const sg = DR.sign || {};
+  if (!sg.name && !s.manager) return '<div class="hint">현장 정보에 현장소장이 지정되어 있지 않습니다. 현장 정보에서 소장을 먼저 정해 주세요.</div>';
+  return `<div class="dr-sign"><div class="dr-sign-box">${sg.data ? `<img src="data:${esc(sg.type || 'image/png')};base64,${sg.data}" alt="서명">` : '<span class="cr-sub">미등록</span>'}</div>
+    <div><b>${esc(sg.name || s.manager)}</b> 현장소장<div class="cr-sub">등록하면 모든 작업일보의 소장 칸에 찍혀 나옵니다.</div>
+    ${sg.can ? `<label class="btn ghost sm" style="margin-top:8px">${sg.data ? '서명 바꾸기' : '서명·도장 이미지 등록'}<input type="file" accept="image/*" id="dSignFile" hidden></label>
+    ${sg.data ? '<button type="button" class="linkish" id="dSignDel" style="margin-left:8px">삭제</button>' : ''}` : ''}</div></div>`;
+}
+
+async function drSignPrep(file) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('이미지를 읽지 못했습니다.')); i.src = URL.createObjectURL(file); });
+  const k = Math.min(1, 600 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+  const px = g.getImageData(0, 0, c.width, c.height), a = px.data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+    const i = (y * c.width + x) * 4, lum = (a[i] + a[i + 1] + a[i + 2]) / 3;
+    if (a[i + 3] < 30 || lum > 215) { a[i + 3] = 0; continue; }
+    if (lum > 170) a[i + 3] = Math.round(a[i + 3] * (215 - lum) / 45);
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) throw new Error('서명이 보이지 않습니다. 흰 종이에 진하게 쓴 사진을 올려 주세요.');
+  g.putImageData(px, 0, 0);
+  const o = document.createElement('canvas'), pad = 4;
+  o.width = x1 - x0 + 1 + pad * 2; o.height = y1 - y0 + 1 + pad * 2;
+  o.getContext('2d').drawImage(c, x0, y0, x1 - x0 + 1, y1 - y0 + 1, pad, pad, x1 - x0 + 1, y1 - y0 + 1);
+  return o.toDataURL('image/png').split(',')[1];
+}
+
+function drForm() {
+  const s = currentSite();
+  const m0 = today().slice(0, 7), pm = rpShiftMonth(m0, -1);
+  const lastDay = m => ymd(new Date(new Date(m + '-01T00:00:00').getFullYear(), new Date(m + '-01T00:00:00').getMonth() + 1, 0));
+  const body = openSheet('작업일보 출력', esc(s.code + ' ' + s.name), `
+    <div class="card">
+      <div class="f"><span class="lb">기간</span>${segHtml('dp', [['m', '이번 달'], ['p', '지난 달'], ['all', '공사 전체'], ['c', '직접 선택']], 'm')}</div>
+      <div id="dpBox" hidden><div class="f"><label for="dpFrom">시작일</label><input type="date" id="dpFrom" value="${m0}-01"></div>
+        <div class="f"><label for="dpTo">종료일</label><input type="date" id="dpTo" value="${today()}"></div></div>
+      <div class="f"><span class="lb">사진</span>${segHtml('dph', [['all', '전부'], ['6', '하루 6장까지'], ['0', '빼기']], 'all')}</div>
+      <div class="hint">보고가 있는 날마다 한 장(엑셀은 시트 1개)씩 만듭니다. 인원·자재·장비 <b>누계</b>는 공사 시작부터 그날까지 합산합니다. 건축주에게는 보이지 않는 내부 서류입니다.</div>
+    </div>
+    <div class="card"><h4>현장소장 서명</h4><div id="dSign"><span class="cr-sub">불러오는 중...</span></div></div>
+    <div class="hint" id="dMsg"></div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="dXls">엑셀 받기</button><button class="btn" type="button" id="dPrt">인쇄 · PDF</button></div>`);
+  bindSegs(body, (n, v) => { if (n === 'dp') $('dpBox').hidden = v !== 'c'; });
+  const range = () => {
+    const v = segVal(body, 'dp');
+    if (v === 'm') return [m0 + '-01', today()];
+    if (v === 'p') return [pm + '-01', lastDay(pm)];
+    if (v === 'all') return ['', ''];
+    return [$('dpFrom').value, $('dpTo').value];
+  };
+  const drawSign = () => {
+    $('dSign').innerHTML = drSignHtml(s);
+    const f = $('dSignFile');
+    if (f) f.onchange = async () => {
+      if (!f.files[0]) return;
+      try {
+        const data = await drSignPrep(f.files[0]);
+        $('dSign').innerHTML = '<span class="cr-sub">저장 중...</span>';
+        DR.sign = (await api({ action: 'rp_sign_set', siteCode: s.code, data })).sign;
+        toast('서명을 등록했습니다');
+      } catch (e) { toast(e.message); }
+      drawSign();
+    };
+    const del = $('dSignDel');
+    if (del) del.onclick = async () => {
+      if (!confirm('등록된 서명을 지울까요?')) return;
+      try { DR.sign = (await api({ action: 'rp_sign_set', siteCode: s.code, remove: true })).sign; } catch (e) { toast(e.message); }
+      drawSign();
+    };
+  };
+  api({ action: 'rp_sign_get', siteCode: s.code }).then(d => { DR.sign = d.sign; DR.signSite = s.code; drawSign(); }).catch(e => { $('dSign').textContent = e.message; });
+  const go = mode => async e => {
+    const btn = e.target, msg = $('dMsg');
+    if (DR.busy) return;
+    const [from, to] = range();
+    if (from && to && from > to) { toast('시작일이 종료일보다 늦습니다.'); return; }
+    DR.busy = true; body.querySelectorAll('.actions .btn').forEach(b => b.disabled = true);
+    try {
+      msg.textContent = '보고 자료 모으는 중...';
+      const d = await api({ action: 'rp_daily', siteCode: s.code, from, to });
+      if (!d.days.length) throw new Error('선택한 기간에 작성된 현장보고가 없습니다.');
+      const lim = segVal(body, 'dph');
+      d.days.forEach(x => { x.pics = lim === '0' ? [] : lim === 'all' ? x.photos : x.photos.slice(0, Number(lim)); });
+      const ids = d.days.flatMap(x => x.pics);
+      if (ids.length > 400 && !confirm(`사진이 ${ids.length}장입니다. 몇 분 걸릴 수 있습니다. 계속할까요?\n(오래 걸리면 기간을 한 달씩 나눠 주세요)`)) throw new Error('취소했습니다.');
+      const pics = await drFetchPhotos(s.code, ids, n => msg.textContent = `사진 불러오는 중 ${n}/${ids.length}`);
+      msg.textContent = mode === 'xlsx' ? '엑셀 만드는 중...' : '인쇄 화면 만드는 중...';
+      if (mode === 'xlsx') await drXlsx(d, pics); else drPrint(d, pics);
+      msg.textContent = `${d.days.length}일치 작업일보${ids.length ? ` · 사진 ${Object.keys(pics).length}장` : ''} 완료`;
+    } catch (err) { msg.textContent = ''; toast(err.message); }
+    finally { DR.busy = false; body.querySelectorAll('.actions .btn').forEach(b => b.disabled = false); }
+  };
+  body.querySelector('#dXls').onclick = go('xlsx');
+  body.querySelector('#dPrt').onclick = go('print');
+}
+
+async function drShrink(type, data) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = `data:${type};base64,${data}`; });
+  const k = Math.min(1, 1100 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+  return { url: c.toDataURL('image/jpeg', 0.8), w: c.width, h: c.height };
+}
+
+async function drFetchPhotos(code, ids, onStep) {
+  const out = {}, batches = [];
+  for (let i = 0; i < ids.length; i += 4) batches.push(ids.slice(i, i + 4));
+  let next = 0, done = 0;
+  const worker = async () => {
+    while (next < batches.length) {
+      const b = batches[next++];
+      let r = null;
+      for (let t = 0; t < 2 && !r; t++) { try { r = await api({ action: 'rp_photos', siteCode: code, ids: b }); } catch (e) { if (t) throw e; } }
+      for (const it of r.items) { if (!it.err) { try { out[it.id] = await drShrink(it.type, it.data); } catch (e) {} } }
+      done += b.length; onStep(done);
+    }
+  };
+  onStep(0);
+  await Promise.all(Array.from({ length: Math.min(3, batches.length) }, worker));
+  return out;
+}
+
+function drDateKo(d) { const x = new Date(d + 'T00:00:00'); return `${x.getFullYear()}년 ${x.getMonth() + 1}월 ${x.getDate()}일 (${rpDow(d)})`; }
+function drWx(day) { return [day.weather, day.tempMin !== '' && day.tempMax !== '' ? `${day.tempMin}°C / ${day.tempMax}°C` : ''].filter(Boolean).join('  '); }
+function drWork(day) {
+  return day.work.map(w => `■ ${w.trade}${w.detail ? ' · ' + w.detail : ''}${w.team ? ' / ' + w.team : ''}${w.count ? ' ' + w.count + '명' : ''}${w.shift === '야간' ? ' (야간)' : ''}\n`
+    + String(w.work || '').split('\n').filter(x => x.trim()).map(x => '  - ' + x.replace(/^[\s\-·•*]+/, '')).join('\n')).join('\n');
+}
+function drLabor(day) {
+  const out = [];
+  day.labor.forEach((t, i) => {
+    out.push({ no: String(i + 1), name: t.trade, shift: t.shift, today: t.today, cum: t.cum, top: true });
+    t.subs.forEach((s, j) => out.push({ no: `${i + 1}-${j + 1}`, name: s.detail, shift: t.shift, today: s.today, cum: s.cum }));
+  });
+  return out;
+}
+function drLines(text, cap) {
+  return String(text || '').split('\n').reduce((n, l) => n + Math.max(1, Math.ceil([...l].reduce((w, ch) => w + (ch.charCodeAt(0) > 255 ? 2 : 1), 0) / cap)), 0);
+}
+
+async function drXlsx(d, pics) {
+  await drLib();
+  const wb = new ExcelJS.Workbook();
+  wb.creator = '(주)사람사는집종합건설';
+  const signId = d.sign && d.sign.data ? wb.addImage({ base64: d.sign.data, extension: 'png' }) : null;
+  const signRatio = signId !== null ? await new Promise(res => { const i = new Image(); i.onload = () => res(i.width / i.height); i.onerror = () => res(2); i.src = 'data:image/png;base64,' + d.sign.data; }) : 2;
+  const used = {};
+  d.days.forEach(day => {
+    let nm = day.date; while (used[nm]) nm += '_'; used[nm] = 1;
+    drSheet(wb, wb.addWorksheet(nm), d, day, pics, signId, signRatio);
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  const f = d.days[0].date, l = d.days[d.days.length - 1].date;
+  a.download = `작업일보_${d.site.code}_${d.site.name}_${f}${f !== l ? '~' + l : ''}.xlsx`.replace(/[\\/:*?"<>|]/g, '');
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function drAt(col, offPx, row, offRowPx) { return { nativeCol: col, nativeColOff: Math.round(offPx * 9525), nativeRow: row, nativeRowOff: Math.round(offRowPx * 9525) }; }
+
+function drSheet(wb, ws, d, day, pics, signId, signRatio) {
+  const W = [2, 6, 20, 8, 7, 7, 34, 9, 20];
+  ws.columns = W.map(w => ({ width: w }));
+  const px = W.map(w => Math.round(w * 7 + 5));
+  const thin = { style: 'thin', color: { argb: 'FF8C8C88' } };
+  const border = { top: thin, left: thin, bottom: thin, right: thin };
+  const F = (o = {}) => Object.assign({ name: '맑은 고딕', size: 9 }, o);
+  const HD = { fill: 'FFF2F2F0', bold: true, center: true };
+  const SEC = { fill: 'FFE4E4E0', bold: true, center: true, size: 10 };
+  const box = (r1, c1, r2, c2, v, o = {}) => {
+    if (r2 !== r1 || c2 !== c1) ws.mergeCells(r1, c1, r2, c2);
+    for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
+      const cl = ws.getCell(r, c);
+      cl.border = border;
+      if (o.fill) cl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: o.fill } };
+    }
+    const m = ws.getCell(r1, c1);
+    if (v !== undefined && v !== null) m.value = v;
+    m.font = F({ bold: !!o.bold, size: o.size || 9 });
+    m.alignment = { vertical: o.top ? 'top' : 'middle', horizontal: o.center ? 'center' : o.right ? 'right' : 'left', wrapText: true, indent: o.center || o.right ? 0 : 1 };
+  };
+  const s = d.site;
+  box(2, 2, 2, 6, '현장명', HD); box(2, 7, 6, 7, '작 업 일 보', { center: true, bold: true, size: 20 });
+  box(2, 8, 2, 8, '시작일', HD); box(2, 9, 2, 9, s.start || '');
+  box(3, 2, 3, 6, s.name, { bold: true, size: 11 }); box(3, 8, 3, 8, '종료일', HD); box(3, 9, 3, 9, s.end || '');
+  box(4, 2, 4, 6, s.address || ''); box(4, 8, 4, 8, '작성자', HD); box(4, 9, 4, 9, day.author || '');
+  box(5, 2, 5, 6, '(주)사람사는집종합건설'); box(5, 8, 5, 8, '현장소장', HD); box(5, 9, 5, 9, (s.manager || '') + (signId !== null ? '' : '   (인)'));
+  box(6, 2, 6, 2, '날짜', HD); box(6, 3, 6, 6, drDateKo(day.date), { bold: true }); box(6, 8, 6, 8, '날씨', HD); box(6, 9, 6, 9, drWx(day));
+  ws.getRow(5).height = 32;
+  if (signId !== null) {
+    let h = 36, w = h * signRatio;
+    if (w > px[8] * 0.5) { w = px[8] * 0.5; h = w / signRatio; }
+    ws.addImage(signId, { tl: drAt(8, px[8] - w - 8, 4, (43 - h) / 2), ext: { width: w, height: h }, editAs: 'oneCell' });
+  }
+  box(7, 2, 7, 6, '인력투입현황', SEC); box(7, 7, 7, 9, '작업내역', SEC);
+  ['No', '공정', '근무형태', '금일', '누계'].forEach((t, i) => box(8, 2 + i, 8, 2 + i, t, HD));
+  const L = drLabor(day), work = drWork(day), cap = Math.floor((px[6] + px[7] + px[8]) / 6.2);
+  const nW = drLines(work, cap) + 1, nT = drLines(day.tomorrow, cap) + 1, nN = drLines(day.note, cap) + 1;
+  const N = Math.max(L.length, 24, nW + nT + nN + 3);
+  const r0 = 9;
+  box(8, 7, 8, 9, '금일 작업내용', HD);
+  for (let i = 0; i < N; i++) {
+    const x = L[i] || {};
+    box(r0 + i, 2, r0 + i, 2, x.no || '', { center: true, bold: x.top });
+    box(r0 + i, 3, r0 + i, 3, x.name ? (x.top ? x.name : '  ' + x.name) : '', { bold: x.top });
+    box(r0 + i, 4, r0 + i, 4, x.shift || '', { center: true });
+    box(r0 + i, 5, r0 + i, 5, x.name ? x.today : '', { center: true });
+    box(r0 + i, 6, r0 + i, 6, x.name ? x.cum : '', { center: true });
+  }
+  const rest = N - 2, b = Math.max(nT, Math.floor((rest - nW) / 2)), c = Math.max(nN, rest - Math.max(nW, rest - b - nN) - b);
+  const a = rest - b - c;
+  box(r0, 7, r0 + a - 1, 9, work, { top: true });
+  box(r0 + a, 7, r0 + a, 9, '명일 작업내용', HD);
+  box(r0 + a + 1, 7, r0 + a + b, 9, day.tomorrow || '', { top: true });
+  box(r0 + a + b + 1, 7, r0 + a + b + 1, 9, '특기사항', HD);
+  box(r0 + a + b + 2, 7, r0 + N - 1, 9, day.note || '', { top: true });
+  let r = r0 + N;
+  box(r, 2, r, 4, '총인원 누계', HD); box(r, 5, r, 5, day.todayTotal, Object.assign({}, HD)); box(r, 6, r, 6, day.cumTotal, Object.assign({}, HD));
+  box(r, 7, r, 9, `금일 ${day.todayTotal}명 · 공사 시작 이후 누계 ${day.cumTotal}명`, { right: true });
+  r += 1;
+  box(r, 2, r, 9, '자재 투입 현황', SEC); r++;
+  [['No', 2, 2], ['품명', 3, 3], ['규격', 4, 5], ['금일', 6, 6], ['누계', 7, 7], ['비고', 8, 9]].forEach(([t, c1, c2]) => box(r, c1, r, c2, t, HD)); r++;
+  (day.mats.length ? day.mats : [null]).forEach((m, i) => {
+    box(r, 2, r, 2, m ? i + 1 : '', { center: true }); box(r, 3, r, 3, m ? m.name : '해당 없음'); box(r, 4, r, 5, m ? m.spec : '');
+    box(r, 6, r, 6, m ? m.today : '', { center: true }); box(r, 7, r, 7, m ? m.cum : '', { right: true }); box(r, 8, r, 9, m ? m.note : ''); r++;
+  });
+  box(r, 2, r, 9, '장비 투입 현황', SEC); r++;
+  [['No', 2, 2], ['장비명', 3, 5], ['금일', 6, 6], ['누계', 7, 7], ['비고', 8, 9]].forEach(([t, c1, c2]) => box(r, c1, r, c2, t, HD)); r++;
+  (day.eqs.length ? day.eqs : [null]).forEach((m, i) => {
+    box(r, 2, r, 2, m ? i + 1 : '', { center: true }); box(r, 3, r, 5, m ? m.name : '해당 없음');
+    box(r, 6, r, 6, m ? m.today : '', { center: true }); box(r, 7, r, 7, m ? m.cum : '', { right: true }); box(r, 8, r, 9, m ? m.note : ''); r++;
+  });
+  let last = r - 1;
+  const list = day.pics.filter(id => pics[id]);
+  if (list.length) {
+    ws.getRow(last).addPageBreak();
+    r = last + 1;
+    box(r, 2, r, 9, `현장 사진 · ${drDateKo(day.date)}`, SEC); r++;
+    const boxes = [[2, 6], [7, 9]], H = 300;
+    for (let i = 0; i < list.length; i += 2) {
+      if (i && i % 6 === 0) { ws.getRow(r - 1).addPageBreak(); }
+      ws.getRow(r).height = H * 0.75;
+      boxes.forEach(([c1, c2], k) => {
+        const id = list[i + k];
+        box(r, c1, r, c2, '', {}); box(r + 1, c1, r + 1, c2, id ? `사진 ${i + k + 1}` : '', { center: true });
+        if (!id) return;
+        const p = pics[id], bw = px.slice(c1 - 1, c2).reduce((x, y) => x + y, 0) - 12, bh = H - 12;
+        const z = Math.min(bw / p.w, bh / p.h), w = p.w * z, h = p.h * z;
+        let off = (bw + 12 - w) / 2, col = c1 - 1;
+        while (off > px[col] && col < c2 - 1) { off -= px[col]; col++; }
+        const img = wb.addImage({ base64: p.url.split(',')[1], extension: 'jpeg' });
+        ws.addImage(img, { tl: drAt(col, off, r - 1, (H - h) / 2), ext: { width: w, height: h }, editAs: 'oneCell' });
+      });
+      r += 2;
+    }
+    last = r - 1;
+  }
+  ws.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
+    margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }, printArea: `B2:I${last}` };
+  ws.headerFooter = { oddFooter: `&L&8${d.site.code} ${d.site.name} 작업일보 ${day.date}&R&8&P / &N` };
+  ws.views = [{ showGridLines: false }];
+}
+
+function drPrint(d, pics) {
+  const s = d.site, sg = d.sign && d.sign.data ? `<img class="sg" src="data:${d.sign.type || 'image/png'};base64,${d.sign.data}" alt="">` : '';
+  const nl = t => esc(t || '').replace(/\n/g, '<br>');
+  const pages = d.days.map(day => {
+    const L = drLabor(day), rows = Math.max(L.length, 18);
+    const lab = Array.from({ length: rows }, (_, i) => { const x = L[i]; return x ? `<tr class="${x.top ? 'top' : ''}"><td class="c">${x.no}</td><td>${x.top ? '' : '&nbsp;&nbsp;'}${esc(x.name)}</td><td class="c">${esc(x.shift)}</td><td class="c">${x.today}</td><td class="c">${x.cum}</td></tr>` : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>'; }).join('');
+    const mats = day.mats.length ? day.mats.map((m, i) => `<tr><td class="c">${i + 1}</td><td>${esc(m.name)}</td><td>${esc(m.spec)}</td><td class="c">${esc(m.today)}</td><td class="r">${esc(m.cum)}</td><td>${esc(m.note)}</td></tr>`).join('') : '<tr><td></td><td colspan="5">해당 없음</td></tr>';
+    const eqs = day.eqs.length ? day.eqs.map((m, i) => `<tr><td class="c">${i + 1}</td><td colspan="2">${esc(m.name)}</td><td class="c">${esc(m.today)}</td><td class="r">${esc(m.cum)}</td><td>${esc(m.note)}</td></tr>`).join('') : '<tr><td></td><td colspan="5">해당 없음</td></tr>';
+    const list = day.pics.filter(id => pics[id]);
+    const photoPages = [];
+    for (let i = 0; i < list.length; i += 6) photoPages.push(`<section class="pg"><div class="ph-h">현장 사진 · ${esc(drDateKo(day.date))} <span>${esc(s.name)}</span></div><div class="ph">${list.slice(i, i + 6).map((id, k) => `<figure><div><img src="${pics[id].url}" alt=""></div><figcaption>사진 ${i + k + 1}</figcaption></figure>`).join('')}</div></section>`);
+    return `<section class="pg">
+      <table class="hd"><colgroup><col style="width:9%"><col style="width:36%"><col style="width:25%"><col style="width:10%"><col style="width:20%"></colgroup>
+        <tr><th colspan="2">현장명</th><td rowspan="5" class="tt">작 업 일 보</td><th>시작일</th><td>${esc(s.start)}</td></tr>
+        <tr><td colspan="2"><b>${esc(s.name)}</b></td><th>종료일</th><td>${esc(s.end)}</td></tr>
+        <tr><td colspan="2">${esc(s.address)}</td><th>작성자</th><td>${esc(day.author)}</td></tr>
+        <tr><td colspan="2">(주)사람사는집종합건설</td><th>현장소장</th><td class="sgc">${esc(s.manager)} <span class="in">(인)</span>${sg}</td></tr>
+        <tr><th>날짜</th><td><b>${esc(drDateKo(day.date))}</b></td><th>날씨</th><td>${esc(drWx(day))}</td></tr></table>
+      <div class="two">
+        <table class="lb"><colgroup><col style="width:12%"><col><col style="width:16%"><col style="width:12%"><col style="width:13%"></colgroup>
+          <tr><th colspan="5" class="sec">인력투입현황</th></tr><tr><th>No</th><th>공정</th><th>근무형태</th><th>금일</th><th>누계</th></tr>${lab}
+          <tr class="tot"><th colspan="3">총인원 누계</th><th>${day.todayTotal}</th><th>${day.cumTotal}</th></tr></table>
+        <div class="wk"><div class="sec">작업내역</div><div class="bh">금일 작업내용</div><div class="bx g">${nl(drWork(day))}</div>
+          <div class="bh">명일 작업내용</div><div class="bx">${nl(day.tomorrow)}</div><div class="bh">특기사항</div><div class="bx">${nl(day.note)}</div></div>
+      </div>
+      <table class="mt"><colgroup><col style="width:6%"><col style="width:24%"><col style="width:20%"><col style="width:12%"><col style="width:14%"><col></colgroup>
+        <tr><th colspan="6" class="sec">자재 투입 현황</th></tr><tr><th>No</th><th>품명</th><th>규격</th><th>금일</th><th>누계</th><th>비고</th></tr>${mats}</table>
+      <table class="mt"><colgroup><col style="width:6%"><col style="width:24%"><col style="width:20%"><col style="width:12%"><col style="width:14%"><col></colgroup>
+        <tr><th colspan="6" class="sec">장비 투입 현황</th></tr><tr><th>No</th><th colspan="2">장비명</th><th>금일</th><th>누계</th><th>비고</th></tr>${eqs}</table>
+    </section>${photoPages.join('')}`;
+  }).join('');
+  const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>작업일보 ${esc(s.code)} ${esc(d.days[0].date)}~${esc(d.days[d.days.length - 1].date)}</title><style>
+    @page{size:A4;margin:10mm}*{box-sizing:border-box}body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:9.5px;color:#111;background:#e9e9e6}
+    .pg{width:190mm;min-height:277mm;margin:12px auto;background:#fff;padding:0;page-break-after:always;break-after:page}
+    @media screen{.pg{padding:8mm;width:210mm;min-height:297mm;box-shadow:0 1px 4px rgba(0,0,0,.15)}}
+    
+    table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #777;padding:3px 5px;vertical-align:middle;word-break:keep-all;overflow-wrap:anywhere}
+    th{background:#f2f2f0;font-weight:700;text-align:center}.sec{background:#e4e4e0;font-size:10.5px}
+    .hd td,.hd th{height:24px}.tt{text-align:center;font-size:24px;font-weight:800;letter-spacing:6px}
+    .sgc{position:relative}.sgc .in{color:#888;margin-left:6px}.sg{position:absolute;right:6px;top:50%;transform:translateY(-50%);max-height:34px;max-width:55%;mix-blend-mode:multiply}
+    .two{display:grid;grid-template-columns:47% 53%;margin-top:-1px}.lb td,.lb th{height:17px}.lb .top td{font-weight:700}.c{text-align:center}.r{text-align:right}
+    .tot th{background:#f2f2f0}.wk{border:1px solid #777;border-left:0;display:flex;flex-direction:column}
+    .wk .sec{text-align:center;font-weight:700;padding:3px;border-bottom:1px solid #777}.bh{background:#f2f2f0;text-align:center;font-weight:700;padding:3px;border-bottom:1px solid #777}
+    .bx{padding:5px 7px;border-bottom:1px solid #777;white-space:normal;line-height:1.5;min-height:60px}.bx:last-child{border-bottom:0;flex:1}.bx.g{flex:2}
+    .mt{margin-top:8px}.mt td{height:17px}
+    .ph-h{font-size:12px;font-weight:700;border-bottom:2px solid #111;padding:2px 0 6px;margin-bottom:8px;display:flex;justify-content:space-between}.ph-h span{font-weight:400;color:#555}
+    .ph{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ph figure{margin:0;border:1px solid #777}.ph figure div{height:78mm;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .ph img{max-width:100%;max-height:100%}.ph figcaption{border-top:1px solid #777;text-align:center;padding:3px;background:#f2f2f0}
+    .bar{position:sticky;top:0;z-index:2;background:#111;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;font-size:13px}
+    .bar button{padding:8px 20px;background:#fff;color:#111;border:0;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer}
+    .pg:last-child{break-after:auto;page-break-after:auto}@media print{body{background:#fff}.pg{margin:0}.bar{display:none}}
+  </style></head><body><div class="bar"><button onclick="window.print()">인쇄 · PDF 저장</button><span>${d.days.length}일치 · 인쇄 창에서 대상을 'PDF로 저장'으로 고르면 PDF 파일이 됩니다.</span></div>${pages}</body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { toast('팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요.'); return; }
+  w.document.write(html); w.document.close();
 }
 
 async function lightbox(ids, startIndex, loader) {
