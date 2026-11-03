@@ -1613,7 +1613,16 @@ async function ovRenderSite(el) {
   const colOf = t => { const i = top.indexOf(t); return i >= 0 ? OVC[i] : OVC_OTHER; };
   const totalPeople = tradeRank.reduce((a, x) => a + x[1], 0);
   const wsum = tasks.reduce((a, t) => a + (t.days || 1), 0);
-  const actualAt = w => tasks.reduce((a, t) => a + (t.days || 1) * (t.status === '완료' && (!t.doneDate || t.doneDate <= w) ? 1 : w >= td ? (t.progress || 0) / 100 : 0), 0) / (wsum || 1) * 100;
+  const taskAct = (t, w) => {
+    if (t.status === '완료' && (!t.doneDate || t.doneDate <= w)) return 1;
+    const ev = (t.ev || []).filter(x => x <= w);
+    if (!ev.length) return w >= td && t.progress ? t.progress / 100 : 0;
+    const last = ev[ev.length - 1];
+    if (w > t.end && tasks.some(o => o !== t && o.start > t.start && (o.ev || []).some(x => x > last && x <= w))) return 1;
+    const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, last < w ? last : w) + 1;
+    return Math.max(0.1, Math.min(0.95, done / tot));
+  };
+  const actualAt = w => tasks.reduce((a, t) => a + (t.days || 1) * taskAct(t, w), 0) / (wsum || 1) * 100;
   const planAt = w => tasks.reduce((a, t) => { const tot = dayDiff(t.start, t.end) + 1, done = dayDiff(t.start, w) + 1; return a + (t.days || 1) * Math.max(0, Math.min(1, done / tot)); }, 0) / (wsum || 1) * 100;
   const prog = tasks.length ? Math.round(actualAt(td)) : null, plan = tasks.length ? Math.round(planAt(td)) : null;
   const total = s.startDate && s.endDate ? dayDiff(s.startDate, s.endDate) : 0, left = s.endDate ? dayDiff(td, s.endDate) : null;
@@ -1640,7 +1649,7 @@ async function ovRenderSite(el) {
   el.innerHTML = `
     <div class="ovk-row">
       ${kpi('공사기간', left == null ? '미정' : left >= 0 ? `${left}일 남음` : `${-left}일 경과`, s.startDate ? `${s.startDate.replace(/-/g, '.')} ~ ${(s.endDate || '').replace(/-/g, '.')}` : '착공일을 마스터에 입력하세요', bar(periodPct))}
-      ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p`, prog == null ? bar(0) : bar(prog, plan))}
+      ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p · 현장보고 기준`, prog == null ? bar(0) : bar(prog, plan))}
       ${kpi('누적 작업자수', `${totalPeople.toLocaleString('ko-KR')}명`, '현장보고·QR 출역 기준', `<div class="ovk-bar seg">${tradeRank.map(([t, n]) => `<i style="width:${n / (totalPeople || 1) * 100}%;background:${colOf(t)}" data-tip="${esc(t)} ${n}명"></i>`).join('')}</div>`)}
       ${kpi('최근 현장보고', L ? `${md(L.date)} (${rpDow(L.date)})` : '없음', L ? (gap === 0 ? '오늘 작성' : `${gap}일 전 · 누적 ${d.reportCount}건`) : '첫 보고를 작성하세요', `<div class="ovk-bar ${gap >= 3 ? 'warn' : ''}"><i style="width:${L ? Math.max(8, 100 - gap * 25) : 0}%"></i></div>`)}
     </div>
@@ -1664,7 +1673,7 @@ async function ovRenderSite(el) {
     </div>
 
     <div class="ov2">
-      <section class="panel ovx-card"><div class="ovx-head"><h4>공정 진척도 <span class="cr-sub">계획 대비 실행 (누적, 주 단위)</span></h4></div>
+      <section class="panel ovx-card"><div class="ovx-head"><h4>공정 진척도 <span class="cr-sub">계획 대비 실행 (누적, 주 단위) · 실행은 현장보고 기준 추정</span></h4></div>
         ${pcols.length ? `<div class="ovg-legend"><span><i class="hatch"></i>계획</span><span><i style="background:#3987e5"></i>실행</span></div>${ovChart(pcols, { pair: true, max: 100, unit: '%' })}` : '<div class="ovw-empty">공정표를 만들면 진척도가 그려집니다</div>'}
       </section>
       <section class="panel ovx-card"><div class="ovx-head"><h4>일별 투입 인원 <span class="cr-sub">최근 3주 · 누적 ${totalPeople.toLocaleString('ko-KR')}명</span></h4></div>
