@@ -1031,6 +1031,8 @@
 .ovh div{height:10px;background:var(--gray-soft);border-radius:999px}.ovh div b{display:block;height:100%;border-radius:999px}.ovh em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:1000px){.ovk-row{grid-template-columns:1fr 1fr}.ov2,.ov2.r{grid-template-columns:1fr}}
 .ovg-wrap{overflow-x:auto}@media(max-width:640px){.ovg{min-width:560px}.ovw-row{grid-template-columns:64px repeat(7,1fr)}.ovw-wx small{font-size:10px}.ovk b{font-size:21px}}
+.pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}
+.pf-stds{margin-top:4px}.pf-oc2{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}.pf-oc2 input{width:72px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 </style>
 </head>
 <body>
@@ -1416,7 +1418,7 @@ function ivRules() {
 let KB = {};
 function kbApply(k) {
   KB = k;
-  DS_TPL = k.dsTpl || []; DS_WEEKS = k.dsWeeks || 28; PF_U_LIMIT = k.pfU || {};
+  DS_TPL = k.dsTpl || []; DS_WEEKS = k.dsWeeks || 28;
   PF_GAS_KWH = (k.pfConst || {}).gasKwh || 0; PF_LPG_KWH = (k.pfConst || {}).lpgKwh || 0; PF_PE = (k.pfConst || {}).pe || { elec: 0, gas: 0 };
 }
 const DYK = { items: [], i: 0, timer: null };
@@ -2657,7 +2659,29 @@ function scPrint() {
 }
 
 const PF = { site: null, d: null, loading: false, tab: '성능 요약' };
-let PF_U_LIMIT = {};
+function pfZone(site) {
+  const t = String((site && site.address) || '') + ' ' + String((site && site.name) || ''), z = KB.pfZone || {};
+  if (/군위/.test(t)) return '중부2';
+  if (/광주/.test(t)) return /경기/.test(t) ? '중부2' : '남부';
+  if (/고성/.test(t)) return /강원/.test(t) ? '중부2' : '남부';
+  const toks = t.replace(/[(),·]/g, ' ').split(/\s+/).map(w => w.replace(/(특별자치시|특별자치도|광역시|특별시|시|군|구|읍|면|동|리)$/, '')).filter(Boolean);
+  for (const tk of toks) for (const [zone, list] of Object.entries(z)) if (list.split(' ').includes(tk)) return zone;
+  return '중부2';
+}
+function pfJudge(part, u, site) {
+  const zone = pfZone(site || (PF.d && PF.d.site) || currentSite());
+  const lg = ((KB.pfLegal || {})[part] || {})[zone], ps = (KB.pfPassive || {})[part];
+  const one = (lim, label) => lim == null || u == null || !(u > 0) ? null : { lim, label, ok: u <= lim };
+  return { zone, legal: one(lg, `법적 기준(${zone})`), passive: one(ps, '패시브 기준') };
+}
+function pfBadges(part, u, site) {
+  const j = pfJudge(part, u, site);
+  return [j.legal, j.passive].filter(Boolean).map(x => `<span class="pf-std ${x.ok ? 'ok' : 'no'}">${x.label} ${x.lim.toFixed(x.lim >= 1 ? 2 : 3)} · ${x.ok ? '통과' : '부족'}</span>`).join('');
+}
+function pfStdText(part, u, site) {
+  const j = pfJudge(part, u, site);
+  return [j.legal, j.passive].filter(Boolean).map(x => `${x.label} ${x.lim} ${x.ok ? '통과' : '부족'}`).join(' · ');
+}
 
 function pfAirGrade(v) {
   v = Number(v);
@@ -2749,16 +2773,16 @@ function pfSummary(el) {
 
       <h4 style="margin-top:18px">외피 열관류율 (U값, W/㎡·K)</h4>
       <div class="pf-u">${parts.map(p => {
-        const e = envBy[p], u = e ? Number(e.uValue) : null, lim = PF_U_LIMIT[p];
-        const pass = u !== null && u <= lim;
+        const e = envBy[p], u = e ? Number(e.uValue) : null, jj = pfJudge(p, u), lim = (jj.passive || jj.legal || { lim: 1 }).lim;
+        const pass = u !== null && jj.legal && jj.legal.ok;
         return `<div class="pf-u-row ${u === null ? 'none' : pass ? 'pass' : 'over'}" ${e ? `data-env="${esc(e.id)}"` : ''}>
           <span class="pf-u-part">${esc(p)}</span>
           <span class="pf-u-val">${u !== null ? u.toFixed(3) : '—'}</span>
-          <span class="pf-u-bar">${u !== null ? `<i style="width:${Math.min(100, u / (lim * 1.6) * 100)}%"></i><em style="left:${100 / 1.6}%"></em>` : ''}</span>
-          <span class="pf-u-note">${u === null ? '미입력' : pass ? `기준 ${lim} 충족` : `기준 ${lim} 초과`}</span>
+          <span class="pf-u-bar">${u !== null ? `<i style="width:${Math.min(100, u / (lim * 2.4) * 100)}%"></i><em style="left:${100 / 2.4}%"></em>` : ''}</span>
+          <span class="pf-u-note">${u === null ? '미입력' : pfBadges(p, u)}</span>
         </div>`;
       }).join('')}</div>
-      <div class="hint">기준은 건축물 에너지절약설계기준(중부2 주거) 값입니다. 숫자가 낮을수록 단열 성능이 좋습니다.</div>
+      <div class="hint">법적 기준: 건축물의 에너지절약설계기준 별표1(${esc(pfZone(PF.d && PF.d.site || currentSite()))}지역, 단독주택). 패시브 기준: 패시브하우스 권장값(벽·지붕·바닥 0.15, 창호·현관문 0.80). 막대의 세로선은 패시브 기준이며, 숫자가 낮을수록 단열 성능이 좋습니다.</div>
       `}
     </section>
 
@@ -2782,10 +2806,10 @@ function pfEnvList(el) {
   el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">외피 구성</h2>
       ${d.canEdit ? '<button class="btn" type="button" id="pfEnvNew">+ 부위 추가</button>' : ''}</div>
     ${list.length ? list.map(e => {
-      const lim = PF_U_LIMIT[e.part], u = Number(e.uValue), layers = e.layers || [];
+      const u = Number(e.uValue), layers = e.layers || [];
       return `<section class="panel ov-block pf-env" data-id="${esc(e.id)}">
         <div class="pf-head"><div><span class="cr-id">${esc(e.part)}${e.woodRatio ? ' · 목재 비율 ' + Math.round(e.woodRatio * 100) + '%' : ''}</span>
-          <h4 style="margin:2px 0">U = ${u.toFixed(3)} <span class="st ${u <= lim ? '완료' : '반려'}">${u <= lim ? '기준 충족' : '기준 초과'}</span></h4></div>
+          <h4 style="margin:2px 0">U = ${u.toFixed(3)}</h4><div class="pf-stds">${pfBadges(e.part, u)}</div></div>
           ${d.canEdit ? `<span style="margin-left:auto"><button class="btn ghost" type="button" data-edit="${esc(e.id)}">수정</button></span>` : ''}</div>
         ${layers.length ? `<table class="pf-layers"><tr><th>층 (실내 → 실외)</th><th>두께</th><th>λ</th><th>R</th></tr>
           ${layers.map(l => { const t = (Number(l.thick) || 0) / 1000, k = Number(l.k) || 0, r = k > 0 ? t / k : (Number(l.r) || 0);
@@ -2812,9 +2836,14 @@ function pfEnvForm(o) {
       <div id="pLayers">
         <div class="f"><label>구성 층 <span class="hint">실내 → 실외 순서</span></label><div id="pRows"></div>
           <button class="btn ghost" type="button" id="pAdd" style="margin-top:8px">+ 층 추가</button></div>
-        <div class="f"><label>구조재(스터드) 비율 <b id="pWrV">${o ? Math.round((o.woodRatio || 0) * 100) : 18}</b>%</label>
-          <input type="range" id="pWr" min="0" max="35" step="1" value="${o ? Math.round((o.woodRatio || 0) * 100) : 18}" style="width:100%">
-          <div class="hint">목구조 벽체는 보통 15~20%. 0으로 두면 열교를 무시한 값이 나옵니다.</div></div>
+        <div class="f"><label>구조재 간격</label>
+          <div class="pf-oc">${segHtml('pOc', [['406.4', '16″ o.c. (406mm)'], ['609.6', '24″ o.c. (610mm)'], ['', '직접 입력']], '')}</div>
+          <div class="pf-oc2"><label>부재 두께 <input type="number" id="pMw" value="38" inputmode="numeric"> mm</label>
+            <label>간격 <input type="number" id="pSp" inputmode="decimal" placeholder="mm"> mm</label>
+            <label>헤더·플레이트 등 추가 <input type="number" id="pEx" inputmode="decimal"> %p</label></div></div>
+        <div class="f"><label>구조재(목재) 비율 <b id="pWrV">${o ? Math.round((o.woodRatio || 0) * 100) : 15}</b>%</label>
+          <input type="range" id="pWr" min="0" max="35" step="1" value="${o ? Math.round((o.woodRatio || 0) * 100) : 15}" style="width:100%">
+          <div class="hint" id="pWrHint">간격을 고르면 자동 계산됩니다. 부재 두께 ÷ 간격 + 추가 부재(외벽 6%p, 지붕 2%p 기본).</div></div>
         <div class="sum"><span>계산된 U값</span> <b id="pUOut">—</b> <span class="hint" id="pUNote"></span></div>
       </div>
       <div class="f"><label>메모</label><input type="text" id="pNote" value="${esc(o ? o.note : '')}" placeholder="예: 가등급 글라스울, 외단열 연속"></div>
@@ -2852,13 +2881,26 @@ function pfEnvForm(o) {
       rI += r; rW += (l.inWood && k > 0) ? t / 0.13 : r;
     });
     const u = rI > 0 ? (wr > 0 ? (1 - wr) / rI + wr / rW : 1 / rI) : 0;
-    const lim = PF_U_LIMIT[part];
+    const jj = pfJudge(part, u);
     $('pUOut').textContent = u ? u.toFixed(3) : '—';
-    $('pUNote').textContent = u ? (u <= lim ? `기준 ${lim} 충족` : `기준 ${lim} 초과`) : '';
-    $('pUOut').className = u && u <= lim ? 'ok' : 'warn';
+    $('pUNote').innerHTML = u ? pfBadges(part, u) : '';
+    $('pUOut').className = u && jj.legal && jj.legal.ok ? 'ok' : 'warn';
   };
+  const ocCalc = () => {
+    const part = segVal(body, 'pPart'), sp = Number($('pSp').value), mw = Number($('pMw').value) || 38;
+    if ($('pEx').value === '') $('pEx').value = part === '외벽' ? 6 : part === '지붕' ? 2 : 0;
+    const ex = Number($('pEx').value) || 0;
+    if (!(sp > 0)) return;
+    const base = mw / sp * 100, tot = Math.round(base + ex);
+    $('pWr').value = Math.min(35, tot);
+    $('pWrHint').textContent = `${mw}mm ÷ ${sp}mm = ${base.toFixed(1)}% + 추가 ${ex}%p → ${tot}%`;
+    calc();
+  };
+  body.querySelectorAll('[data-seg="pOc"] button').forEach(b => b.addEventListener('click', () => { body.querySelectorAll('[data-seg="pOc"] button').forEach(x => x.setAttribute('aria-pressed', x === b)); if (b.dataset.v) $('pSp').value = b.dataset.v; else $('pSp').focus(); ocCalc(); }));
+  ['pSp', 'pMw', 'pEx'].forEach(id => $(id).addEventListener('input', ocCalc));
   const onPart = () => {
     const part = segVal(body, 'pPart');
+    if ($('pEx')) $('pEx').value = '';
     const direct = ['창호', '현관문'].includes(part);
     $('pDirect').hidden = !direct; $('pLayers').hidden = direct;
     if (!direct) calc();
@@ -3086,9 +3128,9 @@ function pfPrint() {
 
     <h2>외피 성능 (열관류율 U, W/㎡·K)</h2>
     <table>${['지붕', '외벽', '최하층바닥', '창호', '현관문'].map(p => {
-      const e = envBy[p], u = e ? Number(e.uValue) : null, lim = PF_U_LIMIT[p];
+      const e = envBy[p], u = e ? Number(e.uValue) : null;
       const layers = e && e.layers && e.layers.length ? e.layers.map(l => l.name + (l.thick ? ' ' + l.thick + 'mm' : '')).join(' / ') : '';
-      return row(p, u !== null ? u.toFixed(3) : '—', u !== null ? (u <= lim ? `기준 ${lim} 충족` : `기준 ${lim} 초과`) + (layers ? ' · ' + layers : '') : '미입력');
+      return row(p, u !== null ? u.toFixed(3) : '—', u !== null ? pfStdText(p, u) + (layers ? ' · ' + layers : '') : '미입력');
     }).join('')}</table>
 
     ${(d.air || []).length ? `<h2>기밀 측정 이력</h2><table><tr><th>측정일</th><td><b>구분 / ACH50 / 측정기관</b></td></tr>
