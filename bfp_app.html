@@ -1106,7 +1106,33 @@ function getToken() {
   return t;
 }
 
-async function api(body) {
+const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get)$/;
+const AC = { mem: {}, flight: {}, pending: false, timer: null };
+function acKey(body) {
+  const b = Object.assign({}, body); delete b.idToken;
+  return 'bfpc:' + (b.action === 'me' ? '' : ((S.me && S.me.email) || '')) + ':' + JSON.stringify(b);
+}
+function acGet(k) {
+  if (AC.mem[k]) return AC.mem[k];
+  try { const v = localStorage.getItem(k); if (v) { const o = JSON.parse(v); AC.mem[k] = o; return o; } } catch (e) {}
+  return null;
+}
+function acPut(k, d) {
+  const o = { t: Date.now(), s: JSON.stringify(d) };
+  AC.mem[k] = o;
+  if (o.s.length > 400000) return;
+  try { localStorage.setItem(k, JSON.stringify(o)); }
+  catch (e) { acClear(() => true); try { localStorage.setItem(k, JSON.stringify(o)); } catch (e2) {} }
+}
+function acClear(test) {
+  Object.keys(AC.mem).forEach(k => { if (test(k)) delete AC.mem[k]; });
+  try { Object.keys(localStorage).filter(k => k.indexOf('bfpc:') === 0 && test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+}
+function acAfterWrite(body) {
+  const code = body.siteCode;
+  acClear(k => { if (!code) return true; const m = k.match(/"siteCode":"([^"]*)"/); return !m || m[1] === code; });
+}
+async function apiNet(body) {
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1117,9 +1143,56 @@ async function api(body) {
   if (!data.ok) throw new Error(data.error || '요청 실패');
   return data;
 }
+function acFetch(body, k) {
+  if (AC.flight[k]) return AC.flight[k];
+  const p = apiNet(body).then(d => { acPut(k, d); return d; }).finally(() => { delete AC.flight[k]; });
+  AC.flight[k] = p;
+  return p;
+}
+function acSafe() {
+  const a = document.activeElement;
+  return !$('sheetWrap') && !document.querySelector('.lightbox') && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) && !CR.busy && !['board', 'est'].includes(S.tab);
+}
+function acRefreshUi() {
+  AC.pending = true;
+  clearTimeout(AC.timer);
+  const tryNow = () => {
+    if (!AC.pending) return;
+    if (!acSafe()) { AC.timer = setTimeout(tryNow, 2000); return; }
+    AC.pending = false;
+    const y = window.scrollY;
+    acResetStates();
+    renderTab();
+    setTimeout(() => window.scrollTo(0, y), 60);
+  };
+  AC.timer = setTimeout(tryNow, 300);
+}
+function acResetStates() {
+  OV.site = null; OV.allAt = 0; FB.board = null; IV.loaded = false; SI.site = null; DT.loaded = false; LB.data = null; LB.key = '';
+  CI.data = null; VW.site = null; SC.site = null; PF.site = null; ST.site = null; CA.reload = true; RP.site = null; DS.site = null;
+  CR.site = null; CR.allAt = 0; OA.loaded = false;
+}
+async function api(body) {
+  const act = String(body.action || '');
+  if (!API_READ.test(act)) { const d = await apiNet(body); acAfterWrite(body); return d; }
+  const k = acKey(body), c = acGet(k);
+  if (c) {
+    if (Date.now() - c.t > 30000 && !AC.flight[k]) {
+      acFetch(body, k).then(d => { if (JSON.stringify(d) !== c.s && act !== 'me' && act !== 'dyk') acRefreshUi(); }).catch(() => {});
+    }
+    return JSON.parse(c.s);
+  }
+  return JSON.parse(JSON.stringify(await acFetch(body, k)));
+}
+function acPrefetch() {
+  const code = S.siteCode; if (!code || !S.tabs.includes('site')) return;
+  const list = [{ action: 'ov_site', siteCode: code }, { action: 'rp_list', siteCode: code }, { action: 'sc_get', siteCode: code }, { action: 'si_list', siteCode: code }];
+  list.reduce((p, b) => p.then(() => { const k = acKey(b); return acGet(k) ? null : acFetch(b, k).catch(() => {}); }), Promise.resolve());
+}
 
 function showLogin(msg) {
   sessionStorage.removeItem(TOKEN_KEY);
+  acClear(() => true);
   $('appView').hidden = true;
   $('loginView').hidden = false;
   $('loginMsg').textContent = msg || '';
@@ -1134,6 +1207,7 @@ function initGoogle() {
 
 function onGoogle(res) {
   sessionStorage.setItem(TOKEN_KEY, res.credential);
+  acClear(() => true);
   start();
 }
 
@@ -1142,6 +1216,7 @@ async function start() {
   $('loginMsg').style.color = 'var(--muted)';
   try {
     const d = await api({ action: 'me' });
+    try { const who = localStorage.getItem('bfpc_who'); if (who && who !== d.user.email) { acClear(k => k.indexOf('bfpc::') !== 0); } localStorage.setItem('bfpc_who', d.user.email); } catch (e) {}
     Object.assign(S, { me: d.user, tabs: d.tabs, links: d.links, sites: d.sites, badges: d.badges || {} });
     kbApply(d.kb || {});
     $('loginView').hidden = true;
@@ -1172,7 +1247,7 @@ function renderShell() {
     ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
     : '<option>볼 수 있는 현장이 없습니다</option>';
   $('sitePick').value = S.siteCode || '';
-  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; PF.site = null; PF.d = null; ST.site = null; ST.d = null; renderTab(); };
+  $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); setTimeout(acPrefetch, 1500); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; PF.site = null; PF.d = null; ST.site = null; ST.d = null; renderTab(); };
 
   const avail = new Set(TAB_ORDER.filter(k => S.tabs.includes(k) || S.links.some(x => x.key === k)));
   const grpFirst = {}; let g = '';
@@ -1190,6 +1265,7 @@ function renderShell() {
   if (S.tabs.includes('cx') && !CX.loaded) cxLoad().then(() => { if (S.tab === 'cx') cxRenderList(); }).catch(() => {});
   dykLoad();
 
+  setTimeout(acPrefetch, 2500);
   setTimeout(() => {
     if (S.tab !== 'site' && S.tabs.includes('site') && S.siteCode && OV.site !== S.siteCode) {
       const code = S.siteCode;
