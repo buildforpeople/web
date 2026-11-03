@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#262624">
+<title>현장 출역 체크</title>
+<style>
+:root{color-scheme:dark;--bg:#262624;--surface:#2D2D2B;--raise:#333331;--line:#3A3937;--line2:#4A4946;--ink:#F2F0EB;--text:#DCD9D3;--muted:#9A9791;--green:#3F7A5C;--red:#E07B6A}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+.brand{font-size:13px;color:var(--muted);letter-spacing:.02em}
+h1{font-size:24px;margin:2px 0 2px;color:var(--ink)}.date{color:var(--muted);margin-bottom:18px}
+.f{margin-bottom:14px}.f label{display:block;font-size:14px;color:var(--muted);margin-bottom:5px}
+.f input,.f select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:13px 14px;font-size:17px}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.chips button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 4px;font-size:15px;color:var(--ink)}
+.chips button[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.agree{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);margin:16px 0}.agree input{width:22px;height:22px;margin-top:1px;flex:none}
+.btn{width:100%;border:0;border-radius:12px;padding:17px;font-size:18px;font-weight:700;background:var(--green);color:#fff}
+.btn.ghost{background:var(--surface);border:1px solid var(--line2);color:var(--ink);font-size:16px;padding:14px;margin-top:10px}
+.btn:disabled{opacity:.6}
+.err{color:var(--red);min-height:22px;margin:10px 0 0;text-align:center}
+.done{text-align:center;padding:26px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:14px}
+.done .ok{width:64px;height:64px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin:0 auto 12px;font-size:34px;color:#fff}
+.done b{display:block;font-size:20px;color:var(--ink)}.done span{color:var(--muted)}
+.times{display:flex;justify-content:center;gap:26px;margin-top:14px}.times div{font-size:13px;color:var(--muted)}.times strong{display:block;font-size:24px;color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 110px;gap:10px}
+.empty{padding:60px 10px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';
+const P = new URLSearchParams(location.search), SITE = P.get('s') || '', KEY = P.get('k') || '';
+const LS = 'bfp_ci_me';
+let ME = {}; try { ME = JSON.parse(localStorage.getItem(LS) || '{}'); } catch (e) {}
+let D = null, pick = ME.trade || '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+async function api(body) {
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ s: SITE, k: KEY }, body)) });
+  const d = await r.json(); if (!d.ok) throw new Error(d.error || '요청 실패'); return d;
+}
+const fmtDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${m}월 ${dd}일 (${'일월화수목금토'[new Date(y, m - 1, dd).getDay()]})`; };
+function head() { return `<div class="brand">사람사는집 현장 출역</div><h1>${esc(D.site.name)}</h1><div class="date">${fmtDate(D.today)}</div>`; }
+function done(m) {
+  $('app').innerHTML = head() + `<div class="done"><div class="ok">✓</div><b>${esc(m.name)} 님 ${m.outAt ? '퇴근' : '출근'} 확인</b><span>${esc(m.trade)}${m.company ? ' · ' + esc(m.company) : ''}${m.extra ? ' · 함께 ' + m.extra + '명' : ''}</span>
+    <div class="times"><div>출근<strong>${esc(m.inAt)}</strong></div><div>퇴근<strong>${esc(m.outAt || '–')}</strong></div></div></div>
+    ${m.outAt ? '' : '<button class="btn" id="out">퇴근 찍기</button>'}<button class="btn ghost" id="edit">정보 고치기</button><div class="err" id="err"></div>`;
+  if ($('out')) $('out').onclick = () => send(true, $('out'));
+  $('edit').onclick = () => form(m);
+}
+function form(m) {
+  const v = m || ME;
+  $('app').innerHTML = head() + `
+    <div class="f"><label>이름</label><input id="nm" autocomplete="name" value="${esc(v.name || '')}"></div>
+    <div class="f"><label>휴대폰 번호</label><input id="ph" type="tel" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" value="${esc(v.phone || '')}"></div>
+    <div class="f"><label>공종</label><div class="chips">${D.trades.map(t => `<button type="button" data-t="${esc(t)}" aria-pressed="${t === pick}">${esc(t)}</button>`).join('')}</div></div>
+    <div class="row2"><div class="f"><label>소속 업체 (선택)</label><input id="co" value="${esc(v.company || '')}"></div>
+      <div class="f"><label>함께 온 인원</label><select id="ex">${Array.from({ length: 16 }, (_, i) => `<option value="${i}" ${Number(v.extra || 0) === i ? 'selected' : ''}>${i ? i + '명' : '없음'}</option>`).join('')}</select></div></div>
+    <label class="agree"><input type="checkbox" id="ag" ${ME.agree ? 'checked' : ''}><span>현장 출역 확인과 안전관리를 위해 이름·연락처·공종을 수집하며, 1년 보관 후 삭제합니다. (주)사람사는집종합건설</span></label>
+    <button class="btn" id="go">${m ? '저장' : '출근 확인'}</button><div class="err" id="err"></div>`;
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { pick = b.dataset.t; document.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  $('go').onclick = () => send(false, $('go'));
+}
+async function send(out, btn) {
+  const src = out ? ME : { name: $('nm').value.trim(), phone: $('ph').value.trim(), trade: pick, company: $('co').value.trim(), extra: Number($('ex').value), agree: $('ag').checked };
+  if (!out) { if (!src.name) return $('err').textContent = '이름을 입력해 주세요.'; if (!/^01\d{8,9}$/.test(src.phone.replace(/\D/g, ''))) return $('err').textContent = '휴대폰 번호를 확인해 주세요.'; if (!src.trade) return $('err').textContent = '공종을 골라 주세요.'; if (!src.agree) return $('err').textContent = '개인정보 수집에 동의해 주세요.'; }
+  btn.disabled = true; const t = btn.textContent; btn.textContent = '보내는 중...';
+  try {
+    const d = await api(Object.assign({ action: 'cp_in', out }, src));
+    ME = Object.assign({}, src, { phone: d.mine.phone }); try { localStorage.setItem(LS, JSON.stringify(ME)); } catch (e) {}
+    done(d.mine);
+  } catch (e) { $('err').textContent = e.message; btn.disabled = false; btn.textContent = t; }
+}
+(async () => {
+  if (!SITE || !KEY) { $('app').innerHTML = '<div class="empty">현장에 붙은 QR코드를 휴대폰 카메라로 찍어 주세요.</div>'; return; }
+  try { D = await api({ action: 'cp_site', phone: ME.phone || '' }); D.mine ? done(D.mine) : form(); }
+  catch (e) { $('app').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+})();
+</script>
+</body>
+</html>
