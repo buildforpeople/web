@@ -99,7 +99,8 @@
   .ca-grid .ca-ck, #caCkAll { width: 15px; height: 15px; vertical-align: middle; cursor: pointer; }
   .ca-grid tr.sel td { background: #2C3A32; }
   #caBulkBar .ca-bulk { margin: 0 0 10px; position: sticky; top: 0; z-index: 3; }
-  .ca-grid th.d { width: 104px; }
+  .ca-grid th.d { width: 128px; }
+  .ca-grid td.d small.nt { opacity: .45; }
   .ca-grid td.d small { font-size: 11px; color: var(--muted); opacity: .8; margin-left: 3px; }
 
   .ca-grid th.ck, .ca-grid td.ck { position: sticky; left: 0; z-index: 2; background: var(--surface); }
@@ -3638,8 +3639,8 @@ function caFilterPop(btn) {
 function caDateCell(v) {
   const t = String(v || '');
   const d = (CA.month && CA.month.length === 7 ? t.slice(5, 10) : t.slice(2, 10)).replace(/-/g, '.');
-  const hm = t.slice(11, 16);
-  return hm && hm !== '00:00' ? `${d} <small>${hm}</small>` : d;
+  const m = t.match(/\s(\d{1,2}):(\d{2})/), hm = m ? ('0' + m[1]).slice(-2) + ':' + m[2] : '';
+  return hm && hm !== '00:00' ? `${d} <small>${hm}</small>` : `${d} <small class="nt">시각 없음</small>`;
 }
 function caSheetRows() {
   const rows = CA.items.filter(caInPeriod);
@@ -3664,11 +3665,11 @@ function caRowHtml(o) {
     <td class="ck"><input type="checkbox" class="ca-ck" ${CA.sel[o.id] ? 'checked' : ''} aria-label="선택"></td>
     <td class="d">${caDateCell(o.paidAt)}</td>
     <td><select data-f="kind" class="${o.kind ? '' : 'need'}">${kindOpts}</select></td>
-    <td class="memo"><input data-f="memo" list="caMemoList" autocomplete="off" value="${esc(o.memo || '')}" placeholder="${esc(o.store || '')}"></td>
+    <td class="store" title="${esc(o.store || '')}">${esc(o.store || '')}</td>
     <td class="r"><input data-f="amount" class="amt ${o.amount < 0 ? 'minus' : ''}" inputmode="numeric" value="${Number(o.amount || 0).toLocaleString()}"></td>
+    <td class="memo"><input data-f="memo" list="caMemoList" autocomplete="off" value="${esc(o.memo || '')}" placeholder="${esc(o.store || '')}"></td>
     <td><select data-f="siteCode" class="${o.siteCode ? '' : 'need'}">${siteOpts}</select>${moved ? '<small class="ca-moved">이동됨</small>' : ''}</td>
     <td><select data-f="trade" class="${big && !o.trade ? 'need' : ''}">${tradeOptsHtml}</select></td>
-    <td class="store" title="${esc(o.store || '')}">${esc(o.store || '')}</td>
     <td class="who"><select data-f="card" class="${o.owner ? '' : 'need'}" title="${esc(o.owner || '미매칭')}${o.last4 ? ' · ' + esc(o.last4) : ''}">${caCardOpts(o)}</select></td>
     <td class="c"><button type="button" class="ca-clip ${big && !nf ? 'need' : ''}" data-act="open">${nf ? '📎' + nf : (big ? '필요' : '+')}</button></td>
   </tr>`;
@@ -3731,8 +3732,8 @@ function caRenderSheet() {
     <section class="panel ca-gridwrap">
       ${vis.length ? `<table class="ca-grid">
         <thead><tr><th class="ck"><input type="checkbox" id="caCkAll" aria-label="모두 선택"></th><th class="d"><button type="button" class="ca-sort" id="caSortDate" title="정렬 바꾸기">일시 <span>${CA.desc ? '▼' : '▲'}</span></button></th>
-          ${caTh('kind', 'k', '분류')}${caTh('memo', '', '지출내용')}<th class="r">금액</th>
-          ${caTh('siteCode', 's', '현장')}${caTh('trade', 't', '공종')}${caTh('store', 'st0', '가맹점')}${caTh('owner', 'w', '사용자')}
+          ${caTh('kind', 'k', '분류')}${caTh('store', 'st0', '가맹점')}<th class="r am0">금액</th>${caTh('memo', '', '지출내용')}
+          ${caTh('siteCode', 's', '현장')}${caTh('trade', 't', '공종')}${caTh('owner', 'w', '사용자')}
           ${caTh('docs', 'c', '증빙')}</tr></thead>
         <tbody>${vis.map(caRowHtml).join('')}</tbody></table>`
         : `<div class="empty"><h3>내역이 없습니다</h3>${caColActive().length ? '필터 조건에 맞는 내역이 없습니다.' : '카드 문자가 오거나 이용내역을 불러오면 여기에 쌓입니다.'}</div>`}
@@ -3774,22 +3775,22 @@ function caPrint() {
   const total = rows.reduce((a, o) => a + (Number(o.amount) || 0), 0);
   const byKind = {}; rows.forEach(o => { byKind[o.kind || '미지정'] = (byKind[o.kind || '미지정'] || 0) + (Number(o.amount) || 0); });
   const title = $('caPrintTitle').textContent + (selIds.length ? ` · 선택 ${rows.length}건` : '');
-  const tr = rows.map(o => `<tr><td class="c">${esc(String(o.paidAt || '').slice(2, 16).replace(/-/g, '.'))}</td><td>${esc(o.kind || '')}</td><td>${esc(o.memo || '')}</td>
-    <td class="r">${(Number(o.amount) || 0).toLocaleString('ko-KR')}</td><td>${esc(site(o.siteCode))}</td><td>${esc(o.trade || '')}</td><td>${esc(o.store || '')}</td><td>${esc(owner(o))}</td><td class="c">${(o.files || []).length ? 'O' : (caBig(o) ? '필요' : '')}</td></tr>`).join('');
+  const tr = rows.map(o => `<tr><td class="c">${esc(String(o.paidAt || '').slice(2, 16).replace(/-/g, '.'))}</td><td>${esc(o.kind || '')}</td><td>${esc(o.store || '')}</td>
+    <td class="r">${(Number(o.amount) || 0).toLocaleString('ko-KR')}</td><td>${esc(o.memo || '')}</td><td>${esc(site(o.siteCode))}</td><td>${esc(o.trade || '')}</td><td>${esc(owner(o))}</td><td class="c">${(o.files || []).length ? 'O' : (caBig(o) ? '필요' : '')}</td></tr>`).join('');
   w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
     body{font-family:"Malgun Gothic",sans-serif;font-size:11.5px;color:#222;margin:18px}
     h1{font-size:16px;margin:0 0 4px}.sub{color:#555;margin-bottom:10px;font-size:12px}.sub b{color:#000;margin-right:10px}.sub span{margin-right:10px}
     table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #bbb;padding:5px 6px;vertical-align:top;word-break:break-all}
     th{background:#F0F0EE;font-weight:600;text-align:center}td.r,th.r{text-align:right;white-space:nowrap}td.c{text-align:center;white-space:nowrap}
     tfoot td{font-weight:700;background:#F7F7F5}
-    col.dt{width:84px}col.kd{width:84px}col.am{width:84px}col.st{width:120px}col.tr{width:76px}col.ow{width:84px}col.dc{width:40px}
+    col.dt{width:96px}col.sto{width:140px}col.kd{width:84px}col.am{width:84px}col.st{width:120px}col.tr{width:76px}col.ow{width:84px}col.dc{width:40px}
     button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
     @media print{button{display:none}@page{size:A4 landscape;margin:10mm}thead{display:table-header-group}tr{break-inside:avoid}}
 </style></head><body><button onclick="window.print()">인쇄</button>
     <h1>${esc(title)}</h1>
     <div class="sub"><b>합계 ${won(total)}</b><span>${rows.length}건</span>${Object.keys(byKind).map(k => `<span>${esc(k)} ${won(byKind[k])}</span>`).join('')}</div>
-    <table><colgroup><col class="dt"><col class="kd"><col><col class="am"><col class="st"><col class="tr"><col><col class="ow"><col class="dc"></colgroup>
-    <thead><tr><th>일시</th><th>분류</th><th>지출내용</th><th class="r">금액</th><th>현장</th><th>공종</th><th>가맹점</th><th>사용자</th><th>증빙</th></tr></thead>
+    <table><colgroup><col class="dt"><col class="kd"><col class="sto"><col class="am"><col><col class="st"><col class="tr"><col class="ow"><col class="dc"></colgroup>
+    <thead><tr><th>일시</th><th>분류</th><th>가맹점</th><th class="r">금액</th><th>지출내용</th><th>현장</th><th>공종</th><th>사용자</th><th>증빙</th></tr></thead>
     <tbody>${tr}</tbody><tfoot><tr><td colspan="3">합계 ${rows.length}건</td><td class="r">${total.toLocaleString('ko-KR')}</td><td colspan="5"></td></tr></tfoot></table>
     <div class="sub" style="margin-top:8px">(주)사람사는집종합건설 · 출력 ${esc(today())}</div></body></html>`);
   w.document.close();
