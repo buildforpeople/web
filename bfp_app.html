@@ -4018,6 +4018,9 @@ function caPasteForm() {
       <div class="f"><label>엑셀 파일 (여러 개 선택 가능)</label>
         <input type="file" id="pFiles" multiple accept=".xlsx,.xls,.csv">
         <small class="hint">카드사에서 받은 이용내역 파일을 그대로 올리세요. 소장님별 파일 5~6개를 한 번에 올려도 됩니다.</small></div>
+      <div class="f"><label for="pCard">누구 카드인가요?</label>
+        <select id="pCard"><option value="">자동으로 찾기 (파일 속 카드번호·파일 이름)</option>${(CA.cards || []).map(c => `<option value="${esc(c.last4)}">${esc(c.owner || c.alias || '')} · ${esc(c.last4)}</option>`).join('')}</select>
+        <small class="hint">카드번호 칸이 없는 파일(개인·대표 카드 내역 등)은 여기서 골라야 사용자가 붙습니다.</small></div>
       <div class="f"><label>또는 붙여넣기</label>
         <textarea id="pTxt" rows="12" placeholder="2026-10-26&#9;0064&#9;동천철물건재&#9;27,500&#10;2026-10-25&#9;8754&#9;한솔철물&#9;238,000&#10;&#10;— 또는 —&#10;&#10;[Web발신]&#10;NH기업0064승인&#10;공용카드&#10;27,500원 체크&#10;10/26 12:50&#10;동천철물건재"></textarea></div>
     </div>
@@ -4036,9 +4039,9 @@ function caPasteForm() {
           r.onload = () => res({ name: f.name, type: f.type || '', data: String(r.result).split(',')[1] });
           r.onerror = rej; r.readAsDataURL(f); }));
       }
-      d = await api({ action: 'ca_files', files, month: '' });
+      d = await api({ action: 'ca_files', files, month: '', last4: $('pCard').value });
     } else {
-      d = await api({ action: 'ca_paste', text: t, month: '' });
+      d = await api({ action: 'ca_paste', text: t, month: '', last4: $('pCard').value });
     }
     CA.items = d.items; if (d.months) CA.months = d.months;
     closeSheet(); renderCardTab();
