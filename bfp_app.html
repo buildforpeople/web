@@ -1093,7 +1093,7 @@
 <script>const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', inv: '창고·장비', labor: '인원출력' };
+const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', inv: '창고·장비', labor: '인원출역' };
 const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'inv', 'sikgu', 'master'];
 const TAB_GROUPS = { cx: '상담·설계', info: '시공', payreq: '재정', detail: '회사' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
@@ -2218,7 +2218,7 @@ function dtForm(o) {
 
 const VW = { site: null, items: [], canEdit: false, open: null };
 const LB = { from: '', to: '', site: '', view: 'worker', data: null, key: '' };
-const LB_VIEWS = { worker: '작업자별', sheet: '출력표', site: '현장별', trade: '공종별' };
+const LB_VIEWS = { worker: '작업자별', sheet: '출역표', site: '현장별', trade: '공종별' };
 function lbYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function lbMonth(off) { const n = new Date(); const a = new Date(n.getFullYear(), n.getMonth() + off, 1), b = new Date(n.getFullYear(), n.getMonth() + off + 1, 0); return [lbYmd(a), lbYmd(b)]; }
 function lbG(n) { return (Math.round(n * 100) / 100).toLocaleString('ko-KR'); }
@@ -2243,10 +2243,10 @@ async function renderLaborTab(force) {
   const tot = lbAgg(R, () => 'all')[0] || { heads: 0, g: 0, gx: 0, amount: 0, noOut: 0, noRate: 0 };
   const [m0a, m0b] = lbMonth(0), [m1a, m1b] = lbMonth(-1);
   $('main').innerHTML = `
-    <div class="cr-bar"><h2>인원출력 <span class="cr-sub" style="font-weight:500">현장보고 입력 우선 · QR 체크 보조</span></h2>
+    <div class="cr-bar"><h2>인원출역 <span class="cr-sub" style="font-weight:500">현장보고 입력 우선 · QR 체크 보조</span></h2>
       ${D.canRate ? '<button class="btn ghost" type="button" id="lbRate">노임 단가</button>' : ''}
       <button class="btn ghost" type="button" id="lbCsv">엑셀 내려받기</button>
-      <button class="btn ghost" type="button" id="lbPrint">출력표 인쇄</button></div>
+      <button class="btn ghost" type="button" id="lbPrint">출역표 인쇄</button></div>
     <section class="panel lb-filter">
       <button type="button" class="chip" data-mon="0" aria-pressed="${LB.from === m0a && LB.to === m0b}">이번 달</button>
       <button type="button" class="chip" data-mon="-1" aria-pressed="${LB.from === m1a && LB.to === m1b}">지난달</button>
@@ -2298,7 +2298,7 @@ function lbView(R) {
 }
 function lbSheetHtml(R, live) {
   const days = lbDays(LB.from, LB.to);
-  if (days.length > 31) return '<section class="panel empty"><h3>출력표는 31일 이내로 볼 수 있습니다</h3>기간을 한 달로 줄여 주세요.</section>';
+  if (days.length > 31) return '<section class="panel empty"><h3>출역표는 31일 이내로 볼 수 있습니다</h3>기간을 한 달로 줄여 주세요.</section>';
   return lbAgg(R, r => r.siteCode).map(S0 => {
     const rows = [];
     lbAgg(S0.recs, r => r.key + '|' + r.trade).forEach(a => {
@@ -2372,20 +2372,20 @@ function lbCsv() {
   const lines = [head.join(',')].concat(R.map(r => [r.src === 'rp' ? '현장보고' : 'QR', r.date, r.siteCode, r.siteName, r.name, r.phone, r.trade, r.company, r.inAt, r.src === 'rp' ? '' : (r.outAt || '미체크'), r.g, r.n, r.rate, r.extraRate, r.amount, r.auto ? '자동' : '수정', r.memo].map(q).join(',')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-  a.download = `인원출력_${LB.from}_${LB.to}${LB.site ? '_' + LB.site : ''}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  a.download = `인원출역_${LB.from}_${LB.to}${LB.site ? '_' + LB.site : ''}.csv`; document.body.appendChild(a); a.click(); a.remove();
 }
 function lbPrint() {
   const R = LB.data.records; if (!R.length) { toast('인쇄할 기록이 없습니다'); return; }
-  if (lbDays(LB.from, LB.to).length > 31) { toast('출력표는 31일 이내로 인쇄할 수 있습니다'); return; }
+  if (lbDays(LB.from, LB.to).length > 31) { toast('출역표는 31일 이내로 인쇄할 수 있습니다'); return; }
   const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
-  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>인원 출력표 ${esc(LB.from)} ~ ${esc(LB.to)}</title><style>
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>인원 출역표 ${esc(LB.from)} ~ ${esc(LB.to)}</title><style>
     body{font-family:"Malgun Gothic",sans-serif;font-size:10px;color:#222;margin:14px}h1{font-size:15px;margin:0 0 4px}.sub{color:#555;margin-bottom:10px;font-size:11px}
     .lb-sh-title{font-weight:700;font-size:12px;margin:12px 0 4px}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 2px;text-align:center}
     th{background:#F0F0EE}th.we{color:#C0392B}td.nm,th.nm{width:110px;text-align:left;padding-left:5px}td.nm small{display:block;color:#666}.r{text-align:right;width:62px;padding-right:4px}
     td.no{background:#FDECEA}td.rp{background:#EAF3EE}tr.tot td{background:#F7F7F5;font-weight:700}.hint,.table-scroll{all:unset}.table-scroll{display:block}
     button{margin-bottom:10px;padding:8px 18px;background:#000;color:#fff;border:0;border-radius:6px}
     @media print{button{display:none}@page{size:A4 landscape;margin:8mm}tr{break-inside:avoid}}
-  </style></head><body><button onclick="window.print()">인쇄</button><h1>인원 출력표</h1>
+  </style></head><body><button onclick="window.print()">인쇄</button><h1>인원 출역표</h1>
   <div class="sub">${esc(LB.from)} ~ ${esc(LB.to)} · 공수 기준 · 노임은 세전 단가 기준 · 연한 빨강 칸은 퇴근 미체크(1공수 처리) · (주)사람사는집종합건설 · 출력 ${esc(today())}</div>
   ${lbSheetHtml(R, false)}</body></html>`);
   w.document.close();
