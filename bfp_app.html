@@ -43,10 +43,12 @@
   .top-row { max-width: 1080px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
   .brand { font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; display: flex; align-items: center; gap: 9px; }
   .logo-mark { height: 15px; display: block; opacity: .95; }
-  .site-pick { margin-left: auto; position: relative; min-width: 0; }
+  .site-pick { margin-left: auto; min-width: 0; display: flex; gap: 6px; }
+  .site-pick .sp { position: relative; min-width: 0; } .site-pick .sp-s { flex: 1 1 auto; } .site-pick .sp-y { flex: 0 0 auto; }
+  .site-pick .sp select { width: 100%; }
   .site-pick select { appearance: none; -webkit-appearance: none; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); color: #fff; border-radius: 8px; padding: 7px 32px 7px 12px; max-width: 280px; font-weight: 600; }
   .site-pick select option { color: var(--ink); }
-  .site-pick::after { content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+.site-pick .sp::after { content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
   .me { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
   .me .role { background: rgba(255,255,255,.16); padding: 2px 8px; border-radius: 999px; }
   .me button { background: none; border: 0; color: rgba(255,255,255,.8); font-size: 13px; padding: 4px; }
@@ -463,6 +465,12 @@
   .rp-d { font-size: 13px; font-weight: 600; color: var(--ink); }
   .rp-mark { line-height: 1.2; overflow: hidden; }
   .rp-p { margin-top: auto; font-weight: 700; color: var(--green); }
+  .cr-cl-ask { display: grid; gap: 3px; margin-bottom: 12px; padding: 14px 18px; border-color: rgba(224,167,46,.5); } .cr-cl-ask span { color: var(--muted); font-size: 13px; }
+  .cr-cl-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .cr-cl-cards .panel { display: grid; gap: 4px; padding: 14px 16px; } .cr-cl-cards b { font-size: 20px; } .cr-cl-cards b.warn { color: #E0A72E; }
+  @media (max-width: 640px) { .cr-cl-cards { gap: 6px; } .cr-cl-cards .panel { padding: 10px; } .cr-cl-cards b { font-size: 16px; } .cr-cl-cards .cr-sub { font-size: 11px; } }
+  .cr-flow { margin-bottom: 12px; padding: 14px 18px; } .cr-flow summary { cursor: pointer; font-weight: 600; }
+  .cr-flow ol { margin: 12px 0 8px; padding-left: 1.3em; display: grid; gap: 6px; } .cr-flow li b { margin-right: 8px; } .cr-flow li span { color: var(--muted); font-size: 13px; }
   .cm-item { border-top: 1px solid var(--line); padding: 10px 0; }
   .cm-item:first-child { border-top: 0; padding-top: 0; }
   .cm-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 3px; }
@@ -795,7 +803,7 @@
     .top-row { display: contents; }
     .brand { order: 0; padding: 22px 20px 14px; }
     .logo-mark { height: 14px; }
-    .site-pick { order: 1; margin: 0 14px 10px; }
+    .site-pick { order: 1; margin: 0 14px 10px; flex-direction: column; }
     .site-pick select { width: 100%; max-width: none; }
     .tabs-row { order: 2; max-width: none; margin: 0; flex-direction: column; flex: 1; }
     .tabs { flex-direction: column; padding: 4px 10px; gap: 2px; overflow: visible; width: auto; }
@@ -838,7 +846,7 @@
   .me button { color: var(--muted); }
   .me .role { background: var(--raise); color: var(--muted); border-radius: 4px; font-size: 12px; }
   .site-pick select { background: var(--surface); border-color: var(--line-strong); color: var(--ink); border-radius: 6px; }
-  .site-pick::after { border-color: var(--muted); }
+  .site-pick .sp::after { border-color: var(--muted); }
   .tab { border-radius: 0; color: var(--muted); font-weight: 500; font-size: 14px; padding: 9px 12px 12px; position: relative; }
   .tab:hover { color: var(--ink); }
   .tab[aria-selected="true"] { background: transparent; color: var(--ink); font-weight: 600; }
@@ -1019,7 +1027,7 @@
 .ovx-sl{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13.5px}.ovx-sl span{color:var(--muted);white-space:nowrap}.ovx-sl span.warn{color:var(--red)}
 .ovx-ev{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}.ovx-ev:last-child{border-bottom:0}.ovx-ev span{color:var(--muted);font-variant-numeric:tabular-nums}.ovx-ev p{margin:0}
 @media(max-width:900px){.ovx-hero,.ovx-cols{grid-template-columns:1fr}.ovx-mosaic{min-height:220px}.ovx-row{grid-template-columns:46px 48px minmax(0,1fr)}.ovx-meta{display:none}}
-.ovk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.ovk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}.ovk-row.c3{grid-template-columns:repeat(3,1fr)}
 .ovk{padding:14px 18px 16px}.ovk-t{display:block;font-weight:700;font-size:14px;color:var(--ink)}.ovk small{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}.ovk b{display:block;font-size:26px;color:var(--ink);margin:2px 0 10px;font-variant-numeric:tabular-nums}
 .ovk-bar{position:relative;height:8px;border-radius:999px;background:var(--gray-soft);overflow:hidden;display:flex;gap:2px}.ovk-bar i{display:block;height:100%;background:#3987e5;border-radius:999px}.ovk-bar.seg i{border-radius:0}.ovk-bar.warn i{background:var(--red)}
 .ovk-bar em{position:absolute;top:-2px;width:2px;height:12px;background:var(--ink);opacity:.7}
@@ -1036,9 +1044,10 @@
 .ovg-tip{position:fixed;z-index:50;display:none;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--text);pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.3);max-width:220px}
 .ovh{display:grid;grid-template-columns:110px 1fr 54px;gap:10px;align-items:center;padding:6px 0;font-size:13px}.ovh span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ovh span i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .ovh div{height:10px;background:var(--gray-soft);border-radius:999px}.ovh div b{display:block;height:100%;border-radius:999px}.ovh em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
-@media(max-width:1000px){.ovk-row{grid-template-columns:1fr 1fr}.ov2,.ov2.r{grid-template-columns:1fr}}
+@media(max-width:1000px){.ovk-row,.ovk-row.c3{grid-template-columns:1fr 1fr}.ov2,.ov2.r{grid-template-columns:1fr}}
 .ovg-wrap{overflow-x:auto}@media(max-width:640px){.ovg{min-width:560px}.ovw-row{grid-template-columns:64px repeat(7,1fr)}.ovw-wx small{font-size:10px}.ovk b{font-size:21px}}
 .pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}
+.pf-legal-sum{display:grid;gap:2px;padding:10px 12px;margin:6px 0 10px;border-radius:8px;background:rgba(63,122,92,.18)}.pf-legal-sum b{color:#7DBA98;font-size:15px}.pf-legal-sum span{font-size:12.5px;color:var(--muted)}
 .pf-stds{margin-top:4px}.pf-oc2{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}.pf-oc2 input{width:72px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .rp-done{display:flex;flex-direction:column;gap:6px}.rp-done .check{font-size:14px}
 .sc-asks{padding:14px 18px;margin-bottom:12px;border:1px solid rgba(224,167,46,.45)!important}.sc-asks h4{margin:0 0 8px;font-size:14px;color:var(--ink)}
@@ -1064,10 +1073,10 @@
   <header class="top">
     <div class="top-row">
       <span class="brand"><img class="logo-mark" src="data:image/png;base64,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" alt=""><span>사람사는집</span></span>
-      <label class="site-pick" id="sitePickWrap">
-        <span class="sr" hidden>현장 선택</span>
-        <select id="sitePick" aria-label="현장 선택"></select>
-      </label>
+      <div class="site-pick" id="sitePickWrap">
+        <span class="sp sp-y" id="yearPickWrap"><select id="yearPick" aria-label="연도 선택"></select></span>
+        <span class="sp sp-s"><select id="sitePick" aria-label="현장 선택"></select></span>
+      </div>
       <div class="me"><span id="meName"></span><span class="role" id="meRole"></span><button type="button" id="logoutBtn">로그아웃</button></div>
     </div>
     <div class="tabs-row"><nav class="tabs" id="tabs" role="tablist"></nav>
@@ -1236,6 +1245,19 @@ $('logoutBtn').onclick = () => {
   location.reload();
 };
 
+function siteYear(c) { return /^\d{2}/.test(c || '') ? c.slice(0, 2) : '기타'; }
+function sitePickFill() {
+  const y = $('yearPick').value, list = S.sites.filter(x => siteYear(x.code) === y);
+  $('sitePick').innerHTML = list.length
+    ? list.map(x => `<option value="${esc(x.code)}">${esc(x.code)} ${esc(x.name)}${x.status === '시공중' ? '' : ' · ' + esc(x.status)}</option>`).join('')
+    : '<option value="">볼 수 있는 현장이 없습니다</option>';
+}
+function sitePickSet(code) {
+  if (!S.sites.some(x => x.code === code)) return;
+  if ($('yearPick').value !== siteYear(code)) { $('yearPick').value = siteYear(code); sitePickFill(); }
+  else if (![...$('sitePick').options].some(o => o.value === code)) sitePickFill();
+  $('sitePick').value = code;
+}
 function renderShell() {
   $('meName').textContent = S.me.name;
   $('meRole').textContent = S.me.roleLabel;
@@ -1244,10 +1266,11 @@ function renderShell() {
   S.sites.sort((a, b) => codeKey(a.code).localeCompare(codeKey(b.code)));
   const saved = localStorage.getItem(SITE_KEY);
   S.siteCode = (S.sites.find(s => s.code === saved) || S.sites[0] || {}).code || null;
-  $('sitePick').innerHTML = S.sites.length
-    ? S.sites.map(s => `<option value="${esc(s.code)}">${esc(s.code)} ${esc(s.name)}${s.status === '시공중' ? '' : ' · ' + esc(s.status)}</option>`).join('')
-    : '<option>볼 수 있는 현장이 없습니다</option>';
-  $('sitePick').value = S.siteCode || '';
+  const years = [...new Set(S.sites.map(x => siteYear(x.code)))].sort((a, b) => a === '기타' ? 1 : b === '기타' ? -1 : b.localeCompare(a));
+  $('yearPick').innerHTML = years.map(y => `<option value="${y}">${y === '기타' ? '기타' : '20' + y + '년'}</option>`).join('');
+  $('yearPickWrap').hidden = years.length < 2;
+  if (S.siteCode) sitePickSet(S.siteCode); else sitePickFill();
+  $('yearPick').onchange = () => { sitePickFill(); if ($('sitePick').value) $('sitePick').onchange(); };
   $('sitePick').onchange = () => { S.siteCode = $('sitePick').value; localStorage.setItem(SITE_KEY, S.siteCode); setTimeout(acPrefetch, 1500); DS.site = null; DS.plan = null; DS.items = []; RP.site = null; RP.items = []; RP.stat = null; OV.site = null; SI.site = null; SC.site = null; SC.cond = null; SC.tasks = []; PF.site = null; PF.d = null; ST.site = null; ST.d = null; renderTab(); };
 
   const avail = new Set(TAB_ORDER.filter(k => S.tabs.includes(k) || S.links.some(x => x.key === k)));
@@ -1598,7 +1621,7 @@ function renderSiteTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
-  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공지', '스펙북', '360 VIEW']
+  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '360 VIEW']
     : ['대시보드', '현장보고', '출역', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
@@ -1619,7 +1642,6 @@ function renderSiteTab() {
   $('toInfo').onclick = () => selectTab('info');
   if (S.siteSub === '대시보드') { ovRenderSite($('subBody')); return; }
   if (S.siteSub === '공정표') {
-    if (S.me.role === 'client') { $('subBody').innerHTML = '<section class="panel empty"><h3>공정표</h3>준비 중입니다.</section>'; return; }
     scLoad(s.code).then(() => { if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '공정표' && $('subBody')) scRender($('subBody')); })
       .catch(e => { if ($('subBody')) $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
     if (SC.site === s.code && $('subBody')) scRender($('subBody'));
@@ -1739,6 +1761,8 @@ async function ovRenderSite(el) {
   };
   const actualAt = w => tasks.reduce((a, t) => a + wt(t) * taskAct(t, w), 0) / (wsum || 1) * 100;
   const prog = tasks.length ? Math.round(actualAt(td)) : null, plan = tasks.length ? Math.round(planAt(td)) : null;
+  OV.prog = { code: s.code, prog, plan, by: d.weightBy || '공사 일수' };
+  const isC = S.me.role === 'client';
   const total = s.startDate && s.endDate ? dayDiff(s.startDate, s.endDate) : 0, left = s.endDate ? dayDiff(td, s.endDate) : null;
   const periodPct = total > 0 ? Math.max(0, Math.min(100, dayDiff(s.startDate, td) / total * 100)) : 0;
   const fc = d.forecast || [];
@@ -1763,10 +1787,10 @@ async function ovRenderSite(el) {
   const od = S.me.role !== 'client' ? scOverdue(d.tasks) : [];
   el.innerHTML = `
     ${od.length ? `<section class="panel sc-asks"><h4>확인이 필요한 공정 <span class="cr-sub">예정 종료일이 지났습니다</span></h4>${scAskHtml(od.slice(0, 4))}</section>` : ''}
-    <div class="ovk-row">
+    <div class="ovk-row${isC ? ' c3' : ''}">
       ${kpi('공사기간', left == null ? '미정' : left >= 0 ? `${left}일 남음` : `${-left}일 경과`, s.startDate ? `${s.startDate.replace(/-/g, '.')} ~ ${(s.endDate || '').replace(/-/g, '.')}` : '착공일을 마스터에 입력하세요', bar(periodPct))}
       ${kpi('공정률', prog == null ? '–' : `${prog}%`, prog == null ? '공정표를 만들면 계산됩니다' : `계획 ${plan}% 대비 ${prog - plan >= 0 ? '+' : ''}${prog - plan}%p · ${d.weightBy || '공사 일수'} 가중`, prog == null ? bar(0) : bar(prog, plan))}
-      ${kpi('누적 작업자수', `${totalPeople.toLocaleString('ko-KR')}명`, '현장보고·QR 출역 기준', `<div class="ovk-bar seg">${tradeRank.map(([t, n]) => `<i style="width:${n / (totalPeople || 1) * 100}%;background:${colOf(t)}" data-tip="${esc(t)} ${n}명"></i>`).join('')}</div>`)}
+      ${isC ? '' : kpi('누적 작업자수', `${totalPeople.toLocaleString('ko-KR')}명`, '현장보고·QR 출역 기준', `<div class="ovk-bar seg">${tradeRank.map(([t, n]) => `<i style="width:${n / (totalPeople || 1) * 100}%;background:${colOf(t)}" data-tip="${esc(t)} ${n}명"></i>`).join('')}</div>`)}
       ${kpi('최근 현장보고', L ? `${md(L.date)} (${rpDow(L.date)})` : '없음', L ? (gap === 0 ? '오늘 작성' : `${gap}일 전 · 누적 ${d.reportCount}건`) : '첫 보고를 작성하세요', `<div class="ovk-bar ${gap >= 3 ? 'warn' : ''}"><i style="width:${L ? Math.max(8, 100 - gap * 25) : 0}%"></i></div>`)}
     </div>
 
@@ -1788,16 +1812,16 @@ async function ovRenderSite(el) {
       </section>
     </div>
 
-    <div class="ov2">
+    ${isC ? '' : `<div class="ov2">
       <section class="panel ovx-card"><div class="ovx-head"><h4>공정 진척도 <span class="cr-sub">계획 대비 실행 (누적, 주 단위) · 실행은 현장보고 기준 추정</span></h4></div>
         ${pcols.length ? `<div class="ovg-legend"><span><i class="hatch"></i>계획</span><span><i style="background:#3987e5"></i>실행</span></div>${ovChart(pcols, { pair: true, max: 100, unit: '%' })}` : '<div class="ovw-empty">공정표를 만들면 진척도가 그려집니다</div>'}
       </section>
       <section class="panel ovx-card"><div class="ovx-head"><h4>일별 투입 인원 <span class="cr-sub">최근 3주 · 누적 ${totalPeople.toLocaleString('ko-KR')}명</span></h4></div>
         ${totalPeople ? ovChart(dcols, { unit: '' }) : '<div class="ovw-empty">현장보고 인원이나 QR 출역이 쌓이면 그려집니다</div>'}
       </section>
-    </div>
+    </div>`}
 
-    ${totalPeople ? `<div class="ov2 r">
+    ${totalPeople && !isC ? `<div class="ov2 r">
       <section class="panel ovx-card"><div class="ovx-head"><h4>공종별 투입 인원</h4></div>
         ${tradeRank.slice(0, 8).map(([t, n]) => `<div class="ovh"><span><i style="background:${colOf(t)}"></i>${esc(t)}</span><div><b style="width:${n / tradeRank[0][1] * 100}%;background:${colOf(t)}"></b></div><em>${n}명</em></div>`).join('')}
       </section>
@@ -1911,7 +1935,7 @@ async function renderAllTab() {
   $('ovCrCard').onclick = () => { CR.wantAll = true; CR.allAt = 0; S.siteSub = '변경공사'; selectTab('site'); };
   $('main').querySelectorAll('.ov-row').forEach(b => b.onclick = () => {
     S.siteCode = b.dataset.code; localStorage.setItem(SITE_KEY, S.siteCode);
-    $('sitePick').value = S.siteCode;
+    sitePickSet(S.siteCode);
     DS.site = null; DS.plan = null; DS.items = []; RP.site = null; OV.site = null;
     S.siteSub = '대시보드'; selectTab('site');
   });
@@ -2613,7 +2637,7 @@ function scRender(el) {
 
     <section class="panel ds-time">
       <div class="ds-time-top">
-        <div><span class="cr-id">공정 진행률 (소요일 기준)</span><div class="ds-now">${pct}%</div></div>
+        <div><span class="cr-id">${OV.prog && OV.prog.code === SC.site && OV.prog.prog != null ? `공정률 (${esc(OV.prog.by)} 가중)` : '공정 진행률 (소요일 기준)'}</span><div class="ds-now">${OV.prog && OV.prog.code === SC.site && OV.prog.prog != null ? OV.prog.prog : pct}%</div></div>
         <div class="ds-counts">${late.length ? `<span class="ds-late"><b>${late.length}</b> 지연</span>` : ''}
           <span class="cr-sub">완료 ${ts.filter(t => t.status === '완료').length}/${ts.length}</span></div>
       </div>
@@ -2800,13 +2824,21 @@ function pfJudge(part, u, site) {
   const one = (lim, label) => lim == null || u == null || !(u > 0) ? null : { lim, label, ok: u <= lim };
   return { zone, legal: one(lg, `법적 기준(${zone})`), passive: one(ps, '패시브 기준') };
 }
+function pfGap(x, u) { return Math.round(Math.abs(x.lim - u) / x.lim * 100); }
 function pfBadges(part, u, site) {
   const j = pfJudge(part, u, site);
-  return [j.legal, j.passive].filter(Boolean).map(x => `<span class="pf-std ${x.ok ? 'ok' : 'no'}">${x.label} ${x.lim.toFixed(x.lim >= 1 ? 2 : 3)} · ${x.ok ? '통과' : '부족'}</span>`).join('');
+  return [j.legal, j.passive].filter(Boolean).map(x => `<span class="pf-std ${x.ok ? 'ok' : 'no'}">${x.label} ${x.lim.toFixed(x.lim >= 1 ? 2 : 3)} · ${x.ok ? '통과' : '부족'}${x === j.legal && pfGap(x, u) > 0 ? (x.ok ? ` · ${pfGap(x, u)}% 더 우수` : ` · ${pfGap(x, u)}% 초과`) : ''}</span>`).join('');
 }
 function pfStdText(part, u, site) {
   const j = pfJudge(part, u, site);
-  return [j.legal, j.passive].filter(Boolean).map(x => `${x.label} ${x.lim} ${x.ok ? '통과' : '부족'}`).join(' · ');
+  return [j.legal, j.passive].filter(Boolean).map(x => `${x.label} ${x.lim} ${x.ok ? '통과' : '부족'}${x === j.legal && x.ok && pfGap(x, u) > 0 ? `(${pfGap(x, u)}% 더 우수)` : ''}`).join(' · ');
+}
+function pfLegalSummary(parts, envBy) {
+  const got = parts.map(p => { const e = envBy[p], u = e ? Number(e.uValue) : null, j = pfJudge(p, u); return u > 0 && j.legal ? { p, g: (j.legal.lim - u) / j.legal.lim * 100 } : null; }).filter(Boolean);
+  if (!got.length) return '';
+  const avg = Math.round(got.reduce((a, x) => a + x.g, 0) / got.length);
+  const list = got.map(x => `${x.p} ${Math.round(x.g) >= 0 ? Math.round(x.g) + '%' : '−' + Math.abs(Math.round(x.g)) + '%'}`).join(' · ');
+  return avg > 0 ? `<div class="pf-legal-sum"><b>법적 기준보다 열이 새는 양이 평균 ${avg}% 적은 집</b><span>${esc(list)} · 숫자가 클수록 같은 난방으로 더 따뜻합니다</span></div>` : '';
 }
 
 function pfAirGrade(v) {
@@ -2899,6 +2931,7 @@ function pfSummary(el) {
       </div>
 
       <h4 style="margin-top:18px">외피 열관류율 (U값, W/㎡·K)</h4>
+      ${pfLegalSummary(parts, envBy)}
       <div class="pf-u">${parts.map(p => {
         const e = envBy[p], u = e ? Number(e.uValue) : null, jj = pfJudge(p, u), lim = (jj.passive || jj.legal || { lim: 1 }).lim;
         const pass = u !== null && jj.legal && jj.legal.ok;
@@ -4860,7 +4893,7 @@ function oaRender(el) {
       <section class="panel" style="padding:18px">
         <h4 style="margin:0 0 10px">${esc(s.code)} ${esc(s.name)} 건축주 계정</h4>
         <dl class="kv" style="margin-bottom:12px"><dt>건축주</dt><dd>${esc(me.owner || '—')}</dd><dt>연락처</dt><dd>${esc(me.ownerPhone || '—')}</dd></dl>
-        <div class="f"><label for="oaMail">구글 계정 이메일</label><input type="text" id="oaMail" inputmode="email" value="${esc(me.ownerEmail || '')}" placeholder="example@gmail.com"></div>
+        <div class="f"><label for="oaMail">구글 계정 이메일</label><input type="text" id="oaMail" inputmode="email" value="${esc(me.ownerEmail || '')}" placeholder="example@gmail.com, spouse@gmail.com"><small class="hint">부부 등 여러 명이면 쉼표로 구분해 3개까지 넣으세요.</small></div>
         <div class="hint">여기에 넣은 구글 계정으로 로그인하면 이 현장의 <b>현장보고(작업 내용·사진)·공지</b>만 볼 수 있습니다. 인원·자재·장비·금액은 보이지 않습니다. 네이버 등 구글이 아닌 메일은 로그인되지 않습니다.</div>
         <div class="actions">${me.ownerEmail ? '<button class="btn danger" type="button" id="oaClear">계정 해제</button>' : ''}<button class="btn" type="button" id="oaSave">저장</button></div>
       </section>
@@ -4885,7 +4918,7 @@ function oaRender(el) {
     if ($('oaClear')) $('oaClear').onclick = e => { if (confirm('이 현장의 건축주 계정을 해제할까요? 건축주는 더 이상 포털에 접속할 수 없습니다.')) submitting(e.target, () => save('')); };
     el.querySelectorAll('[data-code]').forEach(b => b.onclick = () => {
       S.siteCode = b.dataset.code; localStorage.setItem(SITE_KEY, S.siteCode);
-      $('sitePick').value = S.siteCode; DS.site = null; RP.site = null; renderSiteTab();
+      sitePickSet(S.siteCode); DS.site = null; RP.site = null; renderSiteTab();
     });
   };
   if (OA.loaded) { draw(); return; }
@@ -5110,6 +5143,10 @@ const CR_STEPS = [
 const CR_OPEN = ['설계검토', '견적', '건축주확인', '승인대기', '도면반영', '현장반영'];
 
 function crWait(o) {
+  if (S.me.role === 'client') return {
+    설계검토: '사람사는집 검토 중', 견적: '비용 산출 중', 건축주확인: '건축주님 확인·서명 필요',
+    승인대기: '최종 승인 처리 중', 도면반영: '도면 반영 중', 현장반영: '시공 반영 중', 완료: '완료', 반려: '진행 안 함', 취소: '취소'
+  }[o.status] || o.status;
   return {
     설계검토: '설계팀 검토 대기', 견적: '공무 견적 대기', 건축주확인: '건축주 확인 대기',
     승인대기: o.fastTrack ? '소장 전결 승인 대기' : '대표 승인 대기', 도면반영: '설계팀 도면 반영 대기',
@@ -5119,6 +5156,7 @@ function crWait(o) {
 
 function crMyTurn(o) {
   const r = S.me.role, admin = r === 'admin', gm = S.me.team === '공무';
+  if (r === 'client') return o.status === '건축주확인';
   switch (o.status) {
     case '설계검토': return admin || r === 'design';
     case '견적': return admin || gm;
@@ -5251,7 +5289,7 @@ async function crRenderAll() {
           <span class="cr-id">${esc(o.siteCode)} ${esc(o.siteName)} · ${esc(o.id)}${o.fastTrack ? '<span class="tag">전결</span>' : ''}</span>
           <span class="cr-title">${esc(o.title)}</span>
           <span class="cr-sub">${esc(o.trade)} · ${esc(o.createdBy)} · ${esc(String(o.createdAt).slice(0, 10))}${crCost(o) ? ' · ' + esc(crCost(o)) : ''}</span>
-          <span class="cr-right"><span class="st ${esc(o.status)} ${CR_OPEN.includes(o.status) && crMyTurn(o) ? 'mine' : ''}">${esc(o.status === '승인대기' ? '승인' : o.status)}</span><span class="cr-wait">${esc(crWait(o))}</span></span>
+          <span class="cr-right"><span class="st ${esc(o.status)} ${CR_OPEN.includes(o.status) && crMyTurn(o) ? 'mine' : ''}">${esc(S.me.role === 'client' && o.status === '건축주확인' ? '서명 필요' : o.status === '승인대기' ? '승인' : o.status)}</span><span class="cr-wait">${esc(crWait(o))}</span></span>
         </button>`).join('') : '<div class="empty"><h3>해당하는 변경요청이 없습니다</h3></div>'}
     </section>`;
 
@@ -5265,7 +5303,7 @@ async function crRenderAll() {
 async function crGoSite(code, id) {
   if (S.siteCode !== code) {
     S.siteCode = code; localStorage.setItem(SITE_KEY, code);
-    $('sitePick').value = code;
+    sitePickSet(code);
     DS.site = null; DS.plan = null; DS.items = []; RP.site = null; OV.site = null;
     CR.site = null;
   }
@@ -5276,22 +5314,48 @@ async function crGoSite(code, id) {
   if (id) crOpen(id);
 }
 
+function crClientGuide() {
+  const it = CR.items, open = it.filter(o => CR_OPEN.includes(o.status));
+  const sign = open.filter(o => o.status === '건축주확인');
+  const plus = it.filter(o => ['승인대기', '도면반영', '현장반영', '완료'].includes(o.status) && o.costType !== '없음' && o.amount !== '' && o.amount != null)
+    .reduce((t, o) => t + (o.costType === '감액' ? -1 : 1) * (Number(o.amount) || 0), 0);
+  const flow = [['요청 접수', '현장·전화로 말씀하신 변경 사항을 등록합니다'], ['검토·비용 산출', '설계 영향과 추가·감액 비용을 확인합니다'], ['건축주 확인 서명', '내용과 금액을 보시고 동의하면 서명합니다'],
+    ['최종 승인', '사람사는집이 승인합니다'], ['도면 반영', '도면이 바뀌면 새 도면에 반영합니다'], ['시공 완료', '현장에서 반영하고 완료 처리합니다']];
+  return `${sign.length ? `<section class="panel cr-cl-ask"><b>서명이 필요한 변경공사가 ${sign.length}건 있습니다.</b><span>아래 목록에서 눌러 내용과 금액을 확인하고 서명해 주세요.</span></section>` : ''}
+    <div class="cr-cl-cards">
+      <section class="panel"><span class="cr-id">서명 필요</span><b class="${sign.length ? 'warn' : ''}">${sign.length}건</b><span class="cr-sub">건축주님 확인 대기</span></section>
+      <section class="panel"><span class="cr-id">진행 중</span><b>${open.length}건</b><span class="cr-sub">완료 ${it.filter(o => o.status === '완료').length}건</span></section>
+      <section class="panel"><span class="cr-id">확정된 변경 금액</span><b>${plus < 0 ? '−' : ''}${Math.abs(plus).toLocaleString()}원</b><span class="cr-sub">서명·승인된 건 합계 (VAT 포함)</span></section>
+    </div>
+    <details class="panel cr-flow"${it.length ? '' : ' open'}><summary>변경공사는 이렇게 진행됩니다</summary>
+      <ol>${flow.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ol>
+      <div class="hint">비용이 없는 변경은 비용 산출을, 도면에 영향이 없는 변경은 도면 반영을 건너뜁니다. 서명 전에 궁금한 점은 각 건의 의견란에 남겨주세요.</div>
+    </details>`;
+}
 function crRenderList() {
   const s = currentSite();
-  const groups = {
+  const isC = S.me.role === 'client';
+  const groups = isC ? {
+    '서명 필요': o => o.status === '건축주확인',
+    진행중: o => CR_OPEN.includes(o.status),
+    완료: o => o.status === '완료',
+    전체: () => true
+  } : {
     진행중: o => CR_OPEN.includes(o.status),
     '내 차례': o => CR_OPEN.includes(o.status) && crMyTurn(o),
     완료: o => o.status === '완료',
     '반려·취소': o => o.status === '반려' || o.status === '취소',
     전체: () => true
   };
+  if (!groups[CR.filter] || (isC && !CR.cInit)) { CR.cInit = isC; CR.filter = isC ? (CR.items.some(groups['서명 필요']) ? '서명 필요' : '전체') : '진행중'; }
   const list = CR.items.filter(groups[CR.filter]);
   crRoot().innerHTML = `
     <div class="cr-bar">
-      <h2>변경요청 <span class="cr-sub" style="font-size:15px;font-weight:500">${esc(s.code)} ${esc(s.name)}</span></h2>
-      <button class="btn ghost" id="crToAll" type="button">전체 현황</button>
-      <button class="btn" id="crNew" type="button">+ 변경요청 접수</button>
+      <h2>${isC ? '변경공사' : '변경요청'} <span class="cr-sub" style="font-size:15px;font-weight:500">${esc(s.code)} ${esc(s.name)}</span></h2>
+      ${isC ? '' : `<button class="btn ghost" id="crToAll" type="button">전체 현황</button>
+      <button class="btn" id="crNew" type="button">+ 변경요청 접수</button>`}
     </div>
+    ${isC ? crClientGuide() : ''}
     <div class="filters">
       ${Object.keys(groups).map(k => `<button class="chip" data-f="${k}" aria-pressed="${CR.filter === k}">${k}<b>${CR.items.filter(groups[k]).length}</b></button>`).join('')}
     </div>
@@ -5300,10 +5364,13 @@ function crRenderList() {
         <button class="cr-row" data-id="${esc(o.id)}">
           <span class="cr-id">${esc(o.id)}${o.fastTrack ? '<span class="tag">전결</span>' : ''}</span>
           <span class="cr-title">${esc(o.title)}</span>
-          <span class="cr-sub">${esc(o.trade)} · ${esc(o.createdBy)} · ${esc(String(o.createdAt).slice(0, 10))}${crCost(o) ? ' · <span class="money">' + esc(crCost(o)) + '</span>' : ''}</span>
-          <span class="cr-right"><span class="st ${esc(o.status)} ${CR_OPEN.includes(o.status) && crMyTurn(o) ? 'mine' : ''}">${esc(o.status === '승인대기' ? '승인' : o.status)}</span><span class="cr-wait">${esc(crWait(o))}</span></span>
-        </button>`).join('') : `<div class="empty"><h3>${CR.filter === '내 차례' ? '처리할 요청이 없습니다' : '변경요청이 없습니다'}</h3>${CR.filter === '진행중' ? '건축주 요청을 받으면 [변경요청 접수]로 등록하세요.' : ''}</div>`}
+          <span class="cr-sub">${esc(o.trade)}${o.createdBy ? ' · ' + esc(o.createdBy) : ''} · ${esc(String(o.createdAt).slice(0, 10))}${crCost(o) ? ' · <span class="money">' + esc(crCost(o)) + '</span>' : ''}</span>
+          <span class="cr-right"><span class="st ${esc(o.status)} ${CR_OPEN.includes(o.status) && crMyTurn(o) ? 'mine' : ''}">${esc(S.me.role === 'client' && o.status === '건축주확인' ? '서명 필요' : o.status === '승인대기' ? '승인' : o.status)}</span><span class="cr-wait">${esc(crWait(o))}</span></span>
+        </button>`).join('') : `<div class="empty"><h3>${isC ? (CR.filter === '서명 필요' ? '서명할 변경공사가 없습니다' : '변경공사가 없습니다') : CR.filter === '내 차례' ? '처리할 요청이 없습니다' : '변경요청이 없습니다'}</h3>${CR.filter === '진행중' && !isC ? '건축주 요청을 받으면 [변경요청 접수]로 등록하세요.' : ''}</div>`}
     </section>`;
+  crRoot().querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CR.filter = b.dataset.f; crRenderList(); });
+  crRoot().querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
+  if (isC) { const f0 = $('crFab'); if (f0) f0.hidden = true; return; }
   $('crNew').onclick = crNewForm;
   $('crToAll').onclick = () => { CR.mode = 'all'; CR.allAt = 0; renderChangeTab(); };
   let fab = $('crFab');
@@ -5409,6 +5476,7 @@ function crOpen(id) {
   const o = CR.items.find(x => x.id === id);
   if (!o) return;
   const s = currentSite();
+  const isC = S.me.role === 'client';
   const byKind = k => o.attachments.filter(f => f.kind === k);
   const files = (list) => list.length ? `<div class="thumbs">${list.map(f => f.type.startsWith('image/')
       ? `<button type="button" class="thumb" data-file="${esc(f.id)}" title="${esc(f.name)}"><span>${esc(f.name)}</span></button>`
@@ -5417,7 +5485,7 @@ function crOpen(id) {
   const others = o.attachments.filter(f => !['요청', '변경 도면'].includes(f.kind));
 
   const info = [
-    ['공종', o.trade], ['요청', `${o.route} · ${o.requester}`], ['접수', `${o.createdBy} · ${o.createdAt}`],
+    ['공종', o.trade], ['요청', `${o.route} · ${o.requester}`], ['접수', o.createdBy ? `${o.createdBy} · ${o.createdAt}` : o.createdAt],
     ['비용', crCost(o) || '검토 전'], ['도면 영향', o.drawingImpact === 'Y' ? '있음' : o.drawingImpact === 'N' ? '없음' : '검토 전'],
     o.reviewNote ? ['검토 의견', o.reviewNote] : null,
     o.estimateNote ? ['견적 메모', o.estimateNote] : null,
@@ -5436,16 +5504,16 @@ function crOpen(id) {
     ${o.content ? `<div class="card"><h4>요청 내용</h4><div class="content">${esc(o.content)}</div></div>` : ''}
     ${after.length ? `<div class="card"><h4>도면 변경 전 · 후</h4><div class="compare"><div><h5>변경 전</h5>${files(before) || '<div class="hint">첨부 없음</div>'}</div><div><h5>변경 후 · ${esc(o.drawingRev)}</h5>${files(after)}</div></div></div>`
       : before.length ? `<div class="card"><h4>변경 전 사진·도면</h4>${files(before)}</div>` : ''}
-    ${others.length ? `<div class="card"><h4>기타 첨부 (견적·서명·현장 사진)</h4>${files(others)}</div>` : ''}
+    ${others.length ? `<div class="card"><h4>${isC ? '첨부 (서명·사진·자료)' : '기타 첨부 (견적·서명·현장 사진)'}</h4>${files(others)}</div>` : ''}
     <div class="card">
-      <h4>메모</h4>
-      <div class="f"><textarea id="cNote" rows="2" placeholder="진행 관련 메모 (처리 이력에 남습니다)"></textarea></div>
-      <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">메모 저장</button></div>
+      <h4>${isC ? '의견 남기기' : '메모'}</h4>
+      <div class="f"><textarea id="cNote" rows="2" placeholder="${isC ? '궁금한 점이나 요청을 남겨주세요. 담당자가 확인합니다.' : '진행 관련 메모 (처리 이력에 남습니다)'}"></textarea></div>
+      <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">${isC ? '의견 보내기' : '메모 저장'}</button></div>
     </div>
     <div class="card">
-      <h4>사진·자료 업로드</h4>
+      <h4>사진·자료 ${isC ? '보내기' : '업로드'}</h4>
       <div class="f"><input type="file" id="cFiles" multiple accept="image/*,.pdf,.dwg,.dxf,.xlsx,.xls">
-        <div class="hint">현장 사진, 참고 도면 등. 기타 첨부에 추가됩니다.</div></div>
+        <div class="hint">${isC ? '참고 사진이나 자료가 있으면 올려주세요.' : '현장 사진, 참고 도면 등. 기타 첨부에 추가됩니다.'}</div></div>
       <div class="actions"><button class="btn ghost" type="button" id="cUpload">올리기</button></div>
     </div>
     <div class="card"><h4>처리 이력</h4><ul class="timeline" id="histList"><li class="t">불러오는 중...</li></ul></div>`);
@@ -5454,7 +5522,7 @@ function crOpen(id) {
   if (body.querySelector('#actBox')) crActionForm(o, s, body.querySelector('#actBox'));
   body.querySelector('#cSave').onclick = e => submitting(e.target, async () => {
     const note = body.querySelector('#cNote').value.trim();
-    if (!note) throw new Error('메모를 입력하세요.');
+    if (!note) throw new Error(isC ? '의견을 입력하세요.' : '메모를 입력하세요.');
     await crDo(o, { act: 'comment', note });
   });
   body.querySelector('#cUpload').onclick = e => submitting(e.target, async () => {
@@ -5472,6 +5540,7 @@ function crOpen(id) {
 }
 
 function crCanCancel(o) {
+  if (S.me.role === 'client') return false;
   if (!(S.me.role === 'admin' || o.mine)) return false;
   return o.status === '설계검토' || (o.status === '건축주확인' && (o.fastTrack || S.me.role === 'admin'));
 }
@@ -5531,9 +5600,16 @@ function crActionForm(o, s, box) {
       <div class="f"><label>견적서 첨부 (선택)</label><input type="file" class="aFiles" multiple accept="image/*,.pdf,.xlsx,.xls"></div>
       ${noteF('산출 근거 등')}
       <div class="actions">${S.me.role === 'admin' ? rejectBtn : ''}<button class="btn" type="button" data-a="estimate">견적 등록</button></div>`;
+  } else if (o.status === '건축주확인' && S.me.role === 'client') {
+    html = `<h4>건축주 확인 서명</h4>${summary}
+      <div class="notice">위 변경 내용과 금액을 확인하셨다면 서명해 주세요. 서명 후 사람사는집이 최종 승인하고 시공에 반영합니다. 궁금한 점은 아래 의견란에 먼저 남겨주셔도 됩니다.</div>
+      <div class="f"><label>서명자 이름</label><input type="text" class="aOwner" value="${esc(S.me.name || '')}"></div>
+      <div class="f"><span class="lb">서명</span><div class="sig-wrap"><canvas class="aSig"></canvas><span class="ph">여기에 서명</span><button type="button" class="clr">지우기</button></div></div>
+      ${noteF('남기실 말씀 (동의하지 않을 때는 이유를 꼭 적어주세요)')}
+      <div class="actions"><button class="btn danger" type="button" data-a="owner_decline">동의하지 않음</button><button class="btn" type="button" data-a="owner_confirm">동의하고 서명</button></div>`;
   } else if (o.status === '건축주확인') {
     html = `<h4>건축주 확인</h4>${summary}
-      <div class="notice">위 금액과 변경 내용을 건축주께 설명하고 서명을 받아주세요.</div>
+      <div class="notice">건축주님이 변경공사 탭에서 직접 서명할 수 있습니다. 현장에서 대면으로 받을 때만 아래에 서명을 받아주세요.</div>
       <div class="f"><label>건축주 이름</label><input type="text" class="aOwner" value="${esc(s.owner || '')}"></div>
       <div class="f"><span class="lb">서명</span><div class="sig-wrap"><canvas class="aSig"></canvas><span class="ph">여기에 서명</span><button type="button" class="clr">지우기</button></div></div>
       ${noteF()}
@@ -5582,13 +5658,14 @@ function crActionForm(o, s, box) {
     if (act === 'reject' && !confirm('반려할까요?')) return;
     if (act === 'estimate') p.amount = box.querySelector('.aAmount').value;
     if (act === 'owner_confirm') {
-      if (!signed) throw new Error('건축주 서명을 받아주세요.');
+      if (!signed) throw new Error(S.me.role === 'client' ? '서명란에 서명해 주세요.' : '건축주 서명을 받아주세요.');
       p.ownerName = box.querySelector('.aOwner').value;
       const c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = cv.height;
       const x = c2.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c2.width, c2.height); x.drawImage(cv, 0, 0);
       p.signature = c2.toDataURL('image/png').split(',')[1];
     }
-    if (act === 'owner_decline' && !confirm('건축주 미동의로 종료할까요?')) return;
+    if (act === 'owner_decline' && S.me.role === 'client' && !note.trim()) throw new Error('동의하지 않는 이유를 적어주세요.');
+    if (act === 'owner_decline' && !confirm(S.me.role === 'client' ? '이 변경을 진행하지 않는 것으로 알릴까요?' : '건축주 미동의로 종료할까요?')) return;
     if (act === 'drawing') p.rev = box.querySelector('.aRev').value;
     if (act === 'site_done') p.drawingChecked = !!(box.querySelector('.aChk') || {}).checked;
     const fi = box.querySelector('.aFiles');
