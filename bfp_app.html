@@ -1566,6 +1566,7 @@ $('dyk').onclick = () => {
 };
 
 function toPy(m2) { return Math.round(m2 / 3.3058 * 10) / 10; }
+function m2Py(m) { return `${(Math.round(m * 100) / 100).toLocaleString('ko-KR')}㎡ (${(Math.round(m * 121 / 400 * 10) / 10).toFixed(1)} 평)`; }
 function fmtNum(n) { return (Math.round(n * 10) / 10).toLocaleString('ko-KR'); }
 function dayDiff(a, b) { return Math.round((new Date(b) - new Date(a)) / 86400000); }
 function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -1594,8 +1595,10 @@ function siteSummaryHtml(s) {
   const cp = contractPy(s.area);
   const facts = [
     ['유형 · 구조', [s.houseType, s.struct].filter(Boolean).join(' · ') || '—', floors],
-    ['연면적', floorTotal ? `${fmtNum(floorTotal)}㎡` : '—', floorTotal ? `${fmtNum(toPy(floorTotal))}평` + ((s.floorAreas || []).length ? ' · ' + s.floorAreas.map(f => f.name).join('/') : '') : ''],
-    ['대지면적', s.landArea ? `${fmtNum(s.landArea)}㎡` : '—', s.landArea ? `${fmtNum(toPy(s.landArea))}평` : ''],
+    floorTotal ? ['연면적', `${m2Py(floorTotal)}`, s.floorAreas.filter(f => Number(f.area)).map(f => `${f.name} ${fmtNum(Number(f.area))}㎡`).join(' · ')]
+      : s.area && Number(s.area.house) ? ['연면적', `${m2Py(Number(s.area.house) * 400 / 121)}`, ['계약 면적 기준'].concat([['다락', s.area.attic], ['주차장', s.area.parking], ['지하', s.area.basement]].filter(x => Number(x[1])).map(x => `${x[0]} ${fmtNum(Number(x[1]) * 400 / 121)}㎡`)).join(' · ')]
+      : ['연면적', '—', ''],
+    ['대지면적', s.landArea ? m2Py(Number(s.landArea)) : '—', ''],
     ['담당 소장', s.manager || '—', ''],
     ['공사 기간', s.startDate ? `${s.startDate} ~` : (s.plannedStart ? `착공 예정 ${s.plannedStart}` : '—'), s.endDate ? `준공 예정 ${s.endDate}` : ''],
     ['입주 희망', s.moveIn || '—', ''],
