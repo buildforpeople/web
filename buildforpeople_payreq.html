@@ -857,6 +857,23 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   .site-block-title .ttl-total { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); font-weight: 600; }
+  .lookup-search { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 14px 16px; margin-bottom: 24px; }
+  .ls-row { display: flex; gap: 10px; }
+  .ls-year { flex: 0 0 120px; }
+  .ls-site { flex: 0 0 200px; }
+  .ls-input-wrap { position: relative; flex: 1; min-width: 0; }
+  .ls-input-wrap input { padding-right: 38px; }
+  .ls-input-wrap input::-webkit-search-cancel-button { display: none; }
+  #lsClear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 6px; line-height: 1; }
+  #lsClear:hover { color: var(--accent); }
+  .ls-result { font-size: 12px; color: var(--text-muted); margin-top: 8px; min-height: 15px; }
+  .ls-result b { color: var(--accent); }
+  @media (max-width: 600px) {
+    .ls-row { flex-wrap: wrap; }
+    .ls-year { flex: 1 1 36%; }
+    .ls-site { flex: 1 1 56%; }
+    .ls-input-wrap { flex: 1 1 100%; }
+  }
   .summary-bar {
     background: white; border: 1px solid var(--border); border-radius: 2px;
     padding: 12px 16px; display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 10px;
@@ -1198,6 +1215,25 @@
       <div class="who">MY SITES</div>
       <h2 id="lookupName"></h2>
       <div class="badges" id="lookupBadges"></div>
+    </div>
+    <div id="lookupSearchBar" class="lookup-search" style="display:none">
+      <div class="ls-row">
+        <div class="select-wrap ls-year">
+          <select id="lsYear" aria-label="연도 선택">
+            <option value="">전체 연도</option>
+          </select>
+        </div>
+        <div class="select-wrap ls-site">
+          <select id="lsSite" aria-label="현장 선택">
+            <option value="">전체 현장</option>
+          </select>
+        </div>
+        <div class="ls-input-wrap">
+          <input type="search" id="lsQuery" placeholder="거래처명 · 품목 · 요청자 · 금액 검색" autocomplete="off">
+          <button type="button" id="lsClear" title="지우기" style="display:none">✕</button>
+        </div>
+      </div>
+      <div class="ls-result" id="lsResult"></div>
     </div>
     <div id="lookupContent">
       <div class="lookup-loading"><div class="lookup-spinner"></div>데이터를 불러오는 중...</div>
@@ -1867,16 +1903,72 @@
       lookupLoaded = true;
       LOOK.rows = data.rows; LOOK.sites = data.sites;
       document.getElementById('lookupName').textContent = data.name + (currentUser && currentUser.isAdmin ? ' (전체 현장)' : ' 님 담당 현장');
-      document.getElementById('lookupBadges').innerHTML = data.sites.map((s, i) =>
-        `<span class="lbadge" data-site-idx="${i}">${escapeHtml(s)}</span>`).join('');
-      document.querySelectorAll('#lookupBadges .lbadge').forEach(el => {
-        el.onclick = () => filterSite(data.sites[Number(el.dataset.siteIdx)], el);
-      });
+      // 현장 나열 배지는 드롭다운으로 대체 — 표시하지 않음
+      document.getElementById('lookupBadges').innerHTML = '';
       document.getElementById('lookupHero').style.display = '';
-      renderLookup(data.rows, data.sites);
+      initLookupSearch();
+      applyLookupFilter();
     } catch(e) {
       content.innerHTML = '<div class="no-access"><strong>네트워크 오류</strong>다시 시도해 주세요.</div>';
     }
+  }
+
+  // ── 검색창 + 현장 필터
+  function initLookupSearch() {
+    const bar = document.getElementById('lookupSearchBar');
+    const yearSel = document.getElementById('lsYear');
+    const siteSel = document.getElementById('lsSite');
+    const qInput = document.getElementById('lsQuery');
+    const clearBtn = document.getElementById('lsClear');
+    siteSel.innerHTML = '<option value="">전체 현장</option>' +
+      LOOK.sites.map(s => `<option>${escapeHtml(s)}</option>`).join('');
+    // 연도 목록: 내역의 신청일에서 추출, 최신순 — 기본값은 최신 연도
+    const years = [...new Set(LOOK.rows.map(r => String(r.date || '').slice(0, 4)).filter(y => /^\d{4}$/.test(y)))].sort().reverse();
+    yearSel.innerHTML = '<option value="">전체 연도</option>' +
+      years.map(y => `<option>${y}</option>`).join('');
+    if (years.length) yearSel.value = years[0];
+    bar.style.display = '';
+    let t = null;
+    qInput.oninput = () => { clearTimeout(t); t = setTimeout(applyLookupFilter, 200); };
+    yearSel.onchange = applyLookupFilter;
+    siteSel.onchange = applyLookupFilter;
+    clearBtn.onclick = () => { qInput.value = ''; applyLookupFilter(); qInput.focus(); };
+  }
+
+  function applyLookupFilter() {
+    const q = document.getElementById('lsQuery').value.trim().toLowerCase();
+    const year = document.getElementById('lsYear').value;
+    const site = document.getElementById('lsSite').value;
+    document.getElementById('lsClear').style.display = q ? '' : 'none';
+
+    const qNum = q.replace(/[,원\s]/g, '');
+    const rows = LOOK.rows.filter(r => {
+      if (year && String(r.date || '').slice(0, 4) !== year) return false;
+      if (site && r.site !== site) return false;
+      if (!q) return true;
+      const hay = [r.vendor, r.item, r.requester, r.category, r.docId, r.date, r.status].join(' ').toLowerCase();
+      if (hay.indexOf(q) >= 0) return true;
+      if (qNum && /^\d+$/.test(qNum) && String(r.amount).indexOf(qNum) >= 0) return true;
+      return false;
+    });
+
+    const res = document.getElementById('lsResult');
+    if (q || site) {
+      const total = rows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      const done = rows.filter(r => r.status === '완료').length;
+      res.innerHTML = `검색 결과 <b>${rows.length}건</b> · 합계 ${total.toLocaleString('ko-KR')}원 · 입금완료 ${done}건 · 미처리 ${rows.length - done}건`;
+    } else {
+      res.textContent = '';
+    }
+
+    if ((q || site || year) && rows.length === 0) {
+      document.getElementById('lookupContent').innerHTML =
+        '<div class="lookup-empty">조건에 맞는 내역이 없습니다.</div>';
+      return;
+    }
+    // 연도·검색어 적용 시에는 내역이 있는 현장만 표시
+    const sites = site ? [site] : ((q || year) ? LOOK.sites.filter(s => rows.some(r => r.site === s)) : LOOK.sites);
+    renderLookup(rows, sites);
   }
 
 
@@ -2161,7 +2253,7 @@
           if (row) Object.assign(row, { site: n.site, category: n.category, expType: n.expType, vendor: n.vendor, item: n.item,
             amount: n.amount, taxYn: n.taxYn, status: n.status, doneDate: n.doneDate ? n.doneDate.slice(5).replace('-', '/') : '' });
           PR_CACHE[n.sheet + ':' + n.row] = r;
-          renderLookup(LOOK.rows, LOOK.sites);
+          applyLookupFilter(); // 검색 조건 유지한 채 목록 갱신
           prRender(r);
           prToast('저장했습니다');
         } catch (err) { alert('저장 실패: ' + err.message); btn.disabled = false; btn.textContent = '저장'; }
