@@ -5518,7 +5518,7 @@ function crOpen(id) {
     <div class="card">
       <h4>${isC ? '의견 남기기' : '메모'}</h4>
       <div class="f"><textarea id="cNote" rows="2" placeholder="${isC ? '궁금한 점이나 요청을 남겨주세요. 담당자가 확인합니다.' : '진행 관련 메모 (처리 이력에 남습니다)'}"></textarea></div>
-      <div class="actions">${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">${isC ? '의견 보내기' : '메모 저장'}</button></div>
+      <div class="actions">${S.me.role === 'admin' ? '<button class="btn danger ghost" type="button" id="cDelete">삭제</button>' : ''}${crCanCancel(o) ? '<button class="btn danger" type="button" id="cCancel">요청 취소</button>' : ''}<button class="btn ghost" type="button" id="cSave">${isC ? '의견 보내기' : '메모 저장'}</button></div>
     </div>
     <div class="card">
       <h4>사진·자료 ${isC ? '보내기' : '업로드'}</h4>
@@ -5530,6 +5530,15 @@ function crOpen(id) {
 
   body.querySelectorAll('[data-file]').forEach(b => { crThumb(o, b); b.onclick = () => crViewFile(o, b.dataset.file); });
   if (body.querySelector('#actBox')) crActionForm(o, s, body.querySelector('#actBox'));
+  const del = body.querySelector('#cDelete');
+  if (del) del.onclick = e => submitting(e.target, async () => {
+    if (!confirm(`${o.id} "${o.title}"을(를) 삭제할까요?\n처리 이력과 첨부 파일도 함께 지워지며 되돌릴 수 없습니다.`)) return;
+    await api({ action: 'cr_delete', id: o.id });
+    CR.items = CR.items.filter(x => x.id !== o.id);
+    closeSheet();
+    if (CR.mode === 'all') renderChangeTab(); else crRenderList();
+    toast(`${o.id} 삭제됨`);
+  });
   body.querySelector('#cSave').onclick = e => submitting(e.target, async () => {
     const note = body.querySelector('#cNote').value.trim();
     if (!note) throw new Error(isC ? '의견을 입력하세요.' : '메모를 입력하세요.');
