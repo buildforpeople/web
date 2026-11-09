@@ -2325,7 +2325,7 @@ function lbWorker(key) {
     </table></div></div>
     <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button></div>`);
   $('lbX').onclick = closeSheet;
-  if (LB.data.canEdit) body.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => lbEdit(recs.find(r => r.id === b.dataset.rec)));
+  body.querySelectorAll('[data-rec]').forEach(b => b.onclick = () => { const r = recs.find(x => x.id === b.dataset.rec); if (LB.data.canEdit || r.canDel) lbEdit(r); });
 }
 function lbEdit(r) {
   const opts = ['', '0', '0.5', '1', '1.5', '2'];
@@ -2338,11 +2338,15 @@ function lbEdit(r) {
       <div class="f"><label for="lbMemo">비고</label><input type="text" id="lbMemo" value="${esc(r.memo || '')}" placeholder="예: 우천 조기 철수"></div>
       ${r.editBy ? `<div class="hint">최근 수정 ${esc(r.editBy)}</div>` : ''}
     </div>
-    <div class="actions"><button class="btn ghost" type="button" id="lbX">닫기</button><button class="btn" type="button" id="lbSave">저장</button></div>`);
+    <div class="actions">${r.canDel ? '<button class="btn danger ghost" type="button" id="lbDel">출역 삭제</button>' : ''}<button class="btn ghost" type="button" id="lbX">닫기</button>${LB.data.canEdit ? '<button class="btn" type="button" id="lbSave">저장</button>' : ''}</div>`);
   let pick = cur;
+  if ($('lbDel')) $('lbDel').onclick = e => submitting(e.target, async () => {
+    if (!confirm(`${r.name} ${r.date} ${r.siteName} 출역 기록을 삭제할까요?\n공수·노임 집계에서 빠지며 되돌릴 수 없습니다.`)) return;
+    await api({ action: 'lb_delete', id: r.id }); closeSheet(); await renderLaborTab(true); toast('삭제했습니다');
+  });
   document.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { pick = b.dataset.g; document.querySelectorAll('[data-g]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   $('lbX').onclick = closeSheet;
-  $('lbSave').onclick = e => submitting(e.target, async () => { await api({ action: 'lb_set', id: r.id, gongsu: pick, memo: $('lbMemo').value }); closeSheet(); await renderLaborTab(true); toast('저장했습니다'); });
+  if ($('lbSave')) $('lbSave').onclick = e => submitting(e.target, async () => { await api({ action: 'lb_set', id: r.id, gongsu: pick, memo: $('lbMemo').value }); closeSheet(); await renderLaborTab(true); toast('저장했습니다'); });
 }
 function lbRates() {
   const D = LB.data, seen = new Map();
