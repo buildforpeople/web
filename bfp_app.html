@@ -471,6 +471,9 @@
   @media (max-width: 640px) { .cr-cl-cards { gap: 6px; } .cr-cl-cards .panel { padding: 10px; } .cr-cl-cards b { font-size: 16px; } .cr-cl-cards .cr-sub { font-size: 11px; } }
   .cr-flow { margin-bottom: 12px; padding: 14px 18px; } .cr-flow summary { cursor: pointer; font-weight: 600; }
   .cr-flow ol { margin: 12px 0 8px; padding-left: 1.3em; display: grid; gap: 6px; } .cr-flow li b { margin-right: 8px; } .cr-flow li span { color: var(--muted); font-size: 13px; }
+  .pf-phiko { margin-top: 12px; } .pf-phiko summary { cursor: pointer; font-weight: 600; }
+  .pf-phiko-t { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } .pf-phiko-t th, .pf-phiko-t td { border-top: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; } .pf-phiko-t th { color: var(--muted); font-weight: 500; white-space: nowrap; width: 1%; }
+  .pf-phiko-s { margin: 10px 0 0; padding-left: 1.3em; color: var(--muted); font-size: 13px; display: grid; gap: 3px; }
   .cm-item { border-top: 1px solid var(--line); padding: 10px 0; }
   .cm-item:first-child { border-top: 0; padding-top: 0; }
   .cm-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 3px; }
@@ -1046,7 +1049,7 @@
 .ovh div{height:10px;background:var(--gray-soft);border-radius:999px}.ovh div b{display:block;height:100%;border-radius:999px}.ovh em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:1000px){.ovk-row,.ovk-row.c3{grid-template-columns:1fr 1fr}.ov2,.ov2.r{grid-template-columns:1fr}}
 .ovg-wrap{overflow-x:auto}@media(max-width:640px){.ovg{min-width:560px}.ovw-row{grid-template-columns:64px repeat(7,1fr)}.ovw-wx small{font-size:10px}.ovk b{font-size:21px}}
-.pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}
+.pf-std{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;margin:2px 6px 2px 0;white-space:nowrap}.pf-std.ok{background:rgba(63,122,92,.22);color:#7DBA98}.pf-std.no{background:rgba(224,167,46,.15);color:#E0B05A}.pf-std.best{background:rgba(57,135,229,.18);color:#8DBBF0;font-weight:600}
 .pf-legal-sum{display:grid;gap:2px;padding:10px 12px;margin:6px 0 10px;border-radius:8px;background:rgba(63,122,92,.18)}.pf-legal-sum b{color:#7DBA98;font-size:15px}.pf-legal-sum span{font-size:12.5px;color:var(--muted)}
 .pf-stds{margin-top:4px}.pf-oc2{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:13px;color:var(--muted)}.pf-oc2 input{width:72px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit}
 .rp-done{display:flex;flex-direction:column;gap:6px}.rp-done .check{font-size:14px}
@@ -2820,18 +2823,22 @@ function pfZone(site) {
 }
 function pfJudge(part, u, site) {
   const zone = pfZone(site || (PF.d && PF.d.site) || currentSite());
-  const lg = ((KB.pfLegal || {})[part] || {})[zone], ps = (KB.pfPassive || {})[part];
+  const lg = ((KB.pfLegal || {})[part] || {})[zone], pp = (KB.pfPassive || {})[part], ps = pp && typeof pp === 'object' ? pp[zone] : pp;
   const one = (lim, label) => lim == null || u == null || !(u > 0) ? null : { lim, label, ok: u <= lim };
-  return { zone, legal: one(lg, `법적 기준(${zone})`), passive: one(ps, '패시브 기준') };
+  const top = pp && typeof pp === 'object' ? pp['중부1'] : null;
+  const best = zone !== '중부1' && top != null && u > 0 && u <= top ? { lim: top, label: '가장 엄격한 중부1 기준', ok: true, best: true } : null;
+  return { zone, legal: one(lg, `법적 기준(${zone})`), passive: one(ps, `한국패시브건축협회 기준(${zone})`), best };
 }
 function pfGap(x, u) { return Math.round(Math.abs(x.lim - u) / x.lim * 100); }
 function pfBadges(part, u, site) {
   const j = pfJudge(part, u, site);
-  return [j.legal, j.passive].filter(Boolean).map(x => `<span class="pf-std ${x.ok ? 'ok' : 'no'}">${x.label} ${x.lim.toFixed(x.lim >= 1 ? 2 : 3)} · ${x.ok ? '통과' : '부족'}${x === j.legal && pfGap(x, u) > 0 ? (x.ok ? ` · ${pfGap(x, u)}% 더 우수` : ` · ${pfGap(x, u)}% 초과`) : ''}</span>`).join('');
+  return [j.legal, j.passive, j.best].filter(Boolean).map(x => x.best
+    ? `<span class="pf-std best">★ ${x.label}(${x.lim.toFixed(2)})까지 통과</span>`
+    : `<span class="pf-std ${x.ok ? 'ok' : 'no'}">${x.label} ${x.lim.toFixed(x.lim >= 1 ? 2 : 3)} · ${x.ok ? '통과' : '부족'}${pfGap(x, u) > 0 ? (x.ok ? ` · ${pfGap(x, u)}% 더 우수` : ` · ${pfGap(x, u)}% 초과`) : ''}</span>`).join('');
 }
 function pfStdText(part, u, site) {
   const j = pfJudge(part, u, site);
-  return [j.legal, j.passive].filter(Boolean).map(x => `${x.label} ${x.lim} ${x.ok ? '통과' : '부족'}${x === j.legal && x.ok && pfGap(x, u) > 0 ? `(${pfGap(x, u)}% 더 우수)` : ''}`).join(' · ');
+  return [j.legal, j.passive, j.best].filter(Boolean).map(x => x.best ? `${x.label}(${x.lim})까지 통과` : `${x.label} ${x.lim} ${x.ok ? '통과' : '부족'}${x.ok && pfGap(x, u) > 0 ? `(${pfGap(x, u)}% 더 우수)` : ''}`).join(' · ');
 }
 function pfLegalSummary(parts, envBy) {
   const got = parts.map(p => { const e = envBy[p], u = e ? Number(e.uValue) : null, j = pfJudge(p, u); return u > 0 && j.legal ? { p, g: (j.legal.lim - u) / j.legal.lim * 100 } : null; }).filter(Boolean);
@@ -2942,13 +2949,16 @@ function pfSummary(el) {
           <span class="pf-u-note">${u === null ? '미입력' : pfBadges(p, u)}</span>
         </div>`;
       }).join('')}</div>
-      <div class="hint">법적 기준: 건축물의 에너지절약설계기준 별표1(${esc(pfZone(PF.d && PF.d.site || currentSite()))}지역, 단독주택). 패시브 기준: 패시브하우스 권장값(벽·지붕·바닥 0.15, 창호·현관문 0.80). 막대의 세로선은 패시브 기준이며, 숫자가 낮을수록 단열 성능이 좋습니다.</div>
+      <div class="hint">법적 기준: 건축물의 에너지절약설계기준 별표1(${esc(pfZone(PF.d && PF.d.site || currentSite()))}지역, 단독주택). PHIKO 인증: 한국패시브건축협회 신축 인증 기준(2025.01.01 시행) — 외피 복합 열관류율 중부1 0.17 · 중부2 0.21 · 남부·제주 0.25, 창세트 0.8. 협회 기준은 외피 전체의 면적 가중 평균이며, 여기서는 부위별 참고 판정입니다. 막대의 세로선은 PHIKO 기준이며, 숫자가 낮을수록 단열 성능이 좋습니다.</div>
+      ${KB.pfPhiko ? `<details class="pf-phiko"><summary>${esc(KB.pfPhiko.title)} 전체 보기 <span class="cr-sub">${esc(KB.pfPhiko.since)}</span></summary>
+        <table class="pf-phiko-t">${KB.pfPhiko.rows.map(r => `<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</table>
+        <ol class="pf-phiko-s">${KB.pfPhiko.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol></details>` : ''}
       `}
     </section>
 
     ${d.isClient ? `<section class="panel ov-block"><h4>이 숫자가 뜻하는 것</h4>
       <ul class="pf-explain">
-        <li><b>ACH50</b> — 집 전체가 1시간에 몇 번 공기를 바꿔 새는지 보여주는 값입니다. 숫자가 작을수록 틈이 적어 겨울에 따뜻하고 여름에 시원합니다. 일반 신축은 3~5, 패시브하우스는 0.6 이하입니다.</li>
+        <li><b>ACH50</b> — 집 전체가 1시간에 몇 번 공기를 바꿔 새는지 보여주는 값입니다. 숫자가 작을수록 틈이 적어 겨울에 따뜻하고 여름에 시원합니다. 일반 신축은 3~5, 패시브하우스(PHIKO 신축 인증)는 0.6 이하입니다.</li>
         <li><b>1차에너지 소요량</b> — 1년 동안 1㎡를 쓰는 데 들어간 에너지입니다. 일반 신축은 200 안팎, 좋은 집은 120 이하입니다.</li>
         <li><b>U값</b> — 벽·지붕·창으로 열이 얼마나 빠져나가는지입니다. 작을수록 좋습니다.</li>
       </ul></section>` : ''}`;
