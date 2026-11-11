@@ -474,6 +474,16 @@
   .pf-phiko { margin-top: 12px; } .pf-phiko summary { cursor: pointer; font-weight: 600; }
   .pf-phiko-t { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; } .pf-phiko-t th, .pf-phiko-t td { border-top: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; } .pf-phiko-t th { color: var(--muted); font-weight: 500; white-space: nowrap; width: 1%; }
   .pf-phiko-s { margin: 10px 0 0; padding-left: 1.3em; color: var(--muted); font-size: 13px; display: grid; gap: 3px; }
+  .dc-row { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 4px 14px 4px 4px; } .dc-row:first-child { border-top: 0; }
+  .dc-open { flex: 1; display: flex; gap: 12px; align-items: center; text-align: left; background: none; border: 0; color: inherit; padding: 12px; cursor: pointer; min-width: 0; font: inherit; }
+  .dc-open:hover b { text-decoration: underline; } .dc-ic { font-size: 22px; } .dc-t { display: grid; gap: 2px; min-width: 0; } .dc-t b, .dc-t span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dcv { position: fixed; inset: 0; z-index: 9999; background: #1b1b1b; display: flex; flex-direction: column; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .dcv-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); } .dcv-bar b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dcv-bar button { background: none; border: 1px solid var(--line); color: inherit; border-radius: 6px; min-width: 34px; height: 32px; font-size: 18px; cursor: pointer; }
+  .dcv-body { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px; } .dcv-body canvas { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.4); pointer-events: none; max-width: none; }
+  .dcv-shield { display: none; position: absolute; inset: 52px 0 0; background: #1b1b1b; color: var(--muted); align-items: center; justify-content: center; font-size: 14px; }
+  .dcv.hide .dcv-shield { display: flex; } .dcv.hide .dcv-body { visibility: hidden; }
+  @media print { .dcv { display: none !important; } }
   .cm-item { border-top: 1px solid var(--line); padding: 10px 0; }
   .cm-item:first-child { border-top: 0; padding-top: 0; }
   .cm-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 3px; }
@@ -1634,7 +1644,7 @@ function renderSiteTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
-  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '360 VIEW']
+  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW']
     : ['대시보드', '현장보고', '출역', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
@@ -1642,6 +1652,7 @@ function renderSiteTab() {
     <section class="panel site-mini">
       <span class="code">${esc(s.code)}</span><b>${esc(s.name)}</b><span class="pill ${esc(s.status)}">${esc(s.status)}</span>
       ${s.problem ? '<span class="pill problem">문제 현장</span>' : ''}
+      ${s.mine === false ? `<span class="pill" title="${esc(s.manager || '')} 소장님 현장 · 보기만 가능">보기 전용 · ${esc(s.manager || '')} 소장</span>` : ''}
       <button type="button" class="linkish" id="toInfo">현장 정보 ›</button>
       <div class="site-mini-prog">${progressHtml(s) || '<div class="progress"><div class="progress-top"><span>착공일·준공예정일을 마스터에 입력하면 진행률이 표시됩니다</span></div></div>'}</div>
     </section>
@@ -1649,7 +1660,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북', '서류함'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
@@ -1670,6 +1681,7 @@ function renderSiteTab() {
     return;
   }
   if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
+  if (S.siteSub === '서류함') { dcLoad(s.code); return; }
   if (S.siteSub === '출역') { CI.data = null; ciRender(s.code); return; }
   if (S.siteSub === '변경공사') { CR.mode = CR.wantAll ? 'all' : 'site'; CR.wantAll = false; renderChangeTab(); return; }
   if (S.siteSub === '현장보고') {
@@ -1679,6 +1691,120 @@ function renderSiteTab() {
     if (RP.site === s.code && $('subBody')) rpRender($('subBody'));
   }
 
+}
+
+const DC = { site: null, data: null, cat: '전체' };
+const DC_ICON = { 계약서: '📑', 견적서: '🧾', 도면: '📐', 기타: '📄' };
+async function dcLoad(code) {
+  try {
+    const d = await api({ action: 'dc_list', siteCode: code });
+    if (S.siteCode !== code || S.siteSub !== '서류함') return;
+    DC.site = code; DC.data = d; dcRender();
+  } catch (e) { if ($('subBody')) $('subBody').innerHTML = `<section class="panel empty"><h3>서류함을 열 수 없습니다</h3>${esc(e.message)}</section>`; }
+}
+function dcRender() {
+  const el = $('subBody'), d = DC.data; if (!el || !d) return;
+  const cats = ['전체'].concat(d.cats), n = c => c === '전체' ? d.items.length : d.items.filter(i => i.cat === c).length;
+  if (!cats.includes(DC.cat)) DC.cat = '전체';
+  const list = d.items.filter(i => DC.cat === '전체' || i.cat === DC.cat);
+  const kb = b => b > 1048576 ? (b / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(b / 1024)) + 'KB';
+  el.innerHTML = `
+    <div class="cr-bar"><h2>서류함 <span class="cr-sub" style="font-size:13px;font-weight:500">🔒 읽기 전용 · 다운로드·인쇄 불가 · 열람 기록이 남습니다</span></h2>
+      ${d.canUpload.length ? '<button class="btn" type="button" id="dcUp">+ 서류 올리기</button>' : ''}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">${cats.map(c => `<button class="chip" type="button" data-dcc="${esc(c)}" aria-pressed="${c === DC.cat}">${esc(c)} ${n(c)}</button>`).join('')}</div>
+    <section class="panel" style="padding:0">${list.length ? list.map(i => `
+      <div class="dc-row">
+        <button type="button" class="dc-open" data-dco="${esc(i.id)}"><span class="dc-ic">${DC_ICON[i.cat] || '📄'}</span>
+          <span class="dc-t"><b>${esc(i.title)}</b><span class="cr-sub">${esc(i.cat)} · ${esc(i.type === 'application/pdf' ? 'PDF' : '이미지')} ${kb(i.size)} · ${esc(i.by)} · ${esc(String(i.at).slice(0, 10))}${i.note ? ' · ' + esc(i.note) : ''}</span></span></button>
+        ${d.canDelete ? `<button type="button" class="btn ghost danger dc-del" data-dcd="${esc(i.id)}">삭제</button>` : ''}
+      </div>`).join('') : `<div class="empty"><h3>등록된 서류가 없습니다</h3>${d.canUpload.length ? '[+ 서류 올리기]로 계약서·견적서·도면 PDF를 올리세요.' : ''}</div>`}</section>`;
+  el.querySelectorAll('[data-dcc]').forEach(b => b.onclick = () => { DC.cat = b.dataset.dcc; dcRender(); });
+  el.querySelectorAll('[data-dco]').forEach(b => b.onclick = () => dcView(d.items.find(i => i.id === b.dataset.dco)));
+  el.querySelectorAll('[data-dcd]').forEach(b => b.onclick = e => submitting(e.target, async () => {
+    const it = d.items.find(i => i.id === b.dataset.dcd);
+    if (!confirm(`"${it.title}"을(를) 삭제할까요?`)) return;
+    await api({ action: 'dc_delete', id: it.id }); await dcLoad(DC.site); toast('삭제했습니다');
+  }));
+  if ($('dcUp')) $('dcUp').onclick = dcUploadForm;
+}
+function dcUploadForm() {
+  const d = DC.data;
+  const body = openSheet('서류 올리기', currentSite().code + ' ' + currentSite().name, `
+    <div class="card"><div class="f"><span class="lb">분류</span>${segHtml('dcCat', d.canUpload, d.canUpload.includes(DC.cat) ? DC.cat : d.canUpload[0])}</div>
+      <div class="f"><label>제목</label><input type="text" id="dcTitle" placeholder="비우면 파일 이름으로 저장 (예: 공사도급계약서)"></div>
+      <div class="f"><label>메모 (선택)</label><input type="text" id="dcNote" placeholder="예: 2차 변경 반영본"></div>
+      <div class="f"><input type="file" id="dcFile" accept="application/pdf,image/jpeg,image/png"><div class="hint">PDF·JPG·PNG, 20MB 이하. 엑셀·한글 파일은 PDF로 저장해서 올려주세요. 원본 그대로 저장됩니다.</div></div></div>
+    <div class="actions"><button class="btn ghost" type="button" id="dcX">닫기</button><button class="btn" type="button" id="dcGo">올리기</button></div>`);
+  bindSegs(body);
+  $('dcX').onclick = closeSheet;
+  $('dcGo').onclick = e => submitting(e.target, async () => {
+    const f = $('dcFile').files[0];
+    if (!f) throw new Error('파일을 고르세요.');
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(f.type)) throw new Error('PDF·JPG·PNG 파일만 올릴 수 있습니다.');
+    if (f.size > 20 * 1048576) throw new Error('20MB 이하 파일만 올릴 수 있습니다.');
+    e.target.textContent = '올리는 중...';
+    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    await api({ action: 'dc_upload', siteCode: DC.site, cat: segVal(body, 'dcCat'), title: $('dcTitle').value, note: $('dcNote').value, file: { name: f.name, type: f.type, data } });
+    closeSheet(); await dcLoad(DC.site); toast('올렸습니다');
+  });
+}
+let dcPdfLib = null;
+async function dcPdf() {
+  if (dcPdfLib) return dcPdfLib;
+  await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; sc.onload = res; sc.onerror = () => rej(new Error('문서 뷰어를 불러오지 못했습니다.')); document.head.appendChild(sc); });
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  return (dcPdfLib = window.pdfjsLib);
+}
+function dcMark(c, text) {
+  const g = c.getContext('2d'); g.save(); g.globalAlpha = .13; g.fillStyle = '#000'; g.font = `${Math.max(14, Math.round(c.width / 46))}px sans-serif`;
+  g.translate(c.width / 2, c.height / 2); g.rotate(-Math.PI / 7);
+  const step = Math.max(160, c.width / 4.5);
+  for (let y = -c.height; y < c.height; y += step * .55) for (let x = -c.width; x < c.width; x += step * 2.2) g.fillText(text, x, y);
+  g.restore();
+}
+async function dcView(it) {
+  const ov = document.createElement('div'); ov.className = 'dcv';
+  ov.innerHTML = `<div class="dcv-bar"><b>${esc(it.title)}</b><span class="cr-sub">🔒 읽기 전용</span><button type="button" class="dcv-z" data-z="-1">−</button><button type="button" class="dcv-z" data-z="1">+</button><button type="button" class="x" aria-label="닫기">×</button></div>
+    <div class="dcv-body"><div class="loading">문서를 여는 중...</div></div><div class="dcv-shield">화면 밖에서는 문서가 가려집니다</div>`;
+  document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+  const block = e => { e.preventDefault(); return false; };
+  const keys = e => {
+    const k = e.key.toLowerCase();
+    if (e.key === 'Escape') return close();
+    if ((e.ctrlKey || e.metaKey) && ['s', 'p', 'c', 'a'].includes(k) || e.key === 'PrintScreen' || (e.metaKey && e.shiftKey)) { e.preventDefault(); ov.classList.add('hide'); if (e.key === 'PrintScreen') try { navigator.clipboard.writeText(''); } catch (x) {} setTimeout(() => ov.classList.remove('hide'), 1500); }
+  };
+  const hide = () => ov.classList.add('hide'), show = () => { if (document.visibilityState === 'visible') ov.classList.remove('hide'); };
+  const close = () => { ov.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', keys, true); window.removeEventListener('blur', hide); window.removeEventListener('focus', show); document.removeEventListener('visibilitychange', vis); };
+  const vis = () => document.visibilityState === 'visible' ? show() : hide();
+  ov.addEventListener('contextmenu', block); ov.addEventListener('dragstart', block); ov.addEventListener('selectstart', block);
+  document.addEventListener('keydown', keys, true); window.addEventListener('blur', hide); window.addEventListener('focus', show); document.addEventListener('visibilitychange', vis);
+  ov.querySelector('.x').onclick = close;
+  const bodyEl = ov.querySelector('.dcv-body');
+  try {
+    const d = await api({ action: 'dc_view', id: it.id });
+    const bin = Uint8Array.from(atob(d.data), ch => ch.charCodeAt(0));
+    let scale = 1;
+    const draw = async () => {
+      bodyEl.innerHTML = '';
+      const w = Math.min(bodyEl.clientWidth - 24, 1100) * scale, dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (d.type === 'application/pdf') {
+        const lib = await dcPdf(), doc = await lib.getDocument({ data: bin.slice() }).promise;
+        for (let i = 1; i <= doc.numPages; i++) {
+          const pg = await doc.getPage(i), v0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: w / v0.width * dpr });
+          const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.style.width = (vp.width / dpr) + 'px';
+          bodyEl.appendChild(c); await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise; dcMark(c, d.mark);
+        }
+      } else {
+        const url = URL.createObjectURL(new Blob([bin], { type: d.type }));
+        const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+        URL.revokeObjectURL(url);
+        const k = w * dpr / img.width, c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.style.width = (c.width / dpr) + 'px';
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); dcMark(c, d.mark); bodyEl.appendChild(c);
+      }
+    };
+    ov.querySelectorAll('.dcv-z').forEach(b => b.onclick = () => { scale = Math.max(.6, Math.min(3, scale + Number(b.dataset.z) * .25)); draw(); });
+    await draw();
+  } catch (e) { bodyEl.innerHTML = `<div class="empty"><h3>문서를 열 수 없습니다</h3>${esc(e.message)}</div>`; }
 }
 
 const OV = { site: null, data: null, all: null, allAt: 0 };
