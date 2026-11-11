@@ -4052,7 +4052,7 @@ function caOpen(id) {
     </div>
     <div class="card"><h4>영수증 · 명세서 ${big ? '<span class="tag warn-tag">10만원 이상 필요</span>' : '<span class="hint">(선택)</span>'}</h4>
       ${files.length ? `<div class="thumbs" id="cOld">${files.map(f => `<div class="thumb-wrap"><button type="button" class="thumb ${f.type && f.type.startsWith('image/') ? '' : 'doc'}" data-f="${esc(f.id)}"><span>${esc(f.name)}</span></button><button type="button" class="thumb-x" data-rm="${esc(f.id)}">×</button></div>`).join('')}</div>` : ''}
-      <div class="f" style="margin-top:10px"><input type="file" id="cFiles" multiple accept="image/*,.pdf" capture="environment"></div></div>
+      <div class="f" style="margin-top:10px"><input type="file" id="cFiles" multiple accept="image/*,.pdf"></div></div>
     <div class="actions sticky">
       ${CA.canAll ? '<button class="btn danger" type="button" id="cDel">삭제</button>' : ''}
       <button class="btn ghost" type="button" id="cClose">닫기</button>
@@ -4376,9 +4376,9 @@ function rpForm(item, date) {
     </details>
 
     <div class="card">
-      <h4>현장 사진 <span class="hint" style="font-weight:400">1장 이상</span></h4>
+      <h4>현장 사진 <span class="hint" style="font-weight:400">1~20장</span></h4>
       ${editing && item.photos.length ? `<div class="thumbs" id="rOld">${item.photos.map(p => `<div class="thumb-wrap"><button type="button" class="thumb" data-photo="${esc(p.id)}"></button><button type="button" class="thumb-x" data-rm="${esc(p.id)}">×</button></div>`).join('')}</div>` : ''}
-      <div class="f" style="margin-top:10px"><input type="file" id="rPhotos" multiple accept="image/*" capture="environment"></div>
+      <div class="f" style="margin-top:10px"><input type="file" id="rPhotos" multiple accept="image/*"><div class="hint" id="rPhotoCnt">한 번에 최대 20장까지 고를 수 있습니다.</div></div>
     </div>
     <div class="actions sticky"><button class="btn ghost" type="button" id="rClose">닫기</button><button class="btn" type="button" id="rSave">${editing ? '수정 저장' : '보고 등록'}</button></div>`);
   api({ action: 'sc_get', siteCode: s.code }).then(g => {
@@ -4457,8 +4457,16 @@ function rpForm(item, date) {
   });
 }
 
+const RP_MAX_PHOTOS = 20;
+document.addEventListener('change', e => {
+  if (e.target.id !== 'rPhotos') return;
+  const n = e.target.files.length, hint = $('rPhotoCnt');
+  if (n > RP_MAX_PHOTOS) { e.target.value = ''; toast(`사진은 한 번에 ${RP_MAX_PHOTOS}장까지 고를 수 있습니다. (${n}장 선택됨) 다시 골라주세요.`, true); if (hint) hint.textContent = `한 번에 최대 ${RP_MAX_PHOTOS}장까지 고를 수 있습니다.`; return; }
+  if (hint) hint.textContent = n ? `${n}장 선택됨 · 최대 ${RP_MAX_PHOTOS}장` : `한 번에 최대 ${RP_MAX_PHOTOS}장까지 고를 수 있습니다.`;
+});
 async function rpUploadPhotos(input, siteCode, date, btn) {
   const picked = Array.from(input.files || []);
+  if (picked.length > RP_MAX_PHOTOS) throw new Error(`사진은 ${RP_MAX_PHOTOS}장까지 올릴 수 있습니다.`);
   if (!picked.length) return [];
   const total = picked.length; let done = 0;
   const say = t => { if (btn) btn.textContent = t; };
