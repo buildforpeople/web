@@ -1107,6 +1107,49 @@
 .sc-asks{padding:14px 18px;margin-bottom:12px;border:1px solid rgba(224,167,46,.45)!important}.sc-asks h4{margin:0 0 8px;font-size:14px;color:var(--ink)}
 .sc-ask{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}.sc-ask:first-of-type{border-top:0}
 .sc-ask-b{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.sc-ask-b input{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:5px 6px;font-size:12.5px}
+  .dx-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .dx-top .seg { flex: none; }
+  .dx-top input { max-width: 220px; }
+  .dx-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  .dx-col { background: var(--raise); border-radius: 10px; padding: 8px; min-height: 140px; display: flex; flex-direction: column; gap: 8px; }
+  .dx-col.over { outline: 2px dashed var(--accent); }
+  .dx-col h4 { margin: 2px 4px 2px; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; }
+  .dx-card { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; cursor: grab; color: var(--text); font: inherit; display: flex; flex-direction: column; gap: 5px; }
+  .dx-card b { color: var(--ink); font-size: 14.5px; }
+  .dx-card .dx-meta { display: flex; flex-wrap: wrap; gap: 5px; font-size: 12px; color: var(--muted); }
+  .dx-card .st { font-size: 11.5px; padding: 1px 7px; }
+  .dx-card.drag { opacity: .4; }
+  .dx-add { background: transparent; border: 1px dashed var(--line-strong); border-radius: 8px; color: var(--muted); padding: 7px; font: inherit; font-size: 13px; }
+  .dx-lock { background: var(--heritage-soft); color: var(--heritage); border-radius: 8px; padding: 11px 13px; font-size: 13.5px; line-height: 1.6; margin-bottom: 12px; }
+  .dx-lock b { color: var(--ink); }
+  .dx-stage { margin-bottom: 12px; }
+  .dx-stage-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .dx-stage-top h3 { margin: 0; font-size: 17px; }
+  .dx-limit { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .dx-limit > span { background: var(--raise); border-radius: 8px; padding: 7px 11px; font-size: 13.5px; }
+  .dx-limit > span.warn { background: var(--amber-soft); color: var(--amber); }
+  .dx-limit > span.bad { background: var(--red-soft); color: var(--red); }
+  .dx-rev { border-top: 1px solid var(--line); padding: 9px 0; font-size: 13.5px; }
+  .dx-rev .dx-rev-h { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12.5px; margin-bottom: 3px; }
+  .dx-rev p { margin: 0; white-space: pre-wrap; color: var(--text); }
+  .dx-reply { margin-top: 6px; background: var(--raise); border-radius: 6px; padding: 7px 10px; white-space: pre-wrap; }
+  .dx-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .dx-file { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); border-radius: 6px; padding: 5px 9px; font-size: 13px; background: transparent; color: var(--ink); font-family: inherit; }
+  .dx-file .pub { font-size: 11px; color: var(--accent); }
+  .dx-file .x2 { color: var(--muted); cursor: pointer; }
+  .dx-nas li { list-style: none; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .dx-nas ul { padding: 0; margin: 8px 0; max-height: 360px; overflow: auto; }
+  .dx-nas label { display: flex; gap: 8px; align-items: center; }
+  .dx-nas .dis { color: var(--muted); }
+  .dx-tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 12px; }
+  .dx-tbl th, .dx-tbl td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: left; vertical-align: top; }
+  .dx-tbl th { color: var(--muted); font-weight: 600; }
+  .dx-tbl td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .dx-doc summary { cursor: pointer; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .dx-doc h5 { margin: 10px 0 2px; font-size: 13.5px; }
+  .dx-scroll { overflow-x: auto; }
+  .notice { color: var(--amber); }
+  .notice b { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -1170,8 +1213,8 @@ function getToken() {
   return t;
 }
 
-const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief)$/;
-const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview)$/;
+const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief|dx_get)$/;
+const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview|dx_file)$/;
 const AC = { mem: {}, flight: {}, pending: false, timer: null };
 function acKey(body) {
   const b = Object.assign({}, body); delete b.idToken;
@@ -1680,7 +1723,7 @@ function renderSiteTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
-  const subs = S.me.role === 'client' ? ['대시보드', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW']
+  const subs = S.me.role === 'client' ? ['대시보드', '설계', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW']
     : ['대시보드', '현장보고', '출역', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
@@ -1696,7 +1739,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북', '서류함'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '설계', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북', '서류함'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
@@ -1718,6 +1761,7 @@ function renderSiteTab() {
   }
   if (S.siteSub === '360 VIEW') { vwRender(s.code); return; }
   if (S.siteSub === '서류함') { dcLoad(s.code); return; }
+  if (S.siteSub === '설계') { dxClientRender(s.code); return; }
   if (S.siteSub === '출역') { CI.data = null; ciRender(s.code); return; }
   if (S.siteSub === '변경공사') { CR.mode = CR.wantAll ? 'all' : 'site'; CR.wantAll = false; renderChangeTab(); return; }
   if (S.siteSub === '현장보고') {
@@ -1798,7 +1842,7 @@ function dcMark(c, text) {
   for (let y = -c.height; y < c.height; y += step * .55) for (let x = -c.width; x < c.width; x += step * 2.2) g.fillText(text, x, y);
   g.restore();
 }
-async function dcView(it) {
+async function dcView(it, req) {
   const ov = document.createElement('div'); ov.className = 'dcv';
   ov.innerHTML = `<div class="dcv-bar"><b>${esc(it.title)}</b><span class="cr-sub">🔒 읽기 전용</span><button type="button" class="dcv-z" data-z="-1">−</button><button type="button" class="dcv-z" data-z="1">+</button><button type="button" class="x" aria-label="닫기">×</button></div>
     <div class="dcv-body"><div class="loading">문서를 여는 중...</div></div><div class="dcv-shield">화면 밖에서는 문서가 가려집니다</div>`;
@@ -1817,7 +1861,7 @@ async function dcView(it) {
   ov.querySelector('.x').onclick = close;
   const bodyEl = ov.querySelector('.dcv-body');
   try {
-    const d = await api({ action: 'dc_view', id: it.id });
+    const d = await api(req || { action: 'dc_view', id: it.id });
     const bin = Uint8Array.from(atob(d.data), ch => ch.charCodeAt(0));
     let scale = 1;
     const draw = async () => {
@@ -5253,20 +5297,6 @@ function dsTimelineHtml() {
   </section>`;
 }
 
-function renderDesignTab() {
-  const s = currentSite();
-  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
-  $('main').innerHTML = `<div id="dsTimeline">${dsTimelineHtml()}</div><div id="dsBrief"></div><div id="dsBody"><div class="loading">불러오는 중...</div></div>`;
-  dsBrief(s.code);
-  const draw = () => {
-    if (S.tab !== 'design' || S.siteCode !== s.code) return;
-    $('dsTimeline').innerHTML = dsTimelineHtml();
-    dsRender($('dsBody'));
-  };
-  if (DS.site === s.code) draw();
-  dsLoad(s.code).then(draw).catch(e => { if ($('dsBody')) $('dsBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
-}
-
 async function dsBrief(code) {
   try {
     const d = await api({ action: 'cx_brief', siteCode: code }), b = d.brief, el = $('dsBrief');
@@ -5380,6 +5410,375 @@ function dsShiftForm() {
   body.querySelector('#shGo').onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'ds_shift', siteCode: s.code, days: $('shDays').value, fromDate: $('shFrom').value });
     DS.plan = d.plan; DS.items = d.items; closeSheet(); renderDesignTab(); toast(`${d.moved}개 일정을 옮겼습니다`);
+  });
+}
+
+const DX = { site: null, d: null, sub: '', poll: null, busy: false };
+const DX_ORIG = /\.(dwg|dxf|skp|rvt|pln|3dm|max|ifc|dgn)$/i;
+const DX_VIEW = ['application/pdf', 'image/jpeg', 'image/png'];
+
+function dxDue(due, done) {
+  if (!due || done) return null;
+  const n = dayDiff(today(), due), md = `${Number(due.slice(5, 7))}월 ${Number(due.slice(8, 10))}일`;
+  if (n < 0) return { cls: 'bad', short: `${-n}일 지남`, text: `${md} 마감이 ${-n}일 지났습니다. 이후 일정이 늦어질 수 있어요.` };
+  return { cls: n <= 3 ? 'warn' : '', short: n === 0 ? '오늘 마감' : `D-${n}`, text: `${md}까지 이 단계가 마무리되어야 합니다 (${n === 0 ? '오늘' : 'D-' + n}).` };
+}
+function dxLimitText(c) {
+  if (c.limit === '' || c.limit == null) return '';
+  if (Number(c.limit) === 0) return '확인만';
+  return `수정 ${c.used}/${c.limit}`;
+}
+async function dxReadRaw(input, maxMb) {
+  const out = [];
+  for (const f of Array.from(input.files || [])) {
+    if (f.size > maxMb * 1024 * 1024) throw new Error(`${f.name}: ${maxMb}MB 이하만 올릴 수 있습니다.`);
+    const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    let type = f.type || '';
+    if (!type && /\.pdf$/i.test(f.name)) type = 'application/pdf';
+    out.push({ name: f.name, type: type || 'application/octet-stream', data });
+  }
+  return out;
+}
+async function dxOpenFile(ownerId, f) {
+  if (DX_VIEW.includes(f.type)) return dcView({ title: f.name }, { action: 'dx_file', id: ownerId, fileId: f.id });
+  toast('파일을 받는 중...');
+  const d = await api({ action: 'dx_file', id: ownerId, fileId: f.id });
+  const bin = Uint8Array.from(atob(d.data), ch => ch.charCodeAt(0));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bin], { type: d.type })); a.download = d.name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+async function dxLoad(code, fresh) {
+  const b = { action: 'dx_get', siteCode: code };
+  const d = fresh ? await acFetch(b, acKey(b)) : await api(b);
+  DX.site = code; DX.d = d;
+  return d;
+}
+function dxSubs(d) { return d.mode === '외부' ? ['도면·견적자료', '일정'] : ['보드', '도면·견적자료', '일정']; }
+
+function renderDesignTab() {
+  const s = currentSite();
+  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
+  clearTimeout(DX.poll);
+  if (DX.site !== s.code) { DX.d = null; DX.sub = ''; }
+  $('main').innerHTML = `<div id="dsBrief"></div><div id="dxHead"></div><div id="dxBody"><div class="loading">불러오는 중...</div></div>`;
+  dsBrief(s.code);
+  const draw = () => {
+    if (S.tab !== 'design' || S.siteCode !== s.code || !$('dxHead')) return;
+    const d = DX.d, subs = dxSubs(d);
+    if (!subs.includes(DX.sub)) DX.sub = subs[0];
+    $('dxHead').innerHTML = `<div class="dx-top">
+        ${d.canEdit ? segHtml('dxMode', [['자체', '자체설계'], ['외부', '외부사무소 설계']], d.mode) : `<span class="pill">${d.mode === '외부' ? '외부사무소 설계' : '자체설계'}</span>`}
+        ${d.mode === '외부' ? (d.canEdit ? `<div class="f" style="margin:0"><input type="text" id="dxOffice" placeholder="설계사무소 이름" value="${esc(d.office)}"></div>` : `<span class="cr-sub">${esc(d.office)}</span>`) : ''}
+      </div>
+      <div class="subnav" role="tablist">${subs.map(x => `<button class="chip" aria-pressed="${x === DX.sub}" data-dxsub="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+    $('dxHead').querySelectorAll('[data-dxsub]').forEach(b => b.onclick = () => { DX.sub = b.dataset.dxsub; draw(); });
+    bindSegs($('dxHead'), async (n, v) => {
+      if (n !== 'dxMode' || DX.busy) return;
+      DX.busy = true;
+      try {
+        await api({ action: 'dx_mode', siteCode: s.code, mode: v, office: $('dxOffice') ? $('dxOffice').value : d.office });
+        await dxLoad(s.code, true); DX.sub = ''; draw();
+        toast(v === '외부' ? '외부사무소 설계로 바꿨습니다' : '자체설계로 바꿨습니다');
+      } catch (e) { toast(e.message); } finally { DX.busy = false; }
+    });
+    if ($('dxOffice')) $('dxOffice').onchange = e => api({ action: 'dx_mode', siteCode: s.code, mode: d.mode, office: e.target.value }).then(() => { d.office = e.target.value; toast('저장했습니다'); }).catch(x => toast(x.message));
+    const body = $('dxBody');
+    if (DX.sub === '보드') dxBoard(body, s);
+    else if (DX.sub === '도면·견적자료') dxDocsView(body, s);
+    else dxSchedule(body, s);
+  };
+  if (DX.site === s.code && DX.d) draw();
+  dxLoad(s.code).then(draw).catch(e => { if ($('dxBody')) $('dxBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+}
+
+function dxSchedule(el, s) {
+  el.innerHTML = `<div id="dsTimeline">${DS.site === s.code ? dsTimelineHtml() : ''}</div><div id="dsBody"><div class="loading">불러오는 중...</div></div>`;
+  const draw = () => {
+    if (S.tab !== 'design' || S.siteCode !== s.code || DX.sub !== '일정' || !$('dsBody')) return;
+    $('dsTimeline').innerHTML = dsTimelineHtml();
+    dsRender($('dsBody'));
+  };
+  if (DS.site === s.code) draw();
+  dsLoad(s.code).then(draw).catch(e => { if ($('dsBody')) $('dsBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
+}
+
+function dxBoard(el, s) {
+  const d = DX.d;
+  const cardHtml = c => {
+    const due = dxDue(c.due, c.col === '완료'), lim = dxLimitText(c);
+    const over = c.limit !== '' && Number(c.limit) > 0 && c.used >= Number(c.limit);
+    return `<button class="dx-card" type="button" draggable="${d.canEdit}" data-id="${esc(c.id)}">
+      <b>${esc(c.title)}</b>
+      <span class="dx-meta">
+        ${c.confirm === '요청' ? '<span class="st">건축주 확인 대기</span>' : c.confirm === '수정요청' ? '<span class="st mine">수정 요청 받음</span>' : c.confirm === '확인됨' ? '<span class="st 완료">건축주 확인</span>' : ''}
+        ${c.open ? `<span class="st mine">미처리 ${c.open}</span>` : ''}
+        ${due ? `<span class="${due.cls === 'bad' ? 'st 반려' : ''}">${esc(due.short)}</span>` : ''}
+        ${lim ? `<span style="${over ? 'color:var(--red)' : ''}">${esc(lim)}</span>` : ''}
+        ${c.owner ? `<span>${esc(c.owner)}</span>` : ''}
+        ${c.files.length ? `<span>📎${c.files.length}</span>` : ''}
+        ${c.share ? '' : '<span>내부용</span>'}
+      </span></button>`;
+  };
+  el.innerHTML = `<div class="dx-lock">🔒 ${esc(d.notice[0])} 건축주는 <b>시공관리 → 설계</b>에서 단계별 확인·수정 요청을 하고, 남은 수정 횟수와 마감일 안내를 봅니다.</div>
+    <div class="dx-board">${d.cols.map(col => {
+      const list = d.cards.filter(c => c.col === col);
+      return `<div class="dx-col" data-col="${esc(col)}"><h4><span>${esc(col)}</span><span>${list.length}</span></h4>
+        ${list.map(cardHtml).join('')}
+        ${d.canEdit && col === '할 일' ? '<button class="dx-add" type="button" id="dxAdd">+ 단계 추가</button>' : ''}</div>`;
+    }).join('')}</div>
+    <div class="hint" style="margin-top:8px">${d.canEdit ? '카드를 끌어 칸을 옮기세요. 휴대폰에서는 카드를 눌러 칸을 바꿉니다. "건축주 확인"으로 옮기면 건축주에게 남은 수정 횟수·마감일 안내 메일이 갑니다.' : ''}</div>`;
+  el.querySelectorAll('.dx-card').forEach(b => {
+    b.onclick = () => dxCardSheet(s, b.dataset.id);
+    if (!d.canEdit) return;
+    b.ondragstart = e => { e.dataTransfer.setData('text/plain', b.dataset.id); b.classList.add('drag'); };
+    b.ondragend = () => b.classList.remove('drag');
+  });
+  if (d.canEdit) el.querySelectorAll('.dx-col').forEach(colEl => {
+    colEl.ondragover = e => { e.preventDefault(); colEl.classList.add('over'); };
+    colEl.ondragleave = () => colEl.classList.remove('over');
+    colEl.ondrop = e => {
+      e.preventDefault(); colEl.classList.remove('over');
+      const id = e.dataTransfer.getData('text/plain'), col = colEl.dataset.col;
+      const c = d.cards.find(x => x.id === id); if (!c || c.col === col) return;
+      const after = [...colEl.querySelectorAll('.dx-card')].find(x => x.getBoundingClientRect().top + x.offsetHeight / 2 > e.clientY);
+      const sib = after ? d.cards.find(x => x.id === after.dataset.id) : null;
+      dxMove(s, c, col, sib ? sib.order - 0.5 : Math.max(0, ...d.cards.filter(x => x.col === col).map(x => x.order)) + 1);
+    };
+  });
+  if ($('dxAdd')) $('dxAdd').onclick = () => dxCardSheet(s, '');
+}
+
+async function dxMove(s, c, col, order) {
+  if (col === '건축주 확인' && c.share && !confirm(`"${c.title}"을(를) 건축주 확인으로 옮길까요?\n건축주에게 확인 요청 메일(남은 수정 ${c.limit === '' ? '제한 없음' : Math.max(0, c.limit - c.used) + '회'}${c.due ? ', 마감 ' + c.due : ''})이 발송됩니다.`)) return;
+  const prev = c.col; c.col = col; c.order = order;
+  if (col === '건축주 확인' && prev !== col) c.confirm = '요청';
+  dxBoard($('dxBody'), s);
+  try { await api({ action: 'dx_card_move', siteCode: s.code, id: c.id, col, order }); await dxLoad(s.code, true); if (DX.sub === '보드' && $('dxBody')) dxBoard($('dxBody'), s); }
+  catch (e) { c.col = prev; toast(e.message); dxBoard($('dxBody'), s); }
+}
+
+function dxCardSheet(s, id) {
+  const d = DX.d, c = d.cards.find(x => x.id === id) || { id: '', title: '', memo: '', note: '', owner: '', due: '', limit: 2, used: 0, share: true, col: '할 일', files: [], revs: [] };
+  const ro = !d.canEdit ? 'disabled' : '';
+  const left = c.limit === '' ? '제한 없음' : `${Math.max(0, c.limit - c.used)}회 남음 (총 ${c.limit}회 중 ${c.used}회 사용)`;
+  const body = openSheet(c.id ? esc(c.title) : '단계 추가', esc(s.code + ' ' + s.name) + (c.id ? ' · ' + esc(c.col) : ''), `
+    <div class="card">
+      <div class="f"><label>단계 이름</label><input type="text" id="kTitle" maxlength="80" value="${esc(c.title)}" ${ro}></div>
+      ${c.id && d.canEdit ? `<div class="f"><span class="lb">칸</span>${segHtml('kCol', d.cols, c.col)}</div>` : ''}
+      <div class="cx-when"><div class="f"><label>마감일</label><input type="date" id="kDue" value="${esc(c.due)}" ${ro}></div>
+        <div class="f"><label>담당</label><input type="text" id="kOwner" value="${esc(c.owner)}" placeholder="예: 천민기" ${ro}></div></div>
+      <div class="cx-when"><div class="f"><label>건축주 수정 허용 횟수</label><input type="number" id="kLimit" min="0" max="20" step="1" value="${esc(c.limit)}" placeholder="비우면 제한 없음" ${ro}></div>
+        <div class="f"><span class="lb">현재</span><div style="padding-top:8px">${esc(c.id ? left : '-')}</div></div></div>
+      <label class="check"><input type="checkbox" id="kShare" ${c.share ? 'checked' : ''} ${ro}> <span>건축주에게 이 단계 보여주기</span></label>
+      <div class="f" style="margin-top:10px"><label>건축주 안내 문구</label><textarea id="kNote" rows="2" placeholder="건축주 화면에 보이는 설명" ${ro}>${esc(c.note)}</textarea></div>
+      <div class="f"><label>내부 메모 (건축주에게 안 보임)</label><textarea id="kMemo" rows="3" ${ro}>${esc(c.memo)}</textarea></div>
+    </div>
+    ${c.id ? `<div class="card"><h4 style="margin:0 0 4px">파일</h4>
+      <div class="hint">DWG·SKP 등 원본은 내부용입니다. 건축주에게는 <b>공개</b> 표시한 PDF·이미지만 열람 전용(워터마크)으로 보입니다.</div>
+      <div class="dx-files">${c.files.length ? c.files.map(f => `<span class="dx-file"><a href="#" data-open="${esc(f.id)}">${esc(f.name)}</a>
+        ${d.canEdit && DX_VIEW.includes(f.type) && !DX_ORIG.test(f.name) ? `<button type="button" class="linkish pub" data-pub="${esc(f.id)}">${f.pub ? '건축주 공개 ✓' : '공개하기'}</button>` : (f.pub ? '<span class="pub">공개</span>' : '')}
+        ${d.canEdit ? `<span class="x2" data-rm="${esc(f.id)}" title="삭제">×</span>` : ''}</span>`).join('') : '<span class="hint">아직 없습니다</span>'}</div>
+      ${d.canEdit ? `<div class="f"><input type="file" id="kFiles" multiple></div>
+        <label class="check"><input type="checkbox" id="kPub"> <span>올리는 PDF·이미지를 건축주에게 공개</span></label>
+        <div class="actions"><button class="btn ghost" type="button" id="kUp">파일 올리기</button></div>` : ''}</div>` : ''}
+    ${c.id ? `<div class="card"><h4 style="margin:0 0 4px">건축주 수정 요청 <span class="cr-sub">${c.revs.length}건</span></h4>
+      ${c.revs.length ? c.revs.map(r => `<div class="dx-rev" data-rev="${esc(r.id)}">
+        <div class="dx-rev-h"><b>${r.extra ? '추가 요청' : r.no + '차'}</b> · ${esc(r.at)} · ${esc(r.by)} <span class="st ${r.status === '반영 완료' ? '완료' : r.status === '반영 불가' ? '반려' : ''}">${esc(r.status)}</span></div>
+        <p>${esc(r.text)}</p>
+        ${r.files.length ? `<div class="dx-files">${r.files.map(f => `<a href="#" class="dx-file" data-ropen="${esc(r.id)}|${esc(f.id)}">${esc(f.name)}</a>`).join('')}</div>` : ''}
+        ${d.canEdit ? `<div class="f" style="margin-top:6px">${segHtml('rs_' + r.id, ['접수', '반영 중', '반영 완료', '반영 불가'], r.status)}</div>
+          <div class="f"><textarea rows="2" data-reply="${esc(r.id)}" placeholder="건축주에게 보일 답변 (예: 2층 욕실 창 위치 반영했습니다)">${esc(r.reply)}</textarea></div>
+          <div class="actions"><button class="btn ghost" type="button" data-rsave="${esc(r.id)}">답변 저장</button></div>`
+        : (r.reply ? `<div class="dx-reply">${esc(r.reply)}<div class="cr-sub">${esc(r.replyBy)} · ${esc(r.replyAt)}</div></div>` : '')}
+      </div>`).join('') : '<div class="hint">아직 없습니다. 건축주는 이 단계가 "건축주 확인"에 있을 때만 포털에서 수정 요청을 보낼 수 있습니다.</div>'}</div>` : ''}
+    ${d.canEdit ? `<div class="actions sticky">${c.id ? '<button class="btn danger" type="button" id="kDel">삭제</button>' : ''}<button class="btn" type="button" id="kSave">저장</button></div>` : ''}`);
+  bindSegs(body);
+  const reload = async () => { await dxLoad(s.code, true); if (DX.sub === '보드' && $('dxBody')) dxBoard($('dxBody'), s); };
+  body.querySelectorAll('[data-open]').forEach(a => a.onclick = e => { e.preventDefault(); const f = c.files.find(x => x.id === a.dataset.open); dxOpenFile(c.id, f).catch(x => toast(x.message)); });
+  body.querySelectorAll('[data-ropen]').forEach(a => a.onclick = e => { e.preventDefault(); const [rid, fid] = a.dataset.ropen.split('|'); const f = c.revs.find(r => r.id === rid).files.find(x => x.id === fid); dxOpenFile(rid, f).catch(x => toast(x.message)); });
+  if (!d.canEdit) return;
+  body.querySelector('#kSave').onclick = e => submitting(e.target, async () => {
+    const lim = $('kLimit').value.trim();
+    const r = await api({ action: 'dx_card_save', siteCode: s.code, card: { id: c.id, col: c.col, title: $('kTitle').value, due: $('kDue').value, owner: $('kOwner').value, limit: lim === '' ? '' : Number(lim), share: $('kShare').checked, note: $('kNote').value, memo: $('kMemo').value } });
+    const col = c.id ? segVal(body, 'kCol') : '';
+    if (c.id && col && col !== c.col) {
+      if (col === '건축주 확인' && $('kShare').checked && !confirm('건축주에게 확인 요청 메일이 발송됩니다. 옮길까요?')) return;
+      await api({ action: 'dx_card_move', siteCode: s.code, id: r.id, col, order: c.order });
+    }
+    closeSheet(); await reload(); toast('저장했습니다');
+  });
+  if ($('kDel')) $('kDel').onclick = e => {
+    if (!confirm(`"${c.title}" 단계를 삭제할까요? 첨부 파일도 지워집니다.`)) return;
+    submitting(e.target, async () => { await api({ action: 'dx_card_delete', siteCode: s.code, id: c.id }); closeSheet(); await reload(); toast('삭제했습니다'); });
+  };
+  if ($('kUp')) $('kUp').onclick = e => submitting(e.target, async () => {
+    const files = await dxReadRaw($('kFiles'), 25);
+    if (!files.length) throw new Error('파일을 고르세요.');
+    await api({ action: 'dx_card_file', siteCode: s.code, id: c.id, files, pub: $('kPub').checked });
+    await reload(); dxCardSheet(s, c.id); toast('올렸습니다');
+  });
+  body.querySelectorAll('[data-pub]').forEach(b => b.onclick = () => submitting(b, async () => {
+    await api({ action: 'dx_card_file', siteCode: s.code, id: c.id, pubId: b.dataset.pub }); await reload(); dxCardSheet(s, c.id);
+  }));
+  body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    const f = c.files.find(x => x.id === b.dataset.rm);
+    if (!confirm(`${f.name} 파일을 삭제할까요?`)) return;
+    api({ action: 'dx_card_file', siteCode: s.code, id: c.id, removeId: f.id }).then(reload).then(() => dxCardSheet(s, c.id)).catch(x => toast(x.message));
+  });
+  body.querySelectorAll('[data-rsave]').forEach(b => b.onclick = () => submitting(b, async () => {
+    const id = b.dataset.rsave;
+    await api({ action: 'dx_rev_reply', siteCode: s.code, id, status: segVal(body, 'rs_' + id), reply: body.querySelector(`[data-reply="${id}"]`).value });
+    await reload(); toast('답변을 저장했습니다. 건축주 화면에 표시됩니다.');
+  }));
+}
+
+const DX_EXT_OK = /\.(pdf|jpe?g|png)$/i;
+function dxDocsView(el, s) {
+  const d = DX.d;
+  const pend = d.pending || [];
+  const list = d.nasList || [];
+  el.innerHTML = `
+    ${d.canEdit ? `<section class="panel dx-nas" style="padding:16px;margin-bottom:12px">
+      <h4 style="margin:0 0 4px">사무실 NAS에서 읽어오기</h4>
+      <div class="hint">NAS 폴더: ${d.nasFolder ? `<b>${esc(d.nasFolder)}</b>` : '마스터에 NAS 폴더 경로가 없습니다'} · 사무실 PC가 켜져 있으면 몇 분 안에 처리됩니다. NAS 파일은 읽기만 하고 수정·이동하지 않습니다.</div>
+      ${pend.length ? `<div class="notice" style="margin-top:10px">사무실 PC 처리 대기 ${pend.length}건 · ${pend.map(p => `${p.kind === 'list' ? '목록' : '파일 ' + p.paths.length + '개 판독'} (${esc(p.at.slice(5))} ${esc(p.by)})`).join(', ')} <button class="linkish" type="button" id="xRef">새로고침</button></div>` : ''}
+      ${d.nasFail ? `<div class="notice" style="margin-top:10px">최근 요청 실패: ${esc(d.nasFail)}</div>` : ''}
+      <div class="actions" style="justify-content:flex-start"><button class="btn ghost" type="button" id="xList" ${d.nasFolder ? '' : 'disabled'}>${list.length ? '목록 다시 읽기' : '파일 목록 읽어오기'}</button></div>
+      ${list.length ? `<div class="hint">목록 ${esc(d.nasListAt)} 기준 · 판독할 파일을 고르세요 (최대 10개). DWG는 바로 판독할 수 없어 PDF로 출력된 파일을 고르세요.</div>
+        <ul>${list.map((f, i) => { const ok = DX_EXT_OK.test(f.name || f.path); return `<li><label class="${ok ? '' : 'dis'}"><input type="checkbox" data-np="${i}" ${ok ? '' : 'disabled'}> ${esc(f.path || f.name)} <span class="cr-sub">${f.size ? Math.round(f.size / 1024) + 'KB' : ''} ${esc(f.mtime || '')}</span></label></li>`; }).join('')}</ul>
+        <div class="actions" style="justify-content:flex-start"><button class="btn" type="button" id="xPick">선택한 파일 판독</button></div>` : ''}
+    </section>
+    <section class="panel" style="padding:16px;margin-bottom:12px">
+      <h4 style="margin:0 0 4px">급할 때: 직접 올려서 판독</h4>
+      <div class="hint">면적표·창호도·단면상세·실내재료마감표 PDF를 올리면 면적·창호표·외피 구성·실별 마감을 뽑아냅니다. 파일당 1~2분 걸립니다.</div>
+      <div class="f" style="margin-top:10px"><input type="file" id="xFiles" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+      <div class="actions" style="justify-content:flex-start"><button class="btn" type="button" id="xUp">올리고 판독</button></div>
+    </section>` : ''}
+    ${d.docs.length ? d.docs.map(dxDocHtml).join('') : '<section class="panel empty"><h3>판독한 도면이 없습니다</h3>NAS에서 읽어오거나 PDF를 직접 올려주세요.</section>'}`;
+  const again = async () => { await dxLoad(s.code, true); if (DX.sub === '도면·견적자료' && S.siteCode === s.code && $('dxBody')) dxDocsView($('dxBody'), s); };
+  if ($('xRef')) $('xRef').onclick = () => again().catch(e => toast(e.message));
+  if ($('xList')) $('xList').onclick = e => submitting(e.target, async () => { await api({ action: 'dx_nas_request', siteCode: s.code, kind: 'list' }); await again(); toast('사무실 PC에 목록 요청을 보냈습니다'); });
+  if ($('xPick')) $('xPick').onclick = e => submitting(e.target, async () => {
+    const paths = [...el.querySelectorAll('[data-np]:checked')].map(x => list[Number(x.dataset.np)].path || list[Number(x.dataset.np)].name);
+    if (!paths.length) throw new Error('파일을 고르세요.');
+    if (paths.length > 10) throw new Error('한 번에 10개까지 고를 수 있습니다.');
+    await api({ action: 'dx_nas_request', siteCode: s.code, kind: 'extract', paths }); await again(); toast('사무실 PC에 판독 요청을 보냈습니다');
+  });
+  if ($('xUp')) $('xUp').onclick = e => submitting(e.target, async () => {
+    const files = await dxReadRaw($('xFiles'), 30);
+    if (!files.length) throw new Error('파일을 고르세요.');
+    if (files.some(f => !DX_VIEW.includes(f.type))) throw new Error('PDF·JPG·PNG만 판독할 수 있습니다. DWG는 PDF로 출력해서 올려주세요.');
+    e.target.textContent = '판독 중... (파일당 1~2분)';
+    await api({ action: 'dx_extract', siteCode: s.code, files }); await again(); toast('판독을 마쳤습니다');
+  });
+  el.querySelectorAll('[data-dopen]').forEach(a => a.onclick = ev => { ev.preventDefault(); const doc = d.docs.find(x => x.id === a.dataset.dopen); dxOpenFile(doc.id, { id: '', name: doc.fileName, type: /\.pdf$/i.test(doc.fileName) ? 'application/pdf' : 'image/jpeg' }).catch(x => toast(x.message)); });
+  el.querySelectorAll('[data-ddel]').forEach(b => b.onclick = () => {
+    const doc = d.docs.find(x => x.id === b.dataset.ddel);
+    if (!confirm(`${doc.fileName} 판독 결과를 삭제할까요?`)) return;
+    submitting(b, async () => { await api({ action: 'dx_doc_delete', siteCode: s.code, id: doc.id }); await again(); });
+  });
+  el.querySelectorAll('[data-dcopy]').forEach(b => b.onclick = () => {
+    const doc = d.docs.find(x => x.id === b.dataset.dcopy);
+    navigator.clipboard.writeText(dxDocTsv(doc.result)).then(() => toast('표를 복사했습니다. 엑셀·견적기에 붙여넣으세요.')).catch(() => toast('복사하지 못했습니다'));
+  });
+  clearTimeout(DX.poll);
+  if (pend.length || d.docs.some(x => x.status === '판독 중')) DX.poll = setTimeout(() => { if (S.tab === 'design' && DX.sub === '도면·견적자료' && S.siteCode === s.code) again().catch(() => {}); }, 20000);
+}
+function dxN(v) { const n = Number(v); return v === '' || v == null || isNaN(n) ? esc(v || '') : n.toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+function dxTbl(head, rows) {
+  if (!rows.length) return '<div class="hint">없음</div>';
+  return `<div class="dx-scroll"><table class="dx-tbl"><thead><tr>${head.map(h => `<th>${esc(h[0])}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${head.map(h => `<td class="${h[2] ? 'n' : ''}">${h[2] ? dxN(r[h[1]]) : esc(r[h[1]] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const DX_WIN = [['기호', 'mark'], ['종류', 'type'], ['W(mm)', 'w', 1], ['H(mm)', 'h', 1], ['수량', 'qty', 1], ['층', 'floor'], ['비고', 'note']];
+const DX_ENV = [['부위', 'part'], ['구성(실내→실외)', 'layers'], ['단열', 'insulation'], ['비고', 'note']];
+const DX_FIN = [['실', 'room'], ['바닥', 'floor'], ['벽', 'wall'], ['천장', 'ceiling'], ['비고', 'note']];
+function dxDocHtml(doc) {
+  const r = doc.result || {}, a = r.areas || {}, wins = r.windows || [];
+  const winArea = wins.reduce((t, w) => t + (Number(w.w) || 0) * (Number(w.h) || 0) * (Number(w.qty) || 0) / 1e6, 0);
+  const areaRows = [...(a.floors || []).map(f => ({ k: f.name, v: f.area })), { k: '연면적', v: a.total }, { k: '건축면적', v: a.buildingArea }, { k: '대지면적', v: a.landArea }, { k: '발코니', v: a.balcony }, { k: '데크', v: a.deck }, { k: '다락', v: a.attic }, { k: '주차', v: a.parking }].filter(x => x.v !== '' && x.v != null && Number(x.v));
+  return `<details class="panel dx-doc" style="padding:14px;margin-bottom:10px" ${doc.status !== '완료' ? '' : ''}>
+    <summary><b>${esc(doc.fileName)}</b><span class="st ${doc.status === '완료' ? '완료' : doc.status === '실패' ? '반려' : ''}">${esc(doc.status)}</span><span class="cr-sub">${esc(doc.source)} · ${esc(doc.at)} · ${esc(doc.by)}</span>
+      ${doc.status === '완료' ? `<span class="cr-sub">연면적 ${dxN(a.total)}㎡${a.total ? ' (' + (Number(a.total) * 121 / 400).toFixed(1) + '평)' : ''} · 창호 ${wins.length}종 ${winArea ? winArea.toFixed(1) + '㎡' : ''}</span>` : ''}</summary>
+    ${doc.error ? `<div class="notice" style="margin-top:8px">${esc(doc.error)}</div>` : ''}
+    ${doc.status === '완료' ? `
+      ${(r.warnings || []).length ? `<div class="notice" style="margin-top:8px">확인 필요: ${r.warnings.map(esc).join(' · ')}</div>` : ''}
+      <h5>면적 (㎡)</h5>${dxTbl([['구분', 'k'], ['면적', 'v', 1]], areaRows)}
+      <h5>창호표 ${winArea ? `<span class="cr-sub">합계 ${winArea.toFixed(2)}㎡</span>` : ''}</h5>${dxTbl(DX_WIN, wins)}
+      <h5>외피 구성</h5>${dxTbl(DX_ENV, r.envelope || [])}
+      <h5>실별 마감표</h5>${dxTbl(DX_FIN, r.finishes || [])}
+      ${(r.sheets || []).length ? `<div class="hint">읽은 도면: ${r.sheets.map(esc).join(', ')}</div>` : ''}` : ''}
+    <div class="actions" style="justify-content:flex-start">
+      <button class="btn ghost" type="button" data-dopen="${esc(doc.id)}">원본 보기</button>
+      ${doc.status === '완료' ? `<button class="btn ghost" type="button" data-dcopy="${esc(doc.id)}">표 복사 (엑셀용)</button>` : ''}
+      ${DX.d.canEdit ? `<button class="btn ghost danger" type="button" data-ddel="${esc(doc.id)}">삭제</button>` : ''}</div>
+  </details>`;
+}
+function dxDocTsv(r) {
+  r = r || {}; const a = r.areas || {}, L = [];
+  const row = x => L.push(x.map(v => String(v == null ? '' : v).replace(/[\t\n]/g, ' ')).join('\t'));
+  row(['[면적]']); (a.floors || []).forEach(f => row([f.name, f.area])); [['연면적', a.total], ['건축면적', a.buildingArea], ['대지면적', a.landArea], ['발코니', a.balcony], ['데크', a.deck], ['다락', a.attic], ['주차', a.parking]].forEach(x => { if (x[1]) row(x); });
+  row([]); row(['[창호표]']); row(DX_WIN.map(h => h[0])); (r.windows || []).forEach(w => row(DX_WIN.map(h => w[h[1]])));
+  row([]); row(['[외피 구성]']); row(DX_ENV.map(h => h[0])); (r.envelope || []).forEach(w => row(DX_ENV.map(h => w[h[1]])));
+  row([]); row(['[실별 마감표]']); row(DX_FIN.map(h => h[0])); (r.finishes || []).forEach(w => row(DX_FIN.map(h => w[h[1]])));
+  return L.join('\n');
+}
+
+async function dxClientRender(code) {
+  const el = $('subBody');
+  let d;
+  try { d = await dxLoad(code); } catch (e) { if ($('subBody')) $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+  if (S.tab !== 'site' || S.siteCode !== code || S.siteSub !== '설계' || !$('subBody')) return;
+  const notice = `<div class="dx-lock">🔒 ${d.notice.map(esc).join('<br>')}</div>`;
+  if (!d.cards.length) { el.innerHTML = notice + '<section class="panel empty"><h3>설계 진행 단계가 아직 없습니다</h3>설계팀이 단계를 준비하면 이곳에서 확인하실 수 있습니다.</section>'; return; }
+  const cur = d.cards.filter(c => c.col === '건축주 확인');
+  el.innerHTML = notice + (cur.length ? `<div class="notice">확인 요청 ${cur.length}건이 있습니다. 도면을 보시고 <b>확인 완료</b> 또는 <b>수정 요청</b>을 남겨주세요.</div>` : '') +
+    d.cards.map(c => {
+      const due = dxDue(c.due, c.col === '완료'), asking = c.col === '건축주 확인';
+      const lim = c.limit == null ? '' : c.limit === 0 ? '<span>이 단계는 확인만 해주시면 됩니다</span>'
+        : `<span class="${c.left === 0 ? 'bad' : c.left === 1 ? 'warn' : ''}">수정 요청 <b>${c.left}회</b> 남았습니다 <span class="cr-sub">(총 ${c.limit}회 중 ${c.used}회 사용)</span></span>`;
+      return `<section class="panel dx-stage" style="padding:16px">
+        <div class="dx-stage-top"><h3>${esc(c.title)}</h3><span class="st ${c.col === '완료' ? '완료' : ''}">${esc(c.stage)}</span>${c.confirm === '확인됨' ? '<span class="cr-sub">건축주 확인 완료</span>' : ''}</div>
+        ${c.note ? `<div class="hint" style="margin-top:6px">${esc(c.note)}</div>` : ''}
+        ${c.col !== '완료' && (lim || due) ? `<div class="dx-limit">${lim}${due ? `<span class="${due.cls}">${esc(due.text)}</span>` : ''}</div>` : ''}
+        ${c.files.length ? `<div class="dx-files">${c.files.map(f => `<button type="button" class="dx-file" data-cf="${esc(c.id)}|${esc(f.id)}">📄 ${esc(f.name)}</button>`).join('')}</div><div class="hint">도면은 열람만 가능합니다.</div>` : ''}
+        ${c.revs.length ? `<div style="margin-top:8px">${c.revs.map(r => `<div class="dx-rev"><div class="dx-rev-h"><b>${r.extra ? '추가 요청' : r.no + '차 수정 요청'}</b> · ${esc(r.at)} <span class="st ${r.status === '반영 완료' ? '완료' : r.status === '반영 불가' ? '반려' : ''}">${esc(r.status)}</span></div><p>${esc(r.text)}</p>
+          ${r.reply ? `<div class="dx-reply">${esc(r.reply)}<div class="cr-sub">사람사는집 ${esc(r.replyBy)} · ${esc(r.replyAt)}</div></div>` : ''}</div>`).join('')}</div>` : ''}
+        ${asking ? `<div class="actions" style="justify-content:flex-start"><button class="btn" type="button" data-ok="${esc(c.id)}">확인 완료</button>${c.limit === 0 ? '' : `<button class="btn ghost" type="button" data-rev="${esc(c.id)}">수정 요청${c.left != null ? ` (${c.left}회 남음)` : ''}</button>`}</div>`
+          : c.col !== '완료' ? '<div class="hint" style="margin-top:8px">설계팀이 확인을 요청하면 이곳에서 확인·수정 요청을 하실 수 있습니다.</div>' : ''}
+      </section>`;
+    }).join('');
+  el.querySelectorAll('[data-cf]').forEach(b => b.onclick = () => { const [cid, fid] = b.dataset.cf.split('|'); const f = d.cards.find(x => x.id === cid).files.find(x => x.id === fid); dcView({ title: f.name }, { action: 'dx_file', id: cid, fileId: fid }); });
+  el.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => {
+    const c = d.cards.find(x => x.id === b.dataset.ok);
+    if (!confirm(`"${c.title}" 단계를 확인 완료로 처리할까요?\n확인 후에는 다음 단계로 넘어갑니다.`)) return;
+    submitting(b, async () => { await api({ action: 'dx_ok', siteCode: code, cardId: c.id }); await dxLoad(code, true); dxClientRender(code); toast('확인 완료를 보냈습니다. 감사합니다.'); });
+  });
+  el.querySelectorAll('[data-rev]').forEach(b => b.onclick = () => dxClientRev(code, d.cards.find(x => x.id === b.dataset.rev)));
+}
+
+function dxClientRev(code, c) {
+  const extra = c.left === 0;
+  const nth = c.limit == null ? '' : extra ? '추가 요청' : `${c.used + 1}차 요청`;
+  const body = openSheet('수정 요청', esc(c.title) + (nth ? ' · ' + nth : ''), `
+    ${extra ? `<div class="notice">이 단계의 수정 요청 ${c.limit}회를 모두 사용하셨습니다. 추가 수정은 설계 일정이 늦어지거나 추가 설계비가 생길 수 있어, 설계팀이 검토 후 별도로 안내드립니다.</div>`
+      : c.limit != null ? `<div class="dx-lock">이번 요청이 <b>${c.used + 1}차</b>로 기록되며, 보내신 뒤 <b>${c.left - 1}회</b>가 남습니다.<br>수정하실 내용을 <b>한 번에 모아</b> 적어주시면 빠짐없이 반영해 드립니다.</div>` : ''}
+    <div class="card">
+      <div class="f"><label for="vText">수정하실 내용</label><textarea id="vText" rows="7" placeholder="예)&#10;1. 2층 안방 창을 남쪽으로 옮겨주세요&#10;2. 현관 신발장을 벽장형으로&#10;3. 주방 아일랜드 길이 30cm 줄이기"></textarea></div>
+      <div class="f"><label for="vFiles">참고 사진 (선택, 3장까지)</label><input type="file" id="vFiles" multiple accept="image/*"><div class="hint">도면에 표시한 사진이나 참고 이미지를 올려주세요.</div></div>
+      ${extra ? '<label class="check"><input type="checkbox" id="vAgree"> <span>추가 수정에 따른 일정 지연·추가 비용 가능성을 이해했습니다.</span></label>' : ''}
+    </div>
+    <div class="hint" style="margin:0 4px 10px">원본 도면 파일(DWG·SKP 등)은 제공하지 않습니다. 수정 요청과 반영은 모두 이 포털에서 진행됩니다.</div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="vClose">닫기</button><button class="btn" type="button" id="vSend">보내기</button></div>`);
+  body.querySelector('#vClose').onclick = closeSheet;
+  body.querySelector('#vSend').onclick = e => submitting(e.target, async () => {
+    const text = $('vText').value.trim();
+    if (text.length < 5) throw new Error('수정하실 내용을 적어주세요.');
+    if (extra && !$('vAgree').checked) throw new Error('추가 수정 안내에 동의해 주세요.');
+    const inp = $('vFiles'); if (inp.files.length > 3) throw new Error('사진은 3장까지 올릴 수 있습니다.');
+    const files = await readFiles(inp);
+    await api({ action: 'dx_req', siteCode: code, cardId: c.id, text, files, agreeExtra: extra });
+    closeSheet(); await dxLoad(code, true); dxClientRender(code); toast('수정 요청을 보냈습니다. 반영되면 이곳에 답변이 표시됩니다.');
   });
 }
 
