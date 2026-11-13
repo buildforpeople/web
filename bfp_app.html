@@ -345,11 +345,13 @@
   .log-x { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 17px; line-height: 1; padding: 0 4px; border-radius: 6px; cursor: pointer; opacity: .4; }
   .log-x:hover { opacity: 1; color: var(--red); background: var(--red-soft); }
   .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 40; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; }
-  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 6px; }
-  .lb-stage { flex: 1; height: 100%; display: grid; place-items: center; min-width: 0; }
+  .lightbox img { max-width: 100%; max-height: calc(100dvh - 40px); object-fit: contain; border-radius: 6px; cursor: zoom-in; }
+  .lightbox.zoom .lb-stage { display: block; overflow: auto; } .lightbox.zoom img { max-width: none; max-height: none; width: max(100%, 1400px); cursor: zoom-out; }
+  .lb-stage { flex: 1; height: 100%; display: grid; place-items: center; min-width: 0; min-height: 0; overflow: auto; }
   .lb-load { position: absolute; color: #fff; font-size: 14px; }
   .lb-nav { flex: none; width: 48px; height: 72px; border: 0; border-radius: 10px; background: rgba(255,255,255,.14); color: #fff; font-size: 34px; line-height: 1; }
   .lb-nav:hover { background: rgba(255,255,255,.26); }
+  .lb-dl { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 70px; height: 42px; padding: 0 16px; border: 0; border-radius: 21px; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-size: 14px; font-weight: 600; z-index: 2; cursor: pointer; } .lb-dl:hover { background: rgba(255,255,255,.26); }
   .lb-close { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 16px; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255,255,255,.16); color: #fff; font-size: 24px; line-height: 1; }
   .lb-count { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: rgba(255,255,255,.85); font-size: 14px; font-variant-numeric: tabular-nums; }
   @media (max-width: 760px) { .lb-nav { display: none; } .lightbox { padding: 12px; } }
@@ -5058,7 +5060,7 @@ async function lightbox(ids, startIndex, loader) {
   let i = Math.max(0, startIndex);
   const box = document.createElement('div');
   box.className = 'lightbox';
-  box.innerHTML = `<button class="lb-close" type="button" aria-label="닫기">×</button>
+  box.innerHTML = `<button class="lb-close" type="button" aria-label="닫기">×</button><button class="lb-dl" type="button" aria-label="다운로드">⬇ 다운로드</button>
     <button class="lb-nav prev" type="button" aria-label="이전">‹</button>
     <div class="lb-stage"><img alt=""><div class="lb-load">불러오는 중...</div></div>
     <button class="lb-nav next" type="button" aria-label="다음">›</button>
@@ -5069,12 +5071,24 @@ async function lightbox(ids, startIndex, loader) {
     box.querySelector('.lb-count').textContent = `${i + 1} / ${ids.length}`;
     box.querySelectorAll('.lb-nav').forEach(b => b.hidden = ids.length < 2);
     img.style.visibility = 'hidden'; load.hidden = false;
-    try { const f = await loader(ids[i]); img.src = f.url; img.style.visibility = 'visible'; }
+    try { const f = await loader(ids[i]); cur = f; img.src = f.url; img.style.visibility = 'visible'; }
     catch (e) { load.textContent = '사진을 불러오지 못했습니다'; return; }
     load.hidden = true;
     [i - 1, i + 1].filter(n => n >= 0 && n < ids.length).forEach(n => loader(ids[n]).catch(() => {}));
   };
-  const move = n => { i = (i + n + ids.length) % ids.length; show(); };
+  img.onclick = e => { e.stopPropagation(); box.classList.toggle('zoom'); box.querySelector('.lb-stage').scrollTop = 0; };
+  let cur = null;
+  box.querySelector('.lb-dl').onclick = async e => {
+    e.stopPropagation(); if (!cur) return;
+    let name = cur.name || `사진_${i + 1}.jpg`;
+    try {
+      const blob = await (await fetch(cur.url)).blob();
+      if (!/\.\w{2,5}$/.test(name)) name += '.' + ((blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg'));
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (err) { window.open(cur.url, '_blank'); }
+  };
+  const move = n => { box.classList.remove('zoom'); i = (i + n + ids.length) % ids.length; show(); };
   const close = () => { box.remove(); document.removeEventListener('keydown', key); };
   const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') move(-1); if (e.key === 'ArrowRight') move(1); };
   document.addEventListener('keydown', key);
