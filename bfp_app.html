@@ -5518,6 +5518,7 @@ function dxBoard(el, s) {
         ${c.owner ? `<span>${esc(c.owner)}</span>` : ''}
         ${c.files.length ? `<span>📎${c.files.length}</span>` : ''}
         ${c.share ? '' : '<span>내부용</span>'}
+        ${/법규/.test(c.title) && d.law ? '<span>✓ 자동검토</span>' : ''}
       </span></button>`;
   };
   el.innerHTML = `<div class="dx-lock">🔒 ${esc(d.notice[0])} 건축주는 <b>시공관리 → 설계</b>에서 단계별 확인·수정 요청을 하고, 남은 수정 횟수와 마감일 안내를 봅니다.</div>
@@ -5563,6 +5564,7 @@ function dxCardSheet(s, id) {
   const ro = !d.canEdit ? 'disabled' : '';
   const left = c.limit === '' ? '제한 없음' : `${Math.max(0, c.limit - c.used)}회 남음 (총 ${c.limit}회 중 ${c.used}회 사용)`;
   const body = openSheet(c.id ? esc(c.title) : '단계 추가', esc(s.code + ' ' + s.name) + (c.id ? ' · ' + esc(c.col) : ''), `
+    ${c.id && /법규/.test(c.title) ? dxLawHtml(s) : ''}
     <div class="card">
       <div class="f"><label>단계 이름</label><input type="text" id="kTitle" maxlength="80" value="${esc(c.title)}" ${ro}></div>
       ${c.id && d.canEdit ? `<div class="f"><span class="lb">칸</span>${segHtml('kCol', d.cols, c.col)}</div>` : ''}
@@ -5598,6 +5600,12 @@ function dxCardSheet(s, id) {
   body.querySelectorAll('[data-open]').forEach(a => a.onclick = e => { e.preventDefault(); const f = c.files.find(x => x.id === a.dataset.open); dxOpenFile(c.id, f).catch(x => toast(x.message)); });
   body.querySelectorAll('[data-ropen]').forEach(a => a.onclick = e => { e.preventDefault(); const [rid, fid] = a.dataset.ropen.split('|'); const f = c.revs.find(r => r.id === rid).files.find(x => x.id === fid); dxOpenFile(rid, f).catch(x => toast(x.message)); });
   if (!d.canEdit) return;
+  if ($('lwRun')) $('lwRun').onclick = e => submitting(e.target, async () => {
+    e.target.textContent = '조회 중... (30초~1분)';
+    const r = await api({ action: 'dx_law', siteCode: s.code, address: $('lwAddr').value });
+    DX.d.law = r.law; dxCardSheet(s, c.id); toast('법규 검토를 마쳤습니다');
+  });
+  if ($('lwNote')) $('lwNote').onclick = () => { $('kNote').value = dxLawSummary(); $('kNote').focus(); toast('안내 문구에 넣었습니다. 확인 후 저장하세요.'); };
   body.querySelector('#kSave').onclick = e => submitting(e.target, async () => {
     const lim = $('kLimit').value.trim();
     const r = await api({ action: 'dx_card_save', siteCode: s.code, card: { id: c.id, col: c.col, title: $('kTitle').value, due: $('kDue').value, owner: $('kOwner').value, limit: lim === '' ? '' : Number(lim), share: $('kShare').checked, note: $('kNote').value, memo: $('kMemo').value } });
@@ -5631,6 +5639,43 @@ function dxCardSheet(s, id) {
     await api({ action: 'dx_rev_reply', siteCode: s.code, id, status: segVal(body, 'rs_' + id), reply: body.querySelector(`[data-reply="${id}"]`).value });
     await reload(); toast('답변을 저장했습니다. 건축주 화면에 표시됩니다.');
   }));
+}
+
+
+function dxLawHtml(s) {
+  const L = DX.d.law, r = L && L.result, ed = DX.d.canEdit;
+  const lv = { '높음': 'bad', '중간': 'warn', '참고': '' };
+  const py = a => a ? ` (${(a * 121 / 400).toFixed(1)}평)` : '';
+  const body = !r ? '<div class="hint">아직 검토하지 않았습니다. 주소를 확인하고 실행하세요. 30초~1분 걸립니다.</div>' : `
+    <div class="hint">${esc(L.at)} · ${esc(L.by)} · PNU ${esc(r.pnu)}</div>
+    <dl class="dl" style="margin-top:8px">
+      <dt>지번</dt><dd>${esc(r.jibun)}</dd>
+      <dt>지목·면적</dt><dd>${esc(r.land.jimok)} · ${r.land.area ? r.land.area.toLocaleString() + '㎡' + py(r.land.area) : '-'}</dd>
+      <dt>공시지가</dt><dd>${r.land.price ? r.land.price.toLocaleString() + '원/㎡ (' + esc(r.land.year) + ')' : '-'}</dd>
+      <dt>지형·도로</dt><dd>${esc([r.land.height, r.land.shape, r.land.road].filter(Boolean).join(' · ') || '-')}</dd>
+      <dt>용도지역·지구</dt><dd>${r.uses.map(u => esc(u.name) + (u.rel && u.rel !== '포함' ? ` <span class="cr-sub">(${esc(u.rel)})</span>` : '')).join(', ') || '-'}</dd>
+    </dl>
+    ${r.zones.length ? `<div class="dx-scroll"><table class="dx-tbl"><thead><tr><th>용도지역</th><th>건폐율 조례</th><th>법정 상한</th><th>용적률 조례</th><th>법정 상한</th></tr></thead><tbody>${r.zones.map(z => `<tr><td>${esc(z.zone)}</td>
+      <td class="n"><b>${z.bcr != null ? z.bcr + '%' : '확인 필요'}</b><div class="cr-sub">${esc(z.bcrArticle)}</div></td><td class="n">${z.lawBcr}%</td>
+      <td class="n"><b>${z.far != null ? z.far + '%' : '확인 필요'}</b><div class="cr-sub">${esc(z.farArticle)}</div></td><td class="n">${z.lawFar}%</td></tr>`).join('')}</tbody></table></div>
+      ${r.zones.length === 1 && r.land.area && r.zones[0].bcr != null ? `<div class="dx-limit"><span>최대 건축면적 약 <b>${Math.floor(r.land.area * r.zones[0].bcr / 100).toLocaleString()}㎡</b>${py(r.land.area * r.zones[0].bcr / 100)}</span>${r.zones[0].far != null ? `<span>최대 연면적(지상) 약 <b>${Math.floor(r.land.area * r.zones[0].far / 100).toLocaleString()}㎡</b>${py(r.land.area * r.zones[0].far / 100)}</span>` : ''}</div>` : ''}` : ''}
+    ${(r.extra || []).length ? `<div class="hint">${r.extra.map(x => `· ${esc(x.title)}: ${esc(x.text)} ${x.article ? '(' + esc(x.article) + ')' : ''}`).join('<br>')}</div>` : ''}
+    ${r.ordinance ? `<div class="hint" style="margin-top:6px">근거: <a href="${esc(r.ordinance.url)}" target="_blank" rel="noopener">${esc(r.ordinance.name)}</a> · 국토계획법 시행령 제84·85조</div>` : ''}
+    ${r.checks.length ? `<h5 style="margin:12px 0 4px">확인할 것</h5>${r.checks.map(c => `<div class="dx-rev"><div class="dx-rev-h"><span class="st ${lv[c.level] === 'bad' ? 'mine' : lv[c.level] === 'warn' ? '' : '완료'}">${esc(c.level)}</span><b>${esc(c.title)}</b></div><p>${esc(c.text)}</p></div>`).join('')}` : ''}
+    ${(r.warnings || []).length ? `<div class="notice" style="margin-top:8px">${r.warnings.map(esc).join('<br>')}</div>` : ''}
+    <div class="hint" style="margin-top:6px">자동 조회 결과는 참고용입니다. 최종 판단은 토지이음과 조례 원문, 지자체 문의로 확인하세요.</div>`;
+  return `<div class="card"><h4 style="margin:0 0 6px">법규 검토</h4>
+    ${ed ? `<div class="f"><label>대지 주소 (지번 권장)</label><input type="text" id="lwAddr" value="${esc((L && L.address) || DX.d.address || s.address || '')}"></div>
+      <div class="actions" style="justify-content:flex-start;margin-top:0"><button class="btn ghost" type="button" id="lwRun">${r ? '다시 검토' : '법규 검토 실행'}</button>${r ? '<button class="btn ghost" type="button" id="lwNote">요약을 건축주 안내에 넣기</button>' : ''}</div>` : ''}
+    ${body}</div>`;
+}
+function dxLawSummary() {
+  const r = DX.d.law.result, z = r.zones[0];
+  const parts = [`${r.jibun} · ${r.land.jimok} ${r.land.area ? r.land.area.toLocaleString() + '㎡' : ''}`.trim(), `용도지역: ${r.zones.map(x => x.zone).join(', ') || '-'}`];
+  if (z && z.bcr != null) parts.push(`건폐율 ${z.bcr}% · 용적률 ${z.far != null ? z.far + '%' : '확인 중'}`);
+  const key = r.checks.filter(c => c.level !== '참고').map(c => c.title);
+  if (key.length) parts.push(`검토 사항: ${key.join(', ')}`);
+  return parts.join('\n');
 }
 
 const DX_EXT_OK = /\.(pdf|jpe?g|png)$/i;
@@ -6398,7 +6443,7 @@ async function renderCxTab() {
   cxRenderList();
 }
 
-const CX6 = { 신규문의: ['접수', '접수(메일답장완료)'], '첫 상담': ['통화완료', '통화완료 미팅고려'], 미팅: ['미팅약속/진행중'], 견적: ['견적중'], '계약 협의': ['미팅완료/계약고려중'], 계약: ['계약완료'], 종료: ['반려', '이탈'] };
+const CX6 = { 신규문의: ['접수', '접수(메일답장완료)'], '첫 상담': ['통화완료', '통화완료 미팅고려'], 미팅: ['미팅약속/진행중'], 견적: ['견적중', '견적완료/조정'], '계약 협의': ['미팅완료/계약고려중'], 계약: ['계약완료'], 종료: ['반려', '이탈'] };
 const CX6_LIST = ['신규문의', '첫 상담', '미팅', '견적', '계약 협의', '계약'];
 const CX6_DEF = { 신규문의: '접수', '첫 상담': '통화완료', 미팅: '미팅약속/진행중', 견적: '견적중', '계약 협의': '미팅완료/계약고려중', 계약: '계약완료' };
 function cx6(o) { return Object.keys(CX6).find(k => CX6[k].includes(o.stage)) || '첫 상담'; }
