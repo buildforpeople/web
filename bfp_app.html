@@ -365,6 +365,38 @@
   .fab { display: none; }
 
   .badge { background: #D9534F; color: #fff; font-size: 11px; font-weight: 700; min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; padding: 0 5px; text-align: center; margin-left: 2px; }
+  .cx-top { flex-wrap: wrap; gap: 8px; } .cx-top h2 { margin-right: 4px; }
+  .cx-tabs { display: flex; gap: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; margin-right: auto; }
+  .cx-tabs button { background: none; border: 0; color: var(--muted); font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 7px; cursor: pointer; }
+  .cx-tabs button[aria-pressed=true] { background: var(--text); color: var(--bg); } .cx-tabs b { margin-left: 5px; }
+  .cx-q { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--text); padding: 7px 11px; font: inherit; width: 200px; }
+  .cx-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 6px 0 14px; }
+  .cx-kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; } .cx-kpi span, .cx-kpi em { color: var(--muted); font-size: 12px; font-style: normal; } .cx-kpi b { display: block; font-size: 21px; margin: 2px 0; } .cx-kpi small { font-size: 14px; }
+  .cx-note { background: var(--amber-soft); border: 1px solid #6B5A35; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .cx-note p { margin: 0; flex: 1; min-width: 240px; } .cx-note b { color: var(--amber); }
+  .cx-sec { display: flex; align-items: baseline; gap: 8px; margin: 16px 0 8px; } .cx-sec h3 { font-size: 15px; margin: 0; } .cx-sec span { color: var(--muted); font-size: 13px; }
+  .cx-todo { padding: 0; overflow: hidden; }
+  .cx-trow { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 11px 16px; border-top: 1px solid var(--line); cursor: pointer; } .cx-trow:first-child { border-top: 0; } .cx-trow:hover { background: rgba(255,255,255,.03); }
+  .cx-why { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; justify-self: start; } .cx-why.red { background: var(--red-soft); color: var(--red); } .cx-why.amber { background: var(--amber-soft); color: var(--amber); } .cx-why.blue { background: rgba(127,176,234,.15); color: #8DBBF0; } .cx-why.gray { background: rgba(255,255,255,.07); color: var(--muted); }
+  .cx-who { min-width: 0; } .cx-who b { font-size: 15px; } .cx-who .st { margin-left: 6px; } .cx-who > div { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cx-tag { margin-left: 6px; font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: rgba(179,157,219,.15); color: #b39ddb; }
+  .cx-board { display: grid; grid-template-columns: repeat(6, minmax(170px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  .cx-col { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-height: 280px; } .cx-col.over { outline: 2px dashed var(--green); }
+  .cx-col h4 { font-size: 13.5px; margin: 2px 4px 10px; display: flex; justify-content: space-between; } .cx-col h4 span { color: var(--muted); font-weight: 500; }
+  .cx-card { background: var(--raise); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; margin-bottom: 8px; cursor: grab; } .cx-card b { font-size: 14px; } .cx-card > div { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cx-card .cx-nx { color: var(--text); margin-top: 4px; } .cx-card .cx-nx.late { color: var(--red); } .cx-mini { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
+  .cx-closed { margin-top: 12px; } .cx-closed summary { cursor: pointer; font-weight: 600; } .cx-endlist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; } .cx-endlist .cx-card { width: 200px; cursor: pointer; }
+  .cx-sheetbar { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin: 6px 0 8px; }
+  .cx-sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: auto; max-height: 72vh; }
+  .cx-sheet table { border-collapse: collapse; table-layout: fixed; font-size: 13px; } .cx-sheet th, .cx-sheet td { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); padding: 6px 8px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cx-sheet thead th { position: sticky; top: 0; background: #353532; z-index: 2; cursor: pointer; user-select: none; } .cx-sheet thead tr.cx-flt th { top: 32px; background: #2f2f2c; cursor: default; padding: 4px; }
+  .cx-flt input, .cx-flt select { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; font: inherit; font-size: 12px; }
+  .cx-sheet td.ed { background: rgba(79,154,114,.07); } .cx-sheet td.ed select, .cx-sheet td.ed input { background: transparent; color: var(--text); border: 0; font: inherit; width: 100%; } .cx-sheet td.ed option { background: var(--surface); } .cx-sheet td.late, .cx-sheet td.late input { color: var(--red); font-weight: 600; }
+  .cx-sheet td.cx-nm { font-weight: 600; cursor: pointer; } .cx-sheet tbody tr:hover td { background: rgba(255,255,255,.04); }
+  .cx-outs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .cx-outs button { background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 7px 11px; font: inherit; font-size: 13px; cursor: pointer; } .cx-outs button[aria-pressed=true] { background: var(--green); border-color: var(--green); color: #fff; }
+  .cx-bulklist { display: grid; gap: 6px; max-height: 40vh; overflow: auto; } .cx-bulklist label { display: flex; gap: 8px; align-items: center; }
+  .ds-brief .dl { display: grid; grid-template-columns: 96px 1fr; gap: 5px 12px; font-size: 13.5px; margin: 8px 0; } .ds-brief dt { color: var(--muted); } .ds-brief dd { margin: 0; white-space: pre-wrap; }
+  .ds-brief li { margin-bottom: 8px; } .ds-brief li span { color: var(--muted); font-size: 12px; display: block; }
+  @media (max-width: 760px) { .cx-kpis { grid-template-columns: repeat(2, 1fr); } .cx-trow { grid-template-columns: 1fr; gap: 6px; } .cx-q { width: 100%; order: 5; } .cx-tabs { margin-right: 0; } }
   .cx-alert { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .cx-alert button { flex: 1 1 220px; text-align: left; border: 1px solid #6A3A35; background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 12px 16px; font-weight: 700; }
   .cx-alert button.p2 { border-color: #6B5A35; background: var(--amber-soft); color: var(--amber); }
@@ -5203,7 +5235,8 @@ function dsTimelineHtml() {
 function renderDesignTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
-  $('main').innerHTML = `<div id="dsTimeline">${dsTimelineHtml()}</div><div id="dsBody"><div class="loading">불러오는 중...</div></div>`;
+  $('main').innerHTML = `<div id="dsTimeline">${dsTimelineHtml()}</div><div id="dsBrief"></div><div id="dsBody"><div class="loading">불러오는 중...</div></div>`;
+  dsBrief(s.code);
   const draw = () => {
     if (S.tab !== 'design' || S.siteCode !== s.code) return;
     $('dsTimeline').innerHTML = dsTimelineHtml();
@@ -5213,6 +5246,15 @@ function renderDesignTab() {
   dsLoad(s.code).then(draw).catch(e => { if ($('dsBody')) $('dsBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
 }
 
+async function dsBrief(code) {
+  try {
+    const d = await api({ action: 'cx_brief', siteCode: code }), b = d.brief, el = $('dsBrief');
+    if (!b || !el || S.siteCode !== code) return;
+    el.innerHTML = `<details class="panel ds-brief" ${DS.plan ? '' : 'open'} style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:600">건축주 요구사항 <span class="cr-sub">고객관리 ${esc(b.id)} · ${esc(b.name)} · ${esc(b.source)} 접수 ${esc(String(b.createdAt).slice(0, 10))}</span></summary>
+      <dl class="dl">${b.fields.map(f => `<dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd>`).join('')}</dl>
+      ${b.logs.length ? `<h4 style="margin:12px 0 6px">상담 기록</h4><ul style="padding-left:18px;margin:0">${b.logs.map(l => `<li><span>${esc(l.at)} · ${esc(l.kind)} · ${esc(l.by)}</span>${esc(l.text)}</li>`).join('')}</ul>` : ''}</details>`;
+  } catch (e) {}
+}
 function dsRender(el) {
   if (!DS.plan) { dsCreateForm(el); return; }
   const c = dsCurrent();
@@ -5892,7 +5934,7 @@ function cxDue(o) {
 function cxP1(o) { return !cxClosed(o) && ['접수', '접수(메일답장완료)'].includes(o.stage) && !o.firstContactAt; }
 function cxP2(o) { return !cxClosed(o) && o.stage === '견적중'; }
 function cxTodo(o) { return cxP1(o) || cxP2(o); }
-function cxUrgentCount() { return CX.items.filter(cxTodo).length; }
+function cxUrgentCount() { return CX.items.filter(o => { const w = cxWhy(o); return w && w.k <= 1; }).length; }
 function cxUnit(v, unit) { return v && unit && !String(v).includes(unit) && /^[\d.~\s-]+$/.test(v) ? v + unit : v; }
 function cxBadge() {
   const tab = document.querySelector('[data-tab="cx"]');
@@ -5928,86 +5970,219 @@ async function renderCxTab() {
   cxRenderList();
 }
 
-function cxRenderList() {
-  const groups = cxGroups();
-  const list = cxFilteredList();
-  const nP1 = CX.items.filter(cxP1).length, nP2 = CX.items.filter(cxP2).length;
-  const nOver = CX.items.filter(cxOver).length, nStale = CX.items.filter(cxStale).length;
+const CX6 = { 신규문의: ['접수', '접수(메일답장완료)'], '첫 상담': ['통화완료', '통화완료 미팅고려'], 미팅: ['미팅약속/진행중'], 견적: ['견적중'], '계약 협의': ['미팅완료/계약고려중'], 계약: ['계약완료'], 종료: ['반려', '이탈'] };
+const CX6_LIST = ['신규문의', '첫 상담', '미팅', '견적', '계약 협의', '계약'];
+const CX6_DEF = { 신규문의: '접수', '첫 상담': '통화완료', 미팅: '미팅약속/진행중', 견적: '견적중', '계약 협의': '미팅완료/계약고려중', 계약: '계약완료' };
+function cx6(o) { return Object.keys(CX6).find(k => CX6[k].includes(o.stage)) || '첫 상담'; }
+function cxOpen6(o) { return !['계약', '종료'].includes(cx6(o)); }
+function cxWhy(o) {
+  if (!cxOpen6(o)) return null;
+  if (cxP1(o)) return { k: 0, cls: 'red', t: `신규 문의 D+${cxDays(o)}` };
+  if (!o.dueDate) return { k: 3, cls: 'gray', t: '다음 할 일 없음' };
+  const n = dayDiff(today(), o.dueDate);
+  if (n < 0) return { k: 1, cls: 'red', t: `기한 ${-n}일 지남` };
+  if (n <= 7) return { k: 2, cls: n === 0 ? 'amber' : 'blue', t: n === 0 ? '오늘' : `${n}일 남음` };
+  return null;
+}
+function cxHit(o) { const q = CX.q.trim().toLowerCase(); return !q || [o.name, o.phone, o.location, o.id].join(' ').toLowerCase().includes(q); }
+function cxMd(d) { return d ? Number(d.slice(5, 7)) + '/' + Number(d.slice(8, 10)) : ''; }
+function cxStaleList() { return CX.items.filter(o => cxOpen6(o) && o.dueDate && dayDiff(o.dueDate, today()) > 30); }
 
+function cxRenderList() {
+  CX.view = CX.view || 'today';
+  const nToday = CX.items.filter(o => cxWhy(o) && cxHit(o)).length;
+  const nOpen = CX.items.filter(cxOpen6).length;
   $('main').innerHTML = `
-    <div class="cr-bar">
+    <div class="cr-bar cx-top">
       <h2>고객관리</h2>
+      <div class="cx-tabs">${[['today', '오늘 할 일', nToday], ['board', '보드', nOpen], ['sheet', '시트', CX.items.length]].map(([k, l, n]) => `<button type="button" data-v="${k}" aria-pressed="${CX.view === k}">${l}<b>${n}</b></button>`).join('')}</div>
+      <input type="text" id="cxQ" class="cx-q" placeholder="이름·연락처·지역 검색" value="${esc(CX.q)}">
       ${S.me.role === 'admin' ? '<button class="btn ghost" id="cxClean" type="button">자료 정리</button><button class="btn ghost" id="cxImport" type="button">메일 확인</button>' : ''}
       <button class="btn" id="cxNew" type="button">+ 고객 등록</button>
     </div>
-    ${nP1 || nP2 ? `<div class="cx-alert">
-      ${nP1 ? `<button type="button" class="p1" data-f="첫 통화"><b>${nP1}</b> 첫 통화 필요<span>접수 후 아직 통화 전</span></button>` : ''}
-      ${nP2 ? `<button type="button" class="p2" data-f="견적 진행"><b>${nP2}</b> 견적 진행 중<span>견적 제출·확답 필요</span></button>` : ''}
-    </div>` : `<div class="cx-ok">지금 꼭 연락할 고객이 없습니다.</div>`}
-    ${nOver || nStale ? `<div class="cx-sub-alert">
-      ${nOver ? `<button type="button" data-f="기한 지남">연락 기한 지남 <b>${nOver}</b></button>` : ''}
-      ${nStale ? `<button type="button" data-f="방치">${CX.meta.staleDays}일 이상 기록 없음 <b>${nStale}</b></button>` : ''}
-    </div>` : ''}
-    <div class="f"><input type="text" id="cxQ" placeholder="이름·연락처·지역 검색" value="${esc(CX.q)}"></div>
-    <div class="filters">
-      ${Object.keys(groups).map(k => { const n = CX.items.filter(groups[k]).length; return (n || k === CX.filter || k === '오늘 할 일' || k === '진행중' || k === '전체') ? `<button class="chip ${['첫 통화', '견적 진행'].includes(k) && n ? 'warn' : ''} ${k === '★ 별표' ? 'star-chip' : ''}" data-f="${esc(k)}" aria-pressed="${CX.filter === k}">${esc(k)}<b>${n}</b></button>` : ''; }).join('')}
-    </div>
-    <section class="panel" id="cxRows">
-      ${cxRowsHtml(list)}
-    </section>`;
-  cxBindRows();
+    <div id="cxView"></div>`;
+  $('main').querySelectorAll('.cx-tabs button').forEach(b => b.onclick = () => { CX.view = b.dataset.v; cxRenderList(); });
   $('cxNew').onclick = cxNewForm;
   if ($('cxClean')) $('cxClean').onclick = cxCleanForm;
-  const imp = $('cxImport');
-  if (imp) imp.onclick = e => submitting(e.target, async () => {
+  if ($('cxImport')) $('cxImport').onclick = e => submitting(e.target, async () => {
     const d = await api({ action: 'cx_import' });
-    CX.items = d.items; cxBadge(); cxRenderList(); toast(d.imported ? `새 고객 ${d.imported}명 등록` : '새 상담 메일이 없습니다');
+    CX.items = d.items.map(cxNorm); cxBadge(); cxRenderList(); toast(d.imported ? `새 고객 ${d.imported}명 등록` : '새 상담 메일이 없습니다');
   });
   const qi = $('cxQ');
-  qi.oninput = () => { CX.q = qi.value; $('cxRows').innerHTML = cxRowsHtml(cxFilteredList()); cxBindRows(); };
-  $('main').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { CX.filter = b.dataset.f; cxRenderList(); });
-  $('main').querySelectorAll('.cx-row').forEach(b => b.onclick = () => cxOpen(b.dataset.id));
+  qi.oninput = () => { CX.q = qi.value; cxDrawView(); };
+  cxDrawView();
+}
+function cxDrawView() {
+  const el = $('cxView'); if (!el) return;
+  el.innerHTML = CX.view === 'board' ? cxBoardHtml() : CX.view === 'sheet' ? cxSheetHtml() : cxTodayHtml();
+  el.querySelectorAll('[data-cx]').forEach(b => b.onclick = e => { if (e.target.closest('[data-q],[data-site],select,input')) return; cxOpen(b.dataset.cx); });
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => cxQuick(b.dataset.q));
+  el.querySelectorAll('[data-site]').forEach(b => b.onclick = () => cxOpen(b.dataset.site));
+  if ($('cxBulk')) $('cxBulk').onclick = cxBulkForm;
+  if (CX.view === 'board') cxBindBoard(el);
+  if (CX.view === 'sheet') cxBindSheet(el);
 }
 
-function cxRowsHtml(list) {
-  if (!list.length) return `<div class="empty"><h3>해당하는 고객이 없습니다</h3>${CX.filter === '오늘 할 일' ? '첫 통화와 견적 진행 고객이 모두 처리되었습니다.' : CX.filter === '진행중' ? '홈페이지 상담 요청은 자동으로 등록됩니다.' : ''}</div>`;
-  return list.map(o => {
-    const due = cxDue(o);
-    const flag = cxP1(o) ? `첫 통화 D+${cxDays(o)}` : cxP2(o) ? '견적 진행 중' : '';
-    const soft = !flag && cxWait(o) ? '확답 대기' : !flag && cxOver(o) ? `기한 ${due.text}` : !flag && cxStale(o) ? '기록 없음' : '';
-    return `<button class="cr-row cx-row ${flag ? 'urgent' : ''} ${cxP2(o) ? 'p2' : ''} ${o.star ? 'starred' : ''}" data-id="${esc(o.id)}">
-      <span class="cr-id">${esc(o.source)} · 접수 ${esc(String(o.createdAt).slice(2, 10).replace(/-/g, '.'))} (D+${cxDays(o)})</span>
-      <span class="cr-title">${o.star ? '<span class="star">★</span>' : ''}${esc(o.name)}${o.star ? `<span class="tag star-tag">${esc(o.star)}</span>` : ''}${flag ? `<span class="flag ${cxP2(o) ? 'amber' : ''}">${esc(flag)}</span>` : ''}${soft ? `<span class="flag soft">${esc(soft)}</span>` : ''}${o.siteCode ? `<span class="tag">${esc(o.siteCode)}</span>` : ''}</span>
-      <span class="cr-sub">${esc([o.location, o.landStatus, o.wantArea ? cxUnit(o.wantArea, '평') : '', o.budget].filter(Boolean).join(' · '))}</span>
-      ${!cxClosed(o) ? `<span class="cr-sub cx-next ${due.cls}">다음: ${esc(o.nextAction || '미정')}${o.dueDate ? ` · ${esc(o.dueDate.slice(5).replace('-', '/'))} (${esc(due.text)})` : ''}${o.ownerName ? ' · ' + esc(o.ownerName) : ''}</span>`
-        : ['반려', '이탈'].includes(o.stage) && o.rejectReasons ? `<span class="cr-sub">${esc(o.stage)} 사유: ${esc(o.rejectReasons)}</span>` : ''}
-      <span class="cr-right"><span class="st cx-st ${esc(o.stage.replace(/[^\w가-힣]/g, ''))}">${esc(o.stage)}</span></span>
-    </button>`;
-  }).join('');
+function cxKpis() {
+  const all = CX.items, d42 = new Date(Date.now() - 42 * 864e5).toISOString().slice(0, 10);
+  const fresh = all.filter(o => String(o.createdAt).slice(0, 10) >= d42);
+  const met = all.filter(o => ['미팅', '견적', '계약 협의', '계약'].includes(cx6(o))).length;
+  const won = all.filter(o => cx6(o) === '계약').length;
+  const lost = all.filter(o => cx6(o) === '종료'), rs = {};
+  lost.forEach(o => String(o.rejectReasons || '사유 미기록').split(',').forEach(r => { r = r.trim(); rs[r] = (rs[r] || 0) + 1; }));
+  const top = Object.entries(rs).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([r, n]) => `${r} ${n}`).join(' · ') || '—';
+  const resp = fresh.filter(o => o.firstContactAt).map(o => (new Date(String(o.firstContactAt).replace(' ', 'T')) - new Date(String(o.createdAt).replace(' ', 'T'))) / 36e5).filter(h => h >= 0 && h < 24 * 60);
+  const avg = resp.length ? resp.reduce((t, h) => t + h, 0) / resp.length : null;
+  const k = (l, v, s) => `<div class="cx-kpi"><span>${l}</span><b>${v}</b><em>${s}</em></div>`;
+  return `<div class="cx-kpis">${k('최근 6주 신규 문의', fresh.length + '건', '목표: 1시간 안 첫 연락')}${k('평균 첫 연락', avg == null ? '—' : avg < 24 ? Math.round(avg) + '시간' : Math.round(avg / 24) + '일', `최근 6주 ${resp.length}건 기준`)}${k('미팅까지 간 비율', all.length ? Math.round(met / all.length * 100) + '%' : '—', `${met} / ${all.length}명`)}${k('계약', won + '건', `문의 대비 ${all.length ? Math.round(won / all.length * 100) : 0}%`)}${k(`종료 ${lost.length}명 주요 사유`, `<small>${esc(top)}</small>`, '이탈 시 사유 필수')}</div>`;
 }
-function cxBindRows() {
-  document.querySelectorAll('#cxRows .cx-row').forEach(b => b.onclick = () => cxOpen(b.dataset.id));
+function cxQuickLabel(o) { return { 신규문의: '연락했어요', '첫 상담': '연락했어요', 미팅: '미팅했어요', 견적: '견적 보냈어요', '계약 협의': '의사 확인했어요' }[cx6(o)] || '기록'; }
+function cxTodayHtml() {
+  const list = CX.items.filter(cxHit).map(o => ({ o, w: cxWhy(o) })).filter(x => x.w).sort((a, b) => a.w.k - b.w.k || String(a.o.dueDate || '').localeCompare(String(b.o.dueDate || '')));
+  const stale = cxStaleList();
+  const groups = [[0, '지금 바로', '신규 문의 — 1시간 안 첫 연락이 목표'], [1, '기한 지남', '약속한 날짜가 지났습니다'], [2, '이번 주', '7일 안에 할 일'], [3, '다음 할 일 정하기', '진행 중인데 다음 약속이 없는 고객']];
+  return cxKpis() + (stale.length && S.me.role === 'admin' ? `<div class="cx-note"><p><b>먼저 정리하세요.</b> 기한이 30일 넘게 지난 진행 고객이 ${stale.length}명입니다. 한 번에 '보류(재연락 날짜 지정)' 또는 '종료'로 정리하면 이 목록에 실제 할 일만 남습니다.</p><button class="btn ghost" type="button" id="cxBulk">${stale.length}명 일괄 정리</button></div>` : '') +
+    (groups.map(([k, t, s]) => {
+      const g = list.filter(x => x.w.k === k);
+      return g.length ? `<div class="cx-sec"><h3>${t} ${g.length}</h3><span>${s}</span></div><section class="panel cx-todo">${g.map(({ o, w }) => `
+        <div class="cx-trow" data-cx="${esc(o.id)}"><span class="cx-why ${w.cls}">${esc(w.t)}</span>
+          <div class="cx-who"><b>${o.star ? '<span class="star">★</span> ' : ''}${esc(o.name)}</b><span class="st">${cx6(o)}</span>${o.ownerName ? `<span class="cr-sub"> · ${esc(o.ownerName)}</span>` : '<span class="cx-tag">담당 미정</span>'}
+            <div>${esc(o.nextAction || '다음 할 일 미정')}${o.dueDate ? ' · ' + cxMd(o.dueDate) : ''} — ${esc([o.location, o.wantArea ? cxUnit(o.wantArea, '평') : '', o.budget].filter(Boolean).join(' · '))}${o.lastContactAt ? ' · 최근 연락 ' + cxMd(String(o.lastContactAt).slice(0, 10)) : ''}</div></div>
+          <button class="btn" type="button" data-q="${esc(o.id)}">${cxQuickLabel(o)}</button></div>`).join('')}</section>` : '';
+    }).join('') || '<section class="panel empty"><h3>오늘 할 일이 없습니다</h3>모든 고객에게 다음 약속이 잡혀 있습니다.</section>');
 }
 
-function cxFilteredList() {
-  const q = CX.q.trim().toLowerCase();
-  const rank = o => cxP1(o) ? 0 : cxP2(o) ? 1 : cxOver(o) ? 3 : cxStale(o) ? 4 : cxWait(o) ? 6 : cxClosed(o) ? 9 : 5;
-  return CX.items.filter(cxGroups()[CX.filter]).filter(o => !q || [o.name, o.phone, o.location, o.id].join(' ').toLowerCase().includes(q))
-    .sort((a, b) => rank(a) - rank(b) || String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999')) || String(b.createdAt).localeCompare(String(a.createdAt)));
+function cxBoardHtml() {
+  const card = o => { const late = o.dueDate && o.dueDate < today(); return `<div class="cx-card" draggable="true" data-cx="${esc(o.id)}"><b>${o.star ? '<span class="star">★</span> ' : ''}${esc(o.name)}</b><div>${esc([o.location, o.budget].filter(Boolean).join(' · '))}</div>
+    ${cx6(o) === '계약' ? (o.siteCode ? `<div class="cx-nx">현장 ${esc(o.siteCode)}</div>` : S.me.role === 'admin' ? `<button class="btn ghost cx-mini" type="button" data-site="${esc(o.id)}">설계로 넘기기</button>` : '<div class="cx-nx">현장 등록 대기</div>')
+      : `<div class="cx-nx ${late ? 'late' : ''}">${esc(o.nextAction || '다음 할 일 미정')}${o.dueDate ? ' · ' + cxMd(o.dueDate) : ''}</div>`}</div>`; };
+  const end = CX.items.filter(o => cx6(o) === '종료' && cxHit(o));
+  return `<div class="hint" style="margin-bottom:8px">카드를 끌어 단계를 옮깁니다. 붉은 글씨는 기한이 지난 건입니다.</div>
+    <div class="cx-board">${CX6_LIST.map(s => { const cs = CX.items.filter(o => cx6(o) === s && cxHit(o)); return `<div class="cx-col" data-s="${s}"><h4>${s}<span>${cs.length}</span></h4>${cs.map(card).join('')}</div>`; }).join('')}</div>
+    <details class="panel cx-closed"><summary>종료 (반려·이탈) ${end.length}</summary><div class="cx-endlist">${end.map(o => `<div class="cx-card" data-cx="${esc(o.id)}"><b>${esc(o.name)}</b><div>${esc(o.stage)} · ${esc(o.rejectReasons || '사유 미기록')}</div></div>`).join('')}</div></details>`;
 }
-function cxGroups() {
-  return {
-    '오늘 할 일': cxTodo,
-    '첫 통화': cxP1,
-    '견적 진행': cxP2,
-    '확답 대기': cxWait,
-    진행중: o => !cxClosed(o),
-    '★ 별표': o => !!o.star,
-    '기한 지남': cxOver,
-    방치: cxStale,
-    ...Object.fromEntries(CX.meta.stages.map(st => [st, o => o.stage === st])),
-    전체: () => true
+function cxBindBoard(el) {
+  el.querySelectorAll('.cx-card[draggable]').forEach(c => c.ondragstart = e => e.dataTransfer.setData('id', c.dataset.cx));
+  el.querySelectorAll('.cx-col').forEach(col => {
+    col.ondragover = e => { e.preventDefault(); col.classList.add('over'); };
+    col.ondragleave = () => col.classList.remove('over');
+    col.ondrop = async e => {
+      e.preventDefault(); col.classList.remove('over');
+      const o = CX.items.find(x => x.id === e.dataTransfer.getData('id')); if (!o || cx6(o) === col.dataset.s) return;
+      try { const d = await api({ action: 'cx_update', id: o.id, fields: { stage: CX6_DEF[col.dataset.s] } }); cxReplace(d.item); cxDrawView(); toast(`${o.name} → ${col.dataset.s}`); }
+      catch (err) { toast(err.message); }
+    };
+  });
+}
+
+const CX_COLS = [['id', '고객번호', 96], ['createdAt', '접수일', 96], ['source', '경로', 96], ['name', '고객', 80], ['phone', '연락처', 120], ['location', '지역', 170], ['wantArea', '평수', 100], ['budget', '예산', 100], ['houseType', '유형', 80], ['landStatus', '상황', 140], ['stage6', '단계', 108, 1], ['nextAction', '다음 할 일', 140, 1], ['dueDate', '기한', 132, 1], ['ownerEmail', '담당', 90, 1], ['lastContactAt', '최근 연락', 96], ['rejectReasons', '종료 사유', 100], ['siteCode', '현장', 70]];
+CX.sort = CX.sort || { k: 'createdAt', d: -1 }; CX.flt = CX.flt || {};
+function cxCell(o, k) { return k === 'stage6' ? cx6(o) : k === 'ownerEmail' ? (o.ownerName || '') : ['createdAt', 'lastContactAt'].includes(k) ? String(o[k] || '').slice(0, 10) : String(o[k] == null ? '' : o[k]); }
+function cxSheetRows() {
+  return CX.items.filter(o => cxHit(o) && CX_COLS.every(([k]) => !CX.flt[k] || cxCell(o, k).includes(CX.flt[k])))
+    .sort((a, b) => cxCell(a, CX.sort.k).localeCompare(cxCell(b, CX.sort.k)) * CX.sort.d);
+}
+function cxSheetHtml() {
+  const rows = cxSheetRows(), uniq = k => [...new Set(CX.items.map(o => cxCell(o, k)).filter(Boolean))].sort();
+  const pick = ['source', 'stage6', 'ownerEmail', 'houseType', 'landStatus'];
+  const staff = (CX.meta.staff || []);
+  return `<div class="cx-sheetbar">${rows.length}명 · 초록 칸은 바로 고칠 수 있습니다 · 열 제목을 누르면 정렬<span style="flex:1"></span><button class="btn ghost" type="button" id="cxCsv">엑셀(CSV) 내려받기</button></div>
+  <div class="cx-sheet"><table style="width:${CX_COLS.reduce((t, c) => t + c[2], 0)}px"><colgroup>${CX_COLS.map(c => `<col style="width:${c[2]}px">`).join('')}</colgroup>
+  <thead><tr>${CX_COLS.map(([k, l]) => `<th data-sk="${k}">${l}${CX.sort.k === k ? (CX.sort.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr>
+  <tr class="cx-flt">${CX_COLS.map(([k]) => `<th>${pick.includes(k) ? `<select data-fk="${k}"><option value="">전체</option>${(k === 'stage6' ? CX6_LIST.concat('종료') : uniq(k)).map(v => `<option ${CX.flt[k] === v ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : `<input data-fk="${k}" value="${esc(CX.flt[k] || '')}">`}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(o => `<tr data-row="${esc(o.id)}">${CX_COLS.map(([k, , , ed]) => {
+    if (!ed) return `<td ${k === 'name' ? `class="cx-nm" data-cx="${esc(o.id)}"` : ''}>${k === 'name' && o.star ? '★ ' : ''}${esc(cxCell(o, k))}</td>`;
+    const closed = !cxOpen6(o);
+    if (k === 'stage6') return `<td class="ed"><select data-ek="stage">${CX6_LIST.concat(closed && cx6(o) === '종료' ? ['종료'] : []).map(s => `<option value="${s}" ${cx6(o) === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>`;
+    if (k === 'ownerEmail') return `<td class="ed"><select data-ek="ownerEmail"><option value="">미정</option>${staff.map(s => `<option value="${esc(s.email)}" ${o.ownerEmail === s.email ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></td>`;
+    if (closed) return `<td></td>`;
+    if (k === 'dueDate') return `<td class="ed ${o.dueDate && o.dueDate < today() ? 'late' : ''}"><input type="date" data-ek="dueDate" value="${esc(o.dueDate || '')}"></td>`;
+    return `<td class="ed"><select data-ek="nextAction">${[o.nextAction].concat(CX.meta.actions.filter(a => a !== o.nextAction)).map(a => `<option ${a === o.nextAction ? 'selected' : ''}>${esc(a || '')}</option>`).join('')}</select></td>`;
+  }).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function cxBindSheet(el) {
+  el.querySelectorAll('th[data-sk]').forEach(th => th.onclick = () => { CX.sort = { k: th.dataset.sk, d: CX.sort.k === th.dataset.sk ? -CX.sort.d : 1 }; cxDrawView(); });
+  el.querySelectorAll('[data-fk]').forEach(i => i[i.tagName === 'SELECT' ? 'onchange' : 'oninput'] = () => {
+    CX.flt[i.dataset.fk] = i.value; const p = i.selectionStart; cxDrawView();
+    const n = document.querySelector(`[data-fk="${i.dataset.fk}"]`); if (n && n.tagName === 'INPUT') { n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} }
+  });
+  el.querySelectorAll('[data-ek]').forEach(i => i.onchange = async () => {
+    const o = CX.items.find(x => x.id === i.closest('tr').dataset.row), k = i.dataset.ek;
+    if (k === 'stage' && i.value === '계약' && !confirm(`${o.name} 고객을 계약 단계로 옮길까요?`)) { cxDrawView(); return; }
+    const fields = k === 'stage' ? { stage: CX6_DEF[i.value] } : { [k]: i.value };
+    try { const d = await api({ action: 'cx_update', id: o.id, fields }); cxReplace(d.item); cxDrawView(); toast(`${o.name} 저장됨`); }
+    catch (err) { toast(err.message); cxDrawView(); }
+  });
+  if ($('cxCsv')) $('cxCsv').onclick = () => {
+    const rows = cxSheetRows(), q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const csv = '﻿' + CX_COLS.map(c => q(c[1])).join(',') + '\n' + rows.map(o => CX_COLS.map(([k]) => q(cxCell(o, k))).join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `고객목록_${today()}.csv`; a.click();
   };
+}
+
+const CX_OUTS = [['통화 완료', '통화'], ['부재중', '메모'], ['문자·메일 보냄', '메일·문자'], ['미팅 잡힘', '메모', '미팅약속/진행중'], ['미팅 완료', '미팅', '미팅완료/계약고려중'], ['견적 보냄', '메모', '미팅완료/계약고려중'], ['계약 확정', '메모', '계약완료'], ['보류', '메모'], ['이탈', '메모', '이탈']];
+function cxQuick(id) {
+  const o = CX.items.find(x => x.id === id); if (!o) return;
+  const M = CX.meta, plus = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const body = openSheet(`${esc(o.name)} — 방금 한 일 기록`, `${esc(o.id)} · ${cx6(o)}${o.nextAction ? ' · 예정: ' + esc(o.nextAction) : ''}`, `
+    <div class="card"><span class="lb">결과</span><div class="cx-outs">${CX_OUTS.map(([l]) => `<button type="button" data-o="${l}">${l}</button>`).join('')}</div>
+      <div class="f"><textarea id="qMemo" rows="3" placeholder="통화·미팅 내용, 고객 반응 (상담 기록에 남습니다)"></textarea></div>
+      <div id="qDrop" hidden><span class="lb">이탈 사유 (필수)</span>${segHtml('qWhy', M.dropReasons, '')}</div>
+      <div id="qNext"><span class="lb">다음 할 일 (필수)</span>
+        <div class="f" style="display:flex;gap:8px"><select id="qAct" style="flex:1">${M.actions.map(a => `<option ${a === (o.nextAction || M.nextDefault[o.stage]) ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select><input type="date" id="qDue" style="flex:1" value="${o.dueDate && o.dueDate > today() ? o.dueDate : plus(3)}"></div>
+        <div class="f"><select id="qOwner"><option value="">담당 미정</option>${(M.staff || []).map(s => `<option value="${esc(s.email)}" ${(o.ownerEmail || S.me.email) === s.email ? 'selected' : ''}>${esc(s.name)} (${esc(s.team)})</option>`).join('')}</select></div></div>
+    </div>
+    <div class="actions"><button class="btn ghost" type="button" id="qDetail">고객 상세</button><button class="btn" type="button" id="qSave">저장</button></div>`);
+  bindSegs(body);
+  let out = null;
+  body.querySelectorAll('[data-o]').forEach(b => b.onclick = () => {
+    out = CX_OUTS.find(x => x[0] === b.dataset.o);
+    body.querySelectorAll('[data-o]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    const closing = ['이탈', '계약 확정'].includes(out[0]);
+    $('qDrop').hidden = out[0] !== '이탈'; $('qNext').hidden = closing;
+    if (out[0] === '보류') { $('qAct').value = '재연락'; $('qDue').value = plus(90); }
+    if (out[0] === '미팅 잡힘') $('qAct').value = '상담 미팅';
+    if (out[0] === '견적 보냄' || out[0] === '미팅 완료') $('qAct').value = '계약 의사 확인';
+    if (out[0] === '부재중') { $('qAct').value = '재연락'; $('qDue').value = plus(1); }
+  });
+  $('qDetail').onclick = () => { closeSheet(); cxOpen(o.id); };
+  $('qSave').onclick = e => submitting(e.target, async () => {
+    if (!out) throw new Error('결과를 고르세요.');
+    const memo = $('qMemo').value.trim(), [label, kind, stage] = out;
+    const fields = {};
+    if (label === '이탈') { const why = segVal(body, 'qWhy'); if (!why) throw new Error('이탈 사유를 고르세요.'); fields.rejectReasons = why; fields.stage = '이탈'; }
+    else if (label === '계약 확정') { if (!confirm(`${o.name} 고객을 계약 단계로 옮길까요?`)) return; fields.stage = '계약완료'; }
+    else {
+      if (!$('qDue').value) throw new Error('다음 연락 날짜를 정하세요.');
+      if (stage && stage !== o.stage) fields.stage = stage;
+      fields.nextAction = $('qAct').value + (label === '보류' ? ' (보류)' : ''); fields.dueDate = $('qDue').value; fields.ownerEmail = $('qOwner').value;
+    }
+    await api({ action: 'cx_log', id: o.id, kind, text: label + (memo ? ' — ' + memo : '') });
+    const d = await api({ action: 'cx_update', id: o.id, fields });
+    cxReplace(d.item); closeSheet(); cxDrawView();
+    toast(`${o.name} 기록 저장${fields.dueDate ? ` · 다음: ${fields.nextAction} ${cxMd(fields.dueDate)}` : ''}`);
+  });
+}
+function cxBulkForm() {
+  const list = cxStaleList(), M = CX.meta, plus = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const body = openSheet(`${list.length}명 일괄 정리`, '기한이 30일 넘게 지난 진행 고객', `
+    <div class="card"><div class="cx-bulklist">${list.map(o => `<label><input type="checkbox" value="${esc(o.id)}" checked> <b>${esc(o.name)}</b> <span class="cr-sub">${cx6(o)} · ${esc(o.nextAction || '')} ${cxMd(o.dueDate)} · ${esc(o.location || '')}</span></label>`).join('')}</div></div>
+    <div class="card"><span class="lb">처리</span>${segHtml('bMode', [['hold', '보류 — 날짜에 다시 연락'], ['drop', '종료 — 이탈 처리']], 'hold')}
+      <div class="f" id="bHold"><input type="date" id="bDue" value="${plus(90)}"></div>
+      <div id="bDrop" hidden><span class="lb">이탈 사유</span>${segHtml('bWhy', M.dropReasons, '연락 두절')}</div></div>
+    <div class="actions"><button class="btn ghost" type="button" id="bX">닫기</button><button class="btn" type="button" id="bGo">정리하기</button></div>`);
+  bindSegs(body, (k, v) => { if (k === 'bMode') { $('bHold').hidden = v !== 'hold'; $('bDrop').hidden = v !== 'drop'; } });
+  $('bX').onclick = closeSheet;
+  $('bGo').onclick = e => submitting(e.target, async () => {
+    const ids = [...body.querySelectorAll('.cx-bulklist input:checked')].map(i => i.value);
+    if (!ids.length) throw new Error('고객을 하나 이상 고르세요.');
+    const drop = segVal(body, 'bMode') === 'drop';
+    const fields = drop ? { rejectReasons: segVal(body, 'bWhy'), stage: '이탈' } : { nextAction: '재연락 (보류)', dueDate: $('bDue').value };
+    if (!drop && !fields.dueDate) throw new Error('재연락 날짜를 정하세요.');
+    e.target.textContent = `${ids.length}명 처리 중...`;
+    const d = await api({ action: 'cx_bulk', ids, fields });
+    d.items.forEach(cxReplace); closeSheet(); cxDrawView(); toast(`${ids.length}명 ${drop ? '이탈' : '보류'} 처리`);
+  });
 }
 
 function cxFieldInput(f, v) {
@@ -6132,7 +6307,7 @@ function cxNewForm() {
   body.querySelector('#xClose').onclick = closeSheet;
   body.querySelector('#xSave').onclick = e => submitting(e.target, async () => {
     const d = await api(Object.assign({ action: 'cx_create', source: segVal(body, 'src') }, cxReadFields(body)));
-    cxReplace(d.item); CX.filter = '오늘 할 일';
+    cxReplace(d.item); CX.view = 'today';
     closeSheet(); cxRenderList(); cxOpen(d.item.id);
   });
 }
