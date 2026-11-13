@@ -1170,7 +1170,8 @@ function getToken() {
   return t;
 }
 
-const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get)$/;
+const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief)$/;
+const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview)$/;
 const AC = { mem: {}, flight: {}, pending: false, timer: null };
 function acKey(body) {
   const b = Object.assign({}, body); delete b.idToken;
@@ -1238,6 +1239,7 @@ function acResetStates() {
 }
 async function api(body) {
   const act = String(body.action || '');
+  if (API_FILE_READ.test(act)) return apiNet(body);
   if (!API_READ.test(act)) { const d = await apiNet(body); acAfterWrite(body); return d; }
   const k = acKey(body), c = acGet(k);
   if (c) {
@@ -4342,14 +4344,14 @@ function rpWeatherIcon(w) { return { '맑음': '☀️', '구름': '⛅', '흐�
 function rpDow(d) { return ['일', '월', '화', '수', '목', '금', '토'][new Date(d + 'T00:00:00').getDay()]; }
 
 async function rpLoad(code) {
-  if (RP.site === code || RP.loading) return;
-  RP.loading = true;
+  if (RP.site === code || RP.loading === code) return;
+  RP.loading = code;
   try {
     const d = await api({ action: 'rp_list', siteCode: code });
-    RP.items = d.items; RP.stat = d.stat; RP.site = code;
-    if (d.meta) RP.meta = d.meta;
+    if (S.siteCode !== code) return;
+    Object.assign(RP, { site: code, items: d.items, stat: d.stat, meta: d.meta || RP.meta || {} });
     if (!RP.month) RP.month = today().slice(0, 7);
-  } finally { RP.loading = false; }
+  } finally { if (RP.loading === code) RP.loading = false; }
 }
 
 function rpRender(el) {
@@ -4431,9 +4433,14 @@ function rpShiftMonth(m, n) {
 
 async function rpOpen(id) {
   let item;
-  try { item = (await api({ action: 'rp_get', id })).item; } catch (e) { toast(e.message); return; }
+  const code = S.siteCode;
+  try {
+    const [detail] = await Promise.all([api({ action: 'rp_get', id }), rpLoad(code).catch(() => {})]);
+    item = detail.item;
+  } catch (e) { toast(e.message); return; }
+  if (S.siteCode !== code) return;
   const isClient = S.me.role === 'client';
-  const canEdit = RP.meta.canWrite && (S.me.role === 'admin' || item.mine);
+  const canEdit = !!(RP.meta && RP.meta.canWrite) && (S.me.role === 'admin' || item.mine);
   const cum = item.cumulative || {};
   const body = openSheet(`${esc(item.date)} (${rpDow(item.date)}) 현장보고`,
     `${esc(currentSite().code)} · ${esc(item.createdBy)} 작성${item.weather ? ' · ' + rpWeatherIcon(item.weather) + ' ' + esc(item.weather) : ''}${item.tempMin !== '' && item.tempMax !== '' ? ` ${esc(item.tempMin)}/${esc(item.tempMax)}℃` : ''}`, `
