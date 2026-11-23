@@ -385,6 +385,7 @@
   .cx-board { display: grid; grid-template-columns: repeat(7, minmax(140px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
   .cx-col { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-height: 280px; } .cx-col.over { outline: 2px dashed var(--green); }
   .cx-hold { font-size: 11.5px; color: var(--muted); margin: -4px 4px 10px; line-height: 1.5; }
+  .cx-closed.over { outline: 2px dashed var(--red); }
   .cx-col h4 { font-size: 13.5px; margin: 2px 4px 10px; display: flex; justify-content: space-between; } .cx-col h4 span { color: var(--muted); font-weight: 500; }
   .cx-card { background: var(--raise); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; margin-bottom: 8px; cursor: grab; } .cx-card b { font-size: 14px; } .cx-card > div { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cx-card .cx-nx { color: var(--text); margin-top: 4px; } .cx-card .cx-nx.late { color: var(--red); } .cx-mini { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
@@ -7954,7 +7955,7 @@ function cxBoardHtml() {
   const end = CX.items.filter(o => cx6(o) === '종료' && cxHit(o));
   return `<div class="hint" style="margin-bottom:8px">카드를 끌어 단계를 옮깁니다. 붉은 글씨는 기한이 지난 건입니다.</div>
     <div class="cx-board">${CX6_LIST.map(s => { let cs = CX.items.filter(o => cx6(o) === s && cxHit(o)); if (s === '보류') cs = cs.sort((a, b) => String(a.dueDate || '9').localeCompare(String(b.dueDate || '9'))); return `<div class="cx-col" data-s="${s}"><h4>${s}<span>${cs.length}</span></h4>${s === '보류' ? '<div class="cx-hold">1~2년 안 계획 · 재연락일 순<br>일주일 전부터 오늘 할 일에 표시</div>' : ''}${cs.map(card).join('')}</div>`; }).join('')}</div>
-    <details class="panel cx-closed"><summary>종료 (반려·이탈) ${end.length}</summary><div class="cx-endlist">${end.map(o => `<div class="cx-card" data-cx="${esc(o.id)}"><b>${esc(o.name)}</b><div>${esc(o.stage)} · ${esc(o.rejectReasons || '사유 미기록')}</div></div>`).join('')}</div></details>`;
+    <details class="panel cx-closed" id="cxEnd" ${CX.endOpen ? 'open' : ''}><summary>종료 (반려·이탈) ${end.length} <span class="cr-sub">· 카드를 여기로 끌면 종료됩니다</span></summary><div class="cx-endlist">${end.map(o => `<div class="cx-card" draggable="true" data-cx="${esc(o.id)}"><b>${esc(o.name)}</b><div>${esc(o.stage)}${o.rejectReasons ? ' · ' + esc(o.rejectReasons) : ''}</div></div>`).join('')}</div></details>`;
 }
 function cxBindBoard(el) {
   el.querySelectorAll('.cx-card[draggable]').forEach(c => c.ondragstart = e => e.dataTransfer.setData('id', c.dataset.cx));
@@ -7968,6 +7969,18 @@ function cxBindBoard(el) {
       catch (err) { toast(err.message); }
     };
   });
+  const end = el.querySelector('#cxEnd');
+  if (end) {
+    end.ontoggle = () => { CX.endOpen = end.open; };
+    end.ondragover = e => { e.preventDefault(); end.classList.add('over'); };
+    end.ondragleave = e => { if (!end.contains(e.relatedTarget)) end.classList.remove('over'); };
+    end.ondrop = async e => {
+      e.preventDefault(); end.classList.remove('over');
+      const o = CX.items.find(x => x.id === e.dataTransfer.getData('id')); if (!o || cx6(o) === '종료') return;
+      try { const d = await api({ action: 'cx_update', id: o.id, fields: { stage: '이탈' } }); cxReplace(d.item); cxDrawView(); toast(`${o.name} → 종료`); }
+      catch (err) { toast(err.message); }
+    };
+  }
 }
 
 const CX_COLS = [['id', '고객번호', 96], ['createdAt', '접수일', 96], ['source', '경로', 96], ['name', '고객', 80], ['phone', '연락처', 120], ['location', '지역', 170], ['wantArea', '평수', 100], ['budget', '예산', 100], ['houseType', '유형', 80], ['landStatus', '상황', 140], ['stage6', '단계', 108, 1], ['nextAction', '다음 할 일', 140, 1], ['dueDate', '기한', 132, 1], ['ownerEmail', '담당', 90, 1], ['lastContactAt', '최근 연락', 96], ['rejectReasons', '종료 사유', 100], ['siteCode', '현장', 70]];
@@ -8022,7 +8035,7 @@ function cxQuick(id) {
   const body = openSheet(`${esc(o.name)} — 방금 한 일 기록`, `${esc(o.id)} · ${cx6(o)}${o.nextAction ? ' · 예정: ' + esc(o.nextAction) : ''}`, `
     <div class="card"><span class="lb">결과</span><div class="cx-outs">${CX_OUTS.map(([l]) => `<button type="button" data-o="${l}">${l}</button>`).join('')}</div>
       <div class="f"><textarea id="qMemo" rows="3" placeholder="통화·미팅 내용, 고객 반응 (상담 기록에 남습니다)"></textarea></div>
-      <div id="qDrop" hidden><span class="lb">이탈 사유 (필수)</span>${segHtml('qWhy', M.dropReasons, '')}</div>
+      <div id="qDrop" hidden><span class="lb">이탈 사유 (선택)</span>${segHtml('qWhy', M.dropReasons, '')}</div>
       <div id="qNext"><span class="lb">다음 할 일 (필수)</span>
         <div class="f" style="display:flex;gap:8px"><select id="qAct" style="flex:1">${M.actions.map(a => `<option ${a === (o.nextAction || M.nextDefault[o.stage]) ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select><input type="date" id="qDue" style="flex:1" value="${o.dueDate && o.dueDate > today() ? o.dueDate : plus(3)}"></div>
         <div class="f"><select id="qOwner"><option value="">담당 미정</option>${(M.staff || []).map(s => `<option value="${esc(s.email)}" ${(o.ownerEmail || S.me.email) === s.email ? 'selected' : ''}>${esc(s.name)} (${esc(s.team)})</option>`).join('')}</select></div></div>
@@ -8045,7 +8058,7 @@ function cxQuick(id) {
     if (!out) throw new Error('결과를 고르세요.');
     const memo = $('qMemo').value.trim(), [label, kind, stage] = out;
     const fields = {};
-    if (label === '이탈') { const why = segVal(body, 'qWhy'); if (!why) throw new Error('이탈 사유를 고르세요.'); fields.rejectReasons = why; fields.stage = '이탈'; }
+    if (label === '이탈') { fields.rejectReasons = segVal(body, 'qWhy') || ''; fields.stage = '이탈'; }
     else if (label === '계약 확정') { if (!confirm(`${o.name} 고객을 계약 단계로 옮길까요?`)) return; fields.stage = '계약완료'; }
     else {
       if (!$('qDue').value) throw new Error('다음 연락 날짜를 정하세요.');
@@ -8472,7 +8485,7 @@ function cxOpenInner(id) {
       <h4>진행 단계 · 다음 연락</h4>
       ${segHtml('stage', M.stages, o.stage)}
       <div id="rejBox" class="f" style="margin-top:10px" ${['반려', '이탈'].includes(o.stage) ? '' : 'hidden'}>
-        <span class="lb" id="rejLabel">${o.stage === '이탈' ? '이탈 사유 (선택)' : '반려 사유 (여러 개 선택)'}</span>
+        <span class="lb" id="rejLabel">${o.stage === '이탈' ? '이탈 사유 (선택)' : '반려 사유 (선택, 여러 개 가능)'}</span>
         <div class="seg" id="rejSeg">${(o.stage === '이탈' ? (M.dropReasons || []) : M.rejectReasons).map(r => `<button type="button" data-r="${esc(r)}" aria-pressed="${reasons.includes(r)}">${esc(r)}</button>`).join('')}</div>
       </div>
       <div class="cx-plan" id="planBox" ${cxClosed(o) ? 'hidden' : ''}>
@@ -8551,7 +8564,7 @@ function cxOpenInner(id) {
       $('rejBox').hidden = !['반려', '이탈'].includes(v);
       if (['반려', '이탈'].includes(v)) {
         const list = v === '이탈' ? (M.dropReasons || []) : M.rejectReasons;
-        $('rejLabel').textContent = v === '이탈' ? '이탈 사유 (선택)' : '반려 사유 (여러 개 선택)';
+        $('rejLabel').textContent = v === '이탈' ? '이탈 사유 (선택)' : '반려 사유 (선택, 여러 개 가능)';
         $('rejSeg').innerHTML = list.map(r => `<button type="button" data-r="${esc(r)}" aria-pressed="${reasons.includes(r)}">${esc(r)}</button>`).join('');
         $('rejSeg').querySelectorAll('button').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
       }
@@ -8647,7 +8660,6 @@ function cxOpenInner(id) {
     const f = { stage, ownerEmail: $('xOwner').value };
     if (['반려', '이탈'].includes(stage)) {
       f.rejectReasons = [...body.querySelectorAll('#rejSeg [aria-pressed="true"]')].map(b => b.dataset.r);
-      if (stage === '반려' && !f.rejectReasons.length) throw new Error('반려 사유를 선택하세요.');
     }
     if (!M.closed.includes(stage)) {
       f.nextAction = $('xNext').value; f.dueDate = $('xDue').value;
