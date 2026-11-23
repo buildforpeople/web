@@ -558,6 +558,7 @@ function load() {
   if (!d.tenureNotifications) d.tenureNotifications = {};
   if (!d.cardStatements) d.cardStatements = [];
   if (!d.settings) d.settings = {};
+  d.migrated_to_sheets_v1 = true;
   if (!d.secured_v1) {
     d.employees = [];
     d.secured_v1 = true;
