@@ -2707,7 +2707,7 @@ async function sbImport(input) {
       d.done.forEach(x => { map[x.ref] = x.id; if (!x.dup) n++; });
     } catch (e) { toast(`${i + 1}번째부터 실패: ${e.message}`); break; }
   }
-  await sbLoad(true); renderSpecTab();
+  try { await sbLoad(true); renderSpecTab(); } catch (e) {}
   toast(`${n}개를 새로 가져왔습니다`);
   const sel = items.filter(x => x.sel && map[x.ref]);
   if (sel.length && S.sites.length) {
