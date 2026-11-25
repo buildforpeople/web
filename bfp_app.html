@@ -1302,8 +1302,8 @@
 <script>const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', spec: '회사 스펙북', inv: '창고·장비', labor: '인원출역' };
-const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'spec', 'inv', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', inv: '창고·장비', labor: '인원출역' };
+const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'inv', 'sikgu', 'master'];
 const TAB_GROUPS = { cx: '상담·설계', info: '시공', payreq: '재정', detail: '회사' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
@@ -1515,7 +1515,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'spec', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
+  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
   renderTab();
 }
 
@@ -1526,7 +1526,6 @@ function renderTab() {
   if (S.tab === 'all') return renderAllTab();
   if (S.tab === 'info') return renderInfoTab();
   if (S.tab === 'detail') return renderDetailTab();
-  if (S.tab === 'spec') return renderSpecTab();
   if (S.tab === 'card') return renderCardTab();
   if (S.tab === 'board') return renderBoardTab();
   if (S.tab === 'inv') return renderInvTab();
@@ -2599,11 +2598,13 @@ async function sbPhotoUrl(id, fid, thumb) {
   return SB_URL[k] = URL.createObjectURL(new Blob([arr], { type: d.type }));
 }
 
+function sbHost() { return S.tab === 'design' && DX.sub === '회사 스펙북' ? $('dxBody') : null; }
 async function renderSpecTab() {
+  let m = sbHost(); if (!m) return;
   if (!SB.loaded) {
-    $('main').innerHTML = '<div class="loading">회사 스펙북을 불러오는 중...</div>';
-    try { await sbLoad(); } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
-    if (S.tab !== 'spec') return;
+    m.innerHTML = '<div class="loading">회사 스펙북을 불러오는 중...</div>';
+    try { await sbLoad(); } catch (e) { m.innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    m = sbHost(); if (!m) return;
   }
   const groups = Object.keys(SB.groups);
   const q = SB.q.trim().toLowerCase();
@@ -2615,7 +2616,7 @@ async function renderSpecTab() {
   keys.sort((a, b) => { const [ga, pa] = a.split('|'), [gb, pb] = b.split('|'); return groups.indexOf(ga) - groups.indexOf(gb) || (SB.groups[ga] || []).indexOf(pa) - (SB.groups[gb] || []).indexOf(pb); });
   const noPrice = SB.items.filter(o => o.price === '' && o.state !== '단종').length;
   const noBase = groups.reduce((t, g) => t + (SB.groups[g] || []).filter(p => SB.items.some(o => o.group === g && o.part === p) && !SB.items.some(o => o.group === g && o.part === p && o.base === 'Y')).length, 0);
-  $('main').innerHTML = `
+  m.innerHTML = `
     <div class="cr-bar"><h2>회사 스펙북 <span class="cr-sub" style="font-weight:500">품목 ${SB.items.length} · 단종 ${SB.items.filter(o => o.state === '단종').length}</span></h2>
       ${SB.canEdit ? '<label class="btn ghost" for="sbImp" style="cursor:pointer">가져오기</label><input type="file" id="sbImp" accept=".json" hidden><button class="btn" type="button" id="sbNew">+ 품목 추가</button>' : ''}</div>
     ${SB.canEdit && (noPrice || noBase) ? `<div class="notice" style="margin-bottom:12px">${noPrice ? `소비자가가 없는 품목 ${noPrice}개 — 건축주 화면에는 '금액 상담'으로 보입니다. ` : ''}${noBase ? `기본 사양이 지정되지 않은 항목 ${noBase}개 — 추가 금액 계산에 기본 사양이 필요합니다.` : ''}</div>` : ''}
@@ -2631,7 +2632,6 @@ async function renderSpecTab() {
           <b class="sp-name">${esc(String(o.spec || '').split('\n').slice(0, 3).join('\n'))}</b>
           ${o.note ? `<span class="sp-spec">${esc(o.note)}</span>` : ''}
           <span class="sp-money ${o.price === '' ? 'muted' : ''}">${o.price === '' ? '소비자가 미입력' : esc(spWon(Number(o.price))) + ' / ' + esc(o.unit)}</span></button>`).join('')}</div></section>`; }).join('') : `<section class="panel empty"><h3>품목이 없습니다</h3>${SB.canEdit ? '[+ 품목 추가] 또는 [가져오기]로 스펙북을 채우세요.' : ''}</section>`}`;
-  const m = $('main');
   m.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { SB.group = b.dataset.g; SB.part = ''; renderSpecTab(); });
   m.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { SB.part = b.dataset.p; renderSpecTab(); });
   m.querySelectorAll('[data-sb]').forEach(b => b.onclick = () => sbForm(SB.items.find(x => x.id === b.dataset.sb)));
@@ -5869,7 +5869,7 @@ async function dxLoad(code, fresh) {
   DX.site = code; DX.d = d;
   return d;
 }
-function dxSubs(d) { return d.mode === '외부' ? ['도면·견적자료', '일정'] : ['보드', '도면·견적자료', '일정']; }
+function dxSubs(d) { return d.mode === '외부' ? ['도면·견적자료', '일정', '회사 스펙북'] : ['보드', '도면·견적자료', '일정', '회사 스펙북']; }
 
 function renderDesignTab() {
   const s = currentSite();
@@ -5906,6 +5906,7 @@ function renderDesignTab() {
     const body = $('dxBody');
     if (DX.sub === '보드') dxBoard(body, s);
     else if (DX.sub === '도면·견적자료') dxDocsView(body, s);
+    else if (DX.sub === '회사 스펙북') renderSpecTab();
     else dxSchedule(body, s);
   };
   if (DX.site === s.code && DX.d) draw();
