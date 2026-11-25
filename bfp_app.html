@@ -289,6 +289,9 @@
 
   .scrim { position: fixed; inset: 0; background: rgba(20,26,18,.42); z-index: 30; }
   .sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); z-index: 31; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(20,26,18,.18); }
+  .sheet-grip { position: absolute; left: -5px; top: 0; bottom: 0; width: 10px; cursor: ew-resize; z-index: 2; touch-action: none; }
+  .sheet-grip::after { content: ''; position: absolute; left: 3px; top: 50%; width: 4px; height: 48px; margin-top: -24px; border-radius: 2px; background: var(--muted); opacity: .5; transition: opacity .15s; }
+  .sheet-grip:hover::after, .sheet-grip.on::after { opacity: 1; background: var(--green); }
   .sheet-head { background: var(--surface); border-bottom: 1px solid var(--line); padding: 14px 18px; display: flex; align-items: flex-start; gap: 12px; }
   .sheet-head h3 { margin: 2px 0 0; font-size: 18px; letter-spacing: -0.02em; }
   .sheet-head .x { margin-left: auto; background: none; border: 0; font-size: 22px; line-height: 1; color: var(--muted); padding: 4px 6px; }
@@ -359,7 +362,8 @@
   details.more summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--green); }
 
   @media (max-width: 760px) {
-    .sheet { width: 100%; }
+    .sheet { width: 100% !important; }
+    .sheet-grip { display: none; }
     .cr-row { padding: 12px 14px; }
     .compare { grid-template-columns: 1fr; }
   }
@@ -584,6 +588,34 @@
     .ov-trade { grid-template-columns: 84px 1fr 50px; font-size: 13px; }
   }
 
+  .sp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; padding: 12px; }
+  .sp-card { display: flex; flex-direction: column; gap: 6px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; font: inherit; color: inherit; cursor: pointer; min-width: 0; }
+  .sp-card:hover { border-color: var(--line-strong); }
+  .sp-card.picked { border: 2px solid var(--amber); padding: 7px; }
+  .sp-card.final { border-color: var(--accent, var(--green)); }
+  .sp-card.off { opacity: .55; }
+  .sp-img { height: 150px; border-radius: 8px; background: #fff center/contain no-repeat; display: grid; place-items: center; }
+  .sp-img i { font-style: normal; font-size: 12px; color: var(--muted); }
+  .sp-tags { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .sp-tags .st { margin: 0; }
+  .sp-tag { font-size: 11.5px; padding: 1px 7px; border-radius: 4px; background: var(--gray-soft); color: var(--text); }
+  .sp-tag.warn { background: var(--red-soft); color: var(--red); }
+  .sp-name { font-size: 14.5px; white-space: pre-line; line-height: 1.45; overflow-wrap: anywhere; }
+  .sp-spec { font-size: 12.5px; color: var(--muted); white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sp-money { font-size: 14px; font-weight: 700; margin-top: auto; }
+  .sp-money.up { color: var(--amber); } .sp-money.ok { color: var(--accent, var(--green)); } .sp-money.muted { color: var(--muted); font-weight: 500; }
+  .sp-sum { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 12px; }
+  .sp-sum > div { display: flex; flex-direction: column; gap: 2px; }
+  .sp-sum b { font-size: 22px; } .sp-sum b.up { color: var(--amber); } .sp-sum b.ok { color: var(--accent, var(--green)); }
+  .sp-photo .sp-big { display: block; width: 100%; height: 340px; border: 0; border-radius: 8px; background: #fff center/contain no-repeat; cursor: zoom-in; margin-bottom: 8px; }
+  .sp-price b.sp-money { display: block; font-size: 24px; margin: 4px 0; }
+  .sp-row { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; }
+  .sp-row.done { opacity: .55; cursor: default; }
+  .sp-row input { width: 20px; height: 20px; flex: none; }
+  .sp-thumb { width: 56px; height: 56px; flex: none; border-radius: 6px; background: #fff center/contain no-repeat; }
+  .sp-rowtxt { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
+  .si-st.후보 { background: var(--gray-soft); color: var(--text); }
+  .si-st.건축주.선택 { background: var(--amber-soft); color: var(--amber); }
   .si-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; padding: 12px; }
   .si-card { display: flex; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; font: inherit; color: inherit; cursor: pointer; }
   .si-card:hover { border-color: #3E5446; }
@@ -1270,8 +1302,8 @@
 <script>const GOOGLE_CLIENT_ID = '573053436430-btlompn2ojv7h4qviandnb4b9p41410j.apps.googleusercontent.com';
 const TOKEN_KEY = 'bfp_app_token';
 const SITE_KEY = 'bfp_app_site';
-const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', inv: '창고·장비', labor: '인원출역' };
-const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'inv', 'sikgu', 'master'];
+const TAB_LABEL = { all: '전체현황', cx: '고객상담', design: '설계', est: '견적', info: '현장정보', site: '시공관리', card: '법인카드', board: '현장재정', detail: '회사디테일', spec: '회사 스펙북', inv: '창고·장비', labor: '인원출역' };
+const TAB_ORDER = ['all', 'cx', 'design', 'est', 'info', 'site', 'labor', 'payreq', 'card', 'board', 'fin', 'detail', 'spec', 'inv', 'sikgu', 'master'];
 const TAB_GROUPS = { cx: '상담·설계', info: '시공', payreq: '재정', detail: '회사' };
 const EXT_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 
@@ -1296,8 +1328,8 @@ function getToken() {
   return t;
 }
 
-const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief|dx_get|ev_list|ev_targets)$/;
-const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview|dx_file|dx_ifc_get|cx_fu_draft)$/;
+const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|sb_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief|dx_get|ev_list|ev_targets)$/;
+const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|sb_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview|dx_file|dx_ifc_get|cx_fu_draft)$/;
 const AC = { mem: {}, flight: {}, pending: false, timer: null };
 function acKey(body) {
   const b = Object.assign({}, body); delete b.idToken;
@@ -1483,7 +1515,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
+  $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'spec', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
   renderTab();
 }
 
@@ -1494,6 +1526,7 @@ function renderTab() {
   if (S.tab === 'all') return renderAllTab();
   if (S.tab === 'info') return renderInfoTab();
   if (S.tab === 'detail') return renderDetailTab();
+  if (S.tab === 'spec') return renderSpecTab();
   if (S.tab === 'card') return renderCardTab();
   if (S.tab === 'board') return renderBoardTab();
   if (S.tab === 'inv') return renderInvTab();
@@ -1838,7 +1871,7 @@ function renderSiteTab() {
     $('subBody').innerHTML = '<div id="siBody"><div class="loading">선정 소재를 불러오는 중...</div></div>';
     const show = () => { if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '스펙북') siRender(); };
     if (SI.site === s.code) { show(); return; }
-    api({ action: 'si_list', siteCode: s.code }).then(d => { Object.assign(SI, { site: s.code, items: d.items, groups: d.groups, statuses: d.statuses, canEdit: d.canEdit }); show(); })
+    api({ action: 'si_list', siteCode: s.code }).then(d => { Object.assign(SI, { site: s.code, items: d.items, groups: d.groups, statuses: d.statuses, units: d.units, canEdit: d.canEdit }); show(); })
       .catch(e => { if ($('siBody')) $('siBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
     return;
   }
@@ -2263,7 +2296,7 @@ async function renderAllTab() {
   });
 }
 
-const SI = { site: null, items: [], groups: {}, statuses: [], canEdit: false, group: '전체' };
+const SI = { site: null, items: [], groups: {}, statuses: [], units: [], canEdit: false, group: '전체' };
 
 const INFO_SECTIONS = ['개요·소재', '성능 · Passport', '우리 집 이야기'];
 let infoSec = INFO_SECTIONS[0];
@@ -2296,38 +2329,85 @@ async function renderInfoTab() {
   if (SI.site !== s.code) {
     try {
       const d = await api({ action: 'si_list', siteCode: s.code });
-      Object.assign(SI, { site: s.code, items: d.items, groups: d.groups, statuses: d.statuses, canEdit: d.canEdit });
+      Object.assign(SI, { site: s.code, items: d.items, groups: d.groups, statuses: d.statuses, units: d.units, canEdit: d.canEdit });
     } catch (e) { if ($('siBody')) $('siBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
     if (S.tab !== 'info' || S.siteCode !== s.code) return;
   }
   siRender();
 }
 
+const SI_FINAL = ['확정', '발주', '시공완료'];
+const SI_ORDER = ['외장재', '내장재', '하드웨어', '위생기구', '액세서리', '주방기구', '전기기구', '가구', '설비', '기타'];
+function spWon(n) {
+  const a = Math.abs(n);
+  if (a >= 10000) return (a / 10000).toLocaleString('ko-KR', { maximumFractionDigits: a >= 1000000 ? 0 : 1 }) + '만원';
+  return a.toLocaleString('ko-KR') + '원';
+}
+function spNum(v) { const s = String(v == null ? '' : v).trim(); if (!s) return null; const n = Number(s.replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; }
+function siMoney(o) {
+  const p = spNum(o.price), q = spNum(o.qty) || 1, b = spNum(o.basePrice);
+  if (p == null) return { txt: '금액 상담', cls: 'muted', delta: null, total: null, q };
+  const total = p * q;
+  if (b == null) return { txt: spWon(total), cls: '', delta: null, total, q, p };
+  const d = (p - b) * q;
+  return { txt: d > 0 ? '+' + spWon(d) : d < 0 ? '−' + spWon(d) : '기본 포함', cls: d > 0 ? 'up' : 'ok', delta: d, total, q, p, b };
+}
+function siPhotos(o) { return (o.photos || []).concat(o.masterPhotos || []); }
+function siSorted(list) {
+  const gi = g => { const i = SI_ORDER.indexOf(g); return i < 0 ? 99 : i; };
+  const pi = o => { const i = ((SI.groups || {})[o.group] || []).indexOf(o.part); return i < 0 ? 99 : i; };
+  return list.slice().sort((a, b) => gi(a.group) - gi(b.group) || pi(a) - pi(b) || String(a.loc).localeCompare(String(b.loc)) || String(a.id).localeCompare(String(b.id)));
+}
+function siSpecText(o) { return [o.spec, [o.model, o.color].filter(Boolean).join(' · ')].filter(Boolean).join('\n'); }
+function siCardHtml(o) {
+  const m = siMoney(o), ph = siPhotos(o)[0];
+  const st = o.status === '건축주 선택' ? (S.me.role === 'client' ? '선택함' : '건축주 선택') : o.status;
+  const locs = String(o.loc || '').replace(/[\[\]]/g, ' ').split(/\n|,/).map(x => x.trim()).filter(Boolean).slice(0, 3);
+  return `<button type="button" class="sp-card ${o.status === '건축주 선택' ? 'picked' : ''} ${SI_FINAL.includes(o.status) ? 'final' : ''}" data-id="${esc(o.id)}">
+    <span class="sp-img" data-sid="${esc(o.id)}" data-pid="${esc(ph ? ph.id : '')}">${ph ? '' : '<i>사진 없음</i>'}</span>
+    <span class="sp-tags"><span class="st si-st ${esc(o.status)}">${esc(st)}</span>${o.isBase ? '<span class="sp-tag">기본 사양</span>' : ''}${o.discontinued ? '<span class="sp-tag warn">단종</span>' : ''}${locs.map(l => `<span class="sp-tag">${esc(l)}</span>`).join('')}</span>
+    <span class="cr-id">${esc(o.part)}${o.brand ? ' · ' + esc(o.brand) : ''}</span>
+    <b class="sp-name">${esc(o.product)}</b>
+    ${siSpecText(o) ? `<span class="sp-spec">${esc(siSpecText(o))}</span>` : ''}
+    <span class="sp-money ${m.cls}">${esc(m.txt)}</span>
+  </button>`;
+}
+function siBindImgs(root) {
+  root.querySelectorAll('.sp-img[data-pid]').forEach(im => { if (im.dataset.pid) siPhotoUrl(im.dataset.sid, im.dataset.pid, true).then(u => im.style.backgroundImage = `url("${u}")`).catch(() => {}); });
+}
+
 function siRender() {
   const el = $('siBody'); if (!el) return;
-  const groups = Object.keys(SI.groups);
-  const list = SI.items.filter(o => SI.group === '전체' || o.group === SI.group);
-  const done = SI.items.filter(o => o.status === '확정' || o.status === '발주' || o.status === '시공완료').length;
+  const isC = S.me.role === 'client';
+  const groups = SI_ORDER.filter(g => SI.items.some(o => o.group === g)).concat(Object.keys(SI.groups).filter(g => !SI_ORDER.includes(g) && SI.items.some(o => o.group === g)));
+  if (SI.group !== '전체' && !groups.includes(SI.group)) SI.group = '전체';
+  const list = siSorted(SI.items.filter(o => SI.group === '전체' || o.group === SI.group));
+  const cnt = s => SI.items.filter(o => s.includes(o.status)).length;
+  const chosen = SI.items.filter(o => o.status === '건축주 선택' || SI_FINAL.includes(o.status));
+  const add = chosen.reduce((t, o) => { const m = siMoney(o); return t + (m.delta || 0); }, 0);
+  const unknown = chosen.filter(o => siMoney(o).delta == null).length;
+  const parts = []; list.forEach(o => { const k = o.group + '|' + o.part; if (!parts.includes(k)) parts.push(k); });
   el.innerHTML = `
-    <div class="cr-bar"><h2 style="font-size:17px">선정 소재 <span class="cr-sub" style="font-weight:500">${SI.items.length ? `확정 ${done}/${SI.items.length}` : ''}</span></h2>
-      <button class="btn ghost" type="button" id="siPrint">🖨 인쇄</button>
-      ${SI.canEdit ? '<button class="btn" type="button" id="siNew">+ 소재 추가</button>' : ''}</div>
+    <div class="cr-bar"><h2 style="font-size:17px">스펙북 <span class="cr-sub" style="font-weight:500">${SI.items.length ? `확정 ${cnt(SI_FINAL)} · ${isC ? '내가 고른' : '건축주 선택'} ${cnt(['건축주 선택'])} · 후보 ${cnt(['후보'])}` : ''}</span></h2>
+      <button class="btn ghost" type="button" id="siPrint">🖨 스펙 리스트</button>
+      ${SI.canEdit ? '<button class="btn ghost" type="button" id="siOffer">회사 스펙북에서 가져오기</button><button class="btn" type="button" id="siNew">+ 직접 추가</button>' : ''}</div>
+    ${SI.items.length ? `<section class="panel sp-sum">
+      <div><span class="cr-sub">${isC ? '고른 사양 기준' : '건축주 선택·확정 기준'} 기본 대비</span><b class="${add > 0 ? 'up' : 'ok'}">${add ? (add > 0 ? '+' : '−') + spWon(add) : '추가 금액 없음'}</b>
+        ${unknown ? `<span class="cr-sub">금액 상담 ${unknown}건 별도</span>` : ''}</div>
+      ${isC ? `<button class="btn" type="button" id="siSubmit">선택 완료 알리기</button>` : `<span class="cr-sub">견적서 소비자가 기준 · 수량은 항목별로 입력</span>`}
+    </section>` : ''}
     <div class="filters">${['전체', ...groups].map(g => `<button class="chip" data-g="${esc(g)}" aria-pressed="${SI.group === g}">${esc(g)}<b>${g === '전체' ? SI.items.length : SI.items.filter(o => o.group === g).length}</b></button>`).join('')}</div>
-    ${list.length ? groups.filter(g => list.some(o => o.group === g)).map(g => `
+    ${list.length ? parts.map(k => { const [g, p] = k.split('|'); const its = list.filter(o => o.group === g && o.part === p); return `
       <section class="panel" style="margin-bottom:12px">
-        <div class="ds-phase">${esc(g)}</div>
-        <div class="si-grid">${list.filter(o => o.group === g).map(o => `
-          <button type="button" class="si-card" data-id="${esc(o.id)}">
-            <span class="si-img" data-sid="${esc(o.id)}" data-pid="${esc((o.photos[0] || {}).id || '')}">${o.photos.length ? '' : '<i>사진 없음</i>'}</span>
-            <span class="si-txt"><span class="cr-id">${esc(o.part)}</span><b>${esc(o.product)}</b>
-              <span class="cr-sub">${esc([o.brand, o.model, o.color].filter(Boolean).join(' · '))}</span>
-              <span class="st si-st ${esc(o.status)}">${esc(o.status)}</span></span>
-          </button>`).join('')}</div>
-      </section>`).join('') : `<section class="panel empty"><h3>등록된 소재가 없습니다</h3>${SI.canEdit ? '[+ 소재 추가]로 외장재·창호·바닥재 등 선정한 제품을 기록하세요.' : '설계팀이 선정한 소재가 여기에 표시됩니다.'}</section>`}`;
+        <div class="ds-phase">${esc(g)} · ${esc(p)} <span class="cr-sub">${its.length > 1 ? `후보 ${its.length}` : ''}</span></div>
+        <div class="sp-grid">${its.map(siCardHtml).join('')}</div>
+      </section>`; }).join('') : `<section class="panel empty"><h3>등록된 소재가 없습니다</h3>${SI.canEdit ? '[회사 스펙북에서 가져오기]로 후보를 고르거나 [+ 직접 추가]로 기록하세요.' : '디자인팀이 후보를 올리면 여기서 고를 수 있습니다.'}</section>`}`;
   el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { SI.group = b.dataset.g; siRender(); });
-  el.querySelectorAll('.si-card').forEach(b => b.onclick = () => siOpen(b.dataset.id));
-  el.querySelectorAll('.si-img[data-pid]').forEach(im => { if (im.dataset.pid) siPhotoUrl(im.dataset.sid, im.dataset.pid, true).then(u => im.style.backgroundImage = `url("${u}")`).catch(() => {}); });
+  el.querySelectorAll('.sp-card').forEach(b => b.onclick = () => siOpen(b.dataset.id));
+  siBindImgs(el);
   if ($('siNew')) $('siNew').onclick = () => siForm(null);
+  if ($('siOffer')) $('siOffer').onclick = siOfferSheet;
+  if ($('siSubmit')) $('siSubmit').onclick = siSubmitSheet;
   $('siPrint').onclick = siPrint;
 }
 
@@ -2340,23 +2420,53 @@ async function siPhotoUrl(id, fid, thumb) {
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return SI_URL[k] = URL.createObjectURL(new Blob([arr], { type: d.type }));
 }
+function siMerge(items) {
+  items.forEach(it => { const i = SI.items.findIndex(x => x.id === it.id); if (i >= 0) SI.items[i] = it; else SI.items.push(it); });
+}
 
 function siOpen(id) {
   const o = SI.items.find(x => x.id === id); if (!o) return;
+  const isC = S.me.role === 'client', m = siMoney(o), photos = siPhotos(o);
+  const canPick = (isC || SI.canEdit) && ['후보', '건축주 선택'].includes(o.status);
   const body = openSheet(esc(o.product), `${esc(o.group)} · ${esc(o.part)}`, `
-    ${o.photos.length ? `<div class="card"><div class="thumbs">${o.photos.map(p => `<button type="button" class="thumb" data-p="${esc(p.id)}"></button>`).join('')}</div></div>` : ''}
+    ${photos.length ? `<div class="card sp-photo"><button type="button" class="sp-big" data-i="0" aria-label="사진 크게 보기"></button>
+      ${photos.length > 1 ? `<div class="thumbs">${photos.map((p, i) => `<button type="button" class="thumb" data-p="${esc(p.id)}" data-i="${i}"></button>`).join('')}</div>` : ''}</div>` : ''}
     <div class="card"><dl class="kv">
-      <dt>제품명</dt><dd>${esc(o.product)}</dd><dt>브랜드</dt><dd>${esc(o.brand || '—')}</dd>
-      <dt>모델·품번</dt><dd>${esc(o.model || '—')}</dd><dt>색상</dt><dd>${esc(o.color || '—')}</dd>
-      <dt>상태</dt><dd>${esc(o.status)}${o.confirmedAt ? ' · ' + esc(o.confirmedAt) + ' 확정' : ''}</dd>
-      ${o.note ? `<dt>메모</dt><dd class="content">${esc(o.note)}</dd>` : ''}
-      <dt>수정</dt><dd>${esc(o.by)} · ${esc(o.updatedAt)}</dd>
+      <dt>위치</dt><dd class="content">${esc(o.loc || '—')}</dd>
+      <dt>분류</dt><dd>${esc(o.cls || o.group)}</dd>
+      <dt>항목</dt><dd>${esc(o.part)}${o.product && o.product !== o.part ? ' · ' + esc(o.product) : ''}</dd>
+      <dt>제조사</dt><dd>${esc(o.brand || '—')}</dd>
+      <dt>품목 및 사양</dt><dd class="content">${esc(siSpecText(o) || '—')}</dd>
+      <dt>비고</dt><dd class="content">${esc(o.note || '—')}</dd>
+      <dt>선택여부</dt><dd>${esc(o.status === '건축주 선택' && isC ? '선택함' : o.status)}${o.confirmedAt ? ' · ' + esc(o.confirmedAt) + ' 확정' : ''}${o.pickAt ? ` · ${esc(o.pickBy)} ${esc(String(o.pickAt).slice(0, 10))}` : ''}</dd>
+      ${isC ? '' : `<dt>수정</dt><dd>${esc(o.by || '—')} · ${esc(o.updatedAt || '')}</dd>`}
     </dl></div>
-    ${SI.canEdit ? '<div class="actions"><button class="btn danger" type="button" id="siDel">삭제</button><button class="btn" type="button" id="siEdit">수정</button></div>' : ''}`);
-  const ids = o.photos.map(p => p.id);
-  body.querySelectorAll('[data-p]').forEach((b, i) => {
+    <div class="card sp-price"><div class="cr-sub">우리집 적용 금액 (견적서 소비자가)</div>
+      <b class="sp-money ${m.cls}">${esc(m.txt)}</b>
+      <div class="cr-sub">${m.total == null ? '디자인팀이 금액을 안내드립니다.' : `${spWon(m.p)} × ${m.q}${esc(o.unit || '')} = ${spWon(m.total)}${m.b != null ? ` · 기본 사양 ${esc(o.baseName || '')} 대비` : ''}`}</div>
+      ${o.discontinued ? '<div class="notice" style="margin-top:8px">단종된 품목입니다. 다른 후보를 골라 주세요.</div>' : ''}</div>
+    <div class="actions">
+      ${canPick ? (o.status === '건축주 선택' ? '<button class="btn ghost" type="button" id="siUnpick">선택 취소</button>' : '<button class="btn" type="button" id="siPick">이걸로 선택</button>') : ''}
+      ${isC && SI_FINAL.includes(o.status) ? '<span class="cr-sub">확정된 항목입니다. 변경은 디자인팀에 문의해 주세요.</span>' : ''}
+      ${SI.canEdit && !SI_FINAL.includes(o.status) ? '<button class="btn" type="button" id="siConfirm">확정</button>' : ''}
+      ${SI.canEdit ? '<button class="btn danger" type="button" id="siDel">삭제</button><button class="btn ghost" type="button" id="siEdit">수정</button>' : ''}
+    </div>`);
+  const ids = photos.map(p => p.id);
+  const big = body.querySelector('.sp-big');
+  if (big && ids[0]) { siPhotoUrl(o.id, ids[0], false).then(u => big.style.backgroundImage = `url("${u}")`).catch(() => {}); big.onclick = () => lightbox(ids, 0, fid => siPhotoUrl(o.id, fid, false).then(url => ({ url }))); }
+  body.querySelectorAll('[data-p]').forEach(b => {
     siPhotoUrl(o.id, b.dataset.p, true).then(u => b.style.backgroundImage = `url("${u}")`).catch(() => {});
-    b.onclick = () => lightbox(ids, i, fid => siPhotoUrl(o.id, fid, false).then(url => ({ url })));
+    b.onclick = () => { const i = Number(b.dataset.i); siPhotoUrl(o.id, ids[i], false).then(u => { big.style.backgroundImage = `url("${u}")`; big.onclick = () => lightbox(ids, i, fid => siPhotoUrl(o.id, fid, false).then(url => ({ url }))); }).catch(() => {}); };
+  });
+  const pick = off => e => submitting(e.target, async () => {
+    const d = await api({ action: 'si_pick', id: o.id, off: !!off });
+    siMerge(d.items); closeSheet(); siRender(); toast(off ? '선택을 취소했습니다' : `${o.product}을(를) 골랐습니다`);
+  });
+  if ($('siPick')) $('siPick').onclick = pick(false);
+  if ($('siUnpick')) $('siUnpick').onclick = pick(true);
+  if ($('siConfirm')) $('siConfirm').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'si_save', siteCode: currentSite().code, id: o.id, fields: { status: '확정' } });
+    siMerge([d.item]); closeSheet(); siRender(); toast('확정했습니다');
   });
   if ($('siEdit')) $('siEdit').onclick = () => siForm(o);
   if ($('siDel')) $('siDel').onclick = e => { if (confirm(`${o.product}을(를) 삭제할까요?`)) submitting(e.target, async () => {
@@ -2364,22 +2474,42 @@ function siOpen(id) {
   }); };
 }
 
+function siSubmitSheet() {
+  const picked = siSorted(SI.items.filter(o => o.status === '건축주 선택'));
+  const body = openSheet('선택 완료 알리기', esc(currentSite().code + ' ' + currentSite().name), `
+    <div class="card"><h4>고른 사양 ${picked.length}건</h4>
+      ${picked.length ? `<dl class="kv">${picked.map(o => `<dt>${esc(o.part)}</dt><dd>${esc(o.product)} ${o.brand ? '· ' + esc(o.brand) : ''} <span class="sp-money ${siMoney(o).cls}">${esc(siMoney(o).txt)}</span></dd>`).join('')}</dl>` : '<p class="cr-sub">아직 고른 사양이 없습니다.</p>'}</div>
+    <div class="card"><div class="f"><label for="siMemo">디자인팀에 남길 말</label><textarea id="siMemo" rows="3" placeholder="예: 욕실 수납장은 직접 보고 고르고 싶어요"></textarea></div></div>
+    <div class="actions sticky"><button class="btn ghost" type="button" id="smX">닫기</button><button class="btn" type="button" id="smGo">디자인팀에 보내기</button></div>`);
+  $('smX').onclick = closeSheet;
+  $('smGo').onclick = e => submitting(e.target, async () => {
+    await api({ action: 'si_submit', siteCode: currentSite().code, memo: $('siMemo').value });
+    closeSheet(); toast('디자인팀에 알렸습니다. 확인 후 연락드립니다.');
+  });
+}
+
 function siForm(o) {
-  const g0 = o ? o.group : Object.keys(SI.groups)[0];
-  const body = openSheet(o ? '소재 수정' : '소재 추가', esc(currentSite().code + ' ' + currentSite().name), `
+  const g0 = o ? o.group : SI_ORDER[0];
+  const linked = o && o.masterId && !SI_FINAL.includes(o.status);
+  const dis = linked ? 'disabled' : '';
+  const body = openSheet(o ? '소재 수정' : '소재 직접 추가', esc(currentSite().code + ' ' + currentSite().name), `
     <div class="card">
-      <div class="f"><span class="lb">공간</span>${segHtml('sg', Object.keys(SI.groups), g0)}</div>
-      <div class="f"><label>부위</label><select id="sPart"></select></div>
-      <div class="f"><label>제품명</label><input type="text" id="sProduct" value="${esc(o ? o.product : '')}" placeholder="예: 세라믹 사이딩"></div>
-      <div class="cx-when"><div class="f"><label>브랜드</label><input type="text" id="sBrand" value="${esc(o ? o.brand : '')}"></div>
-        <div class="f"><label>모델·품번</label><input type="text" id="sModel" value="${esc(o ? o.model : '')}"></div></div>
-      <div class="f"><label>색상</label><input type="text" id="sColor" value="${esc(o ? o.color : '')}" placeholder="예: 세이지 그린 / 월넛"></div>
+      ${linked ? '<div class="notice" style="margin-bottom:10px">회사 스펙북 품목입니다. 사양·제조사·금액은 스펙북을 따르고, 확정하면 그 시점 값으로 고정됩니다.</div>' : ''}
+      <div class="f"><span class="lb">분류</span>${segHtml('sg', Object.keys(SI.groups), g0)}</div>
+      <div class="cx-when"><div class="f"><label>항목</label><select id="sPart"></select></div>
+        <div class="f"><label>위치</label><input type="text" id="sLoc" value="${esc(o ? o.loc : '')}" placeholder="예: 거실, 방-1"></div></div>
+      <div class="f"><label>항목명</label><input type="text" id="sProduct" value="${esc(o ? o.product : '')}" placeholder="예: 세라믹 사이딩"></div>
+      <div class="f"><label>제조사</label><input type="text" id="sBrand" value="${esc(o ? o.brand : '')}" ${dis}></div>
+      <div class="f"><label>품목 및 사양</label><textarea id="sSpec" rows="3" placeholder="모델·색상·규격" ${dis}>${esc(o ? siSpecText(o) : '')}</textarea></div>
+      <div class="f"><label>비고</label><textarea id="sNote" rows="2" placeholder="시공 위치, 주의사항, 대체품 등">${esc(o ? o.note : '')}</textarea></div>
+      <div class="cx-when"><div class="f"><label>소비자가 (견적서)</label><input type="number" id="sPrice" value="${esc(o ? o.price : '')}" placeholder="원" ${dis}></div>
+        <div class="f"><label>단위</label><select id="sUnit" ${dis}>${(SI.units || ['식']).map(u => `<option ${o && o.unit === u ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></div>
+        <div class="f"><label>수량</label><input type="number" id="sQty" value="${esc(o ? o.qty : '')}" placeholder="1"></div></div>
       <div class="f"><span class="lb">상태</span>${segHtml('ss', SI.statuses, o ? o.status : '검토중')}</div>
-      <div class="f"><label>메모</label><textarea id="sNote" rows="2" placeholder="시공 시 주의, 대체품 등">${esc(o ? o.note : '')}</textarea></div>
     </div>
-    <div class="card"><h4>사진 (샘플·카탈로그·시공 예)</h4>
+    ${linked ? '' : `<div class="card"><h4>사진 (샘플·카탈로그·시공 예)</h4>
       ${o && o.photos.length ? `<div class="thumbs" id="sOld">${o.photos.map(p => `<div class="thumb-wrap"><button type="button" class="thumb" data-p="${esc(p.id)}"></button><button type="button" class="thumb-x" data-rm="${esc(p.id)}">×</button></div>`).join('')}</div>` : ''}
-      <div class="f" style="margin-top:10px"><input type="file" id="sPhotos" multiple accept="image/*"></div></div>
+      <div class="f" style="margin-top:10px"><input type="file" id="sPhotos" multiple accept="image/*"></div></div>`}
     <div class="actions sticky"><button class="btn ghost" type="button" id="sClose">닫기</button><button class="btn" type="button" id="sSave">저장</button></div>`);
   const fillParts = g => { $('sPart').innerHTML = (SI.groups[g] || []).map(p => `<option ${o && o.part === p ? 'selected' : ''}>${esc(p)}</option>`).join(''); };
   fillParts(g0);
@@ -2389,32 +2519,209 @@ function siForm(o) {
   body.querySelectorAll('#sOld [data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
   $('sClose').onclick = closeSheet;
   $('sSave').onclick = e => submitting(e.target, async () => {
-    const d = await api({ action: 'si_save', siteCode: currentSite().code, id: o ? o.id : '', removePhotos: removed,
-      photos: await readFiles($('sPhotos')),
-      fields: { group: segVal(body, 'sg'), part: $('sPart').value, product: $('sProduct').value, brand: $('sBrand').value,
-        model: $('sModel').value, color: $('sColor').value, status: segVal(body, 'ss'), note: $('sNote').value } });
-    const i = SI.items.findIndex(x => x.id === d.item.id);
-    if (i >= 0) SI.items[i] = d.item; else SI.items.push(d.item);
-    closeSheet(); siRender(); toast('저장했습니다');
+    const f = { group: segVal(body, 'sg'), part: $('sPart').value, loc: $('sLoc').value, product: $('sProduct').value, note: $('sNote').value, qty: $('sQty').value, status: segVal(body, 'ss') };
+    if (!linked) Object.assign(f, { brand: $('sBrand').value, spec: $('sSpec').value, price: $('sPrice').value, unit: $('sUnit').value, model: '', color: '' });
+    const d = await api({ action: 'si_save', siteCode: currentSite().code, id: o ? o.id : '', removePhotos: removed, photos: $('sPhotos') ? await readFiles($('sPhotos')) : [], fields: f });
+    siMerge([d.item]); closeSheet(); siRender(); toast('저장했습니다');
   });
+}
+
+async function siOfferSheet() {
+  const body = openSheet('회사 스펙북에서 가져오기', esc(currentSite().code + ' ' + currentSite().name), '<div class="loading">스펙북을 불러오는 중...</div>');
+  try { await sbLoad(); } catch (e) { body.innerHTML = `<div class="notice">${esc(e.message)}</div>`; return; }
+  const have = new Set(SI.items.map(o => o.masterId).filter(Boolean));
+  const pick = new Set();
+  let g = SI_ORDER.find(x => SB.items.some(o => o.group === x)) || SI_ORDER[0];
+  const draw = () => {
+    const its = SB.items.filter(o => o.group === g && o.state !== '단종');
+    const parts = (SB.groups[g] || []).filter(p => its.some(o => o.part === p));
+    body.innerHTML = `
+      <div class="card"><div class="cr-sub" style="margin-bottom:8px">후보로 보내면 건축주가 포털에서 고릅니다. 기본 사양은 처음부터 선택된 상태로 들어갑니다.</div>
+        <button class="btn ghost" type="button" id="soBase">기본 사양 전체 넣기 (${SB.items.filter(o => o.base === 'Y' && o.state !== '단종' && !have.has(o.id)).length}건)</button></div>
+      <div class="filters">${SI_ORDER.filter(x => SB.items.some(o => o.group === x)).map(x => `<button class="chip" data-sg="${esc(x)}" aria-pressed="${x === g}">${esc(x)}<b>${SB.items.filter(o => o.group === x && o.state !== '단종').length}</b></button>`).join('')}</div>
+      ${parts.map(p => `<div class="card"><h4>${esc(p)}</h4>${its.filter(o => o.part === p).map(o => `
+        <label class="sp-row ${have.has(o.id) ? 'done' : ''}"><input type="checkbox" data-mid="${esc(o.id)}" ${have.has(o.id) ? 'disabled checked' : pick.has(o.id) ? 'checked' : ''}>
+          <span class="sp-thumb" data-mid="${esc(o.id)}" data-pid="${esc((o.photos[0] || {}).id || '')}"></span>
+          <span class="sp-rowtxt"><b>${esc(o.item || o.part)}${o.maker ? ' · ' + esc(o.maker) : ''}</b><span class="cr-sub">${esc(String(o.spec || '').split('\n').slice(0, 2).join(' · '))}</span>
+          <span class="cr-sub">${o.price !== '' ? esc(spWon(Number(o.price))) + '/' + esc(o.unit) : '금액 미입력'}${o.base === 'Y' ? ' · 기본 사양' : ''}${have.has(o.id) ? ' · 이미 추가됨' : ''}</span></span></label>`).join('')}</div>`).join('') || '<div class="hint">이 분류에 판매 중인 품목이 없습니다.</div>'}
+      <div class="actions sticky"><span class="cr-sub" id="soN">${pick.size}개 선택</span><button class="btn ghost" type="button" id="soFinal">확정으로 넣기</button><button class="btn" type="button" id="soGo">후보로 보내기</button></div>`;
+    body.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { g = b.dataset.sg; draw(); });
+    body.querySelectorAll('input[data-mid]').forEach(c => c.onchange = () => { c.checked ? pick.add(c.dataset.mid) : pick.delete(c.dataset.mid); $('soN').textContent = pick.size + '개 선택'; });
+    body.querySelectorAll('.sp-thumb[data-pid]').forEach(im => { if (im.dataset.pid) sbPhotoUrl(im.dataset.mid, im.dataset.pid, true).then(u => im.style.backgroundImage = `url("${u}")`).catch(() => {}); });
+    const send = (ids, status) => e => submitting(e.target, async () => {
+      if (!ids.length) throw new Error('넣을 품목을 고르세요.');
+      const d = await api({ action: 'si_offer', siteCode: currentSite().code, masterIds: ids, status });
+      siMerge(d.items); closeSheet(); siRender(); toast(`${d.items.length}건을 ${status === '후보' ? '후보로 보냈습니다' : status === '확정' ? '확정으로 넣었습니다' : '넣었습니다'}`);
+    });
+    $('soGo').onclick = e => send([...pick], '후보')(e);
+    $('soFinal').onclick = e => send([...pick], '확정')(e);
+    $('soBase').onclick = e => send(SB.items.filter(o => o.base === 'Y' && o.state !== '단종' && !have.has(o.id)).map(o => o.id), '건축주 선택')(e);
+  };
+  draw();
 }
 
 async function siPrint() {
   const s = currentSite();
   const w = window.open('', '_blank'); if (!w) { toast('팝업을 허용해 주세요'); return; }
-  const rows = [];
-  for (const g of Object.keys(SI.groups)) for (const o of SI.items.filter(x => x.group === g)) {
-    let img = '';
-    if (o.photos[0]) { try { img = `<img src="${await siPhotoUrl(o.id, o.photos[0].id, true)}">`; } catch (e) {} }
-    rows.push(`<tr><td>${esc(g)}</td><td>${esc(o.part)}</td><td class="im">${img}</td><td><b>${esc(o.product)}</b><br>${esc([o.brand, o.model].filter(Boolean).join(' · '))}</td><td>${esc(o.color)}</td><td>${esc(o.status)}</td><td>${esc(o.note)}</td></tr>`);
+  w.document.write('<p style="font-family:sans-serif">스펙 리스트를 만드는 중...</p>');
+  const rows = siSorted(SI.items.filter(o => SI_FINAL.includes(o.status) || o.status === '건축주 선택'));
+  const out = [];
+  for (const [i, o] of rows.entries()) {
+    const ph = siPhotos(o)[0]; let img = '';
+    if (ph) { try { img = `<img src="${await siPhotoUrl(o.id, ph.id, true)}">`; } catch (e) {} }
+    out.push(`<tr><td class="c">${i + 1}</td><td>${esc(o.loc)}</td><td class="c">${esc(o.cls || o.group)}</td><td class="c">${esc(o.part)}${o.product && o.product !== o.part ? '<br>' + esc(o.product) : ''}</td><td class="im">${img}</td><td class="c">${esc(o.brand)}</td><td>${esc(siSpecText(o))}</td><td>${esc(o.note)}</td><td class="c">${esc(o.status === '건축주 선택' ? '선택(미확정)' : o.status)}</td></tr>`);
   }
-  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>선정 소재 ${esc(s.code)}</title><style>
-    body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#262626;padding:24px}h1{font-size:18px;margin:0 0 4px;color:#000000;border-top:3px solid #000000;padding-top:10px}
-    .sub{color:#8C8C88;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;vertical-align:middle}th{background:#F5F5F3;color:#000000}
-    td.im{width:80px}td.im img{width:72px;height:72px;object-fit:cover;display:block}button{margin-bottom:12px;padding:9px 20px;background:#000000;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
-</style></head><body><button onclick="window.print()">인쇄</button><h1>선정 소재 목록</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · (주)사람사는집종합건설</div>
-    <table><tr><th>공간</th><th>부위</th><th>사진</th><th>제품</th><th>색상</th><th>상태</th><th>메모</th></tr>${rows.join('') || '<tr><td colspan="7">등록된 소재 없음</td></tr>'}</table></body></html>`);
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>SPEC LIST ${esc(s.code)}</title><style>
+    body{font-family:"Malgun Gothic",sans-serif;font-size:12px;color:#262626;padding:24px}h1{font-size:22px;letter-spacing:.06em;margin:0 0 4px}
+    .sub{color:#8C8C88;margin-bottom:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px 8px;vertical-align:middle;white-space:pre-line}th{background:#F5F5F3}
+    td.c{text-align:center}td.im{width:110px}td.im img{width:100px;height:76px;object-fit:contain;display:block;margin:auto}tr{page-break-inside:avoid}
+    button{margin-bottom:12px;padding:9px 20px;background:#2F5D46;color:#fff;border:0;border-radius:6px}@media print{button{display:none}}
+  </style></head><body><button onclick="window.print()">인쇄 · PDF 저장</button><h1>SPEC LIST</h1><div class="sub">${esc(s.code)} ${esc(s.name)} · ${today()} · (주)사람사는집종합건설</div>
+    <table><tr><th>No</th><th>위치</th><th>분류</th><th>항목</th><th>스펙이미지</th><th>제조사</th><th>품목 및 사양</th><th>비고</th><th>선택여부</th></tr>${out.join('') || '<tr><td colspan="9">확정된 소재 없음</td></tr>'}</table></body></html>`);
   w.document.close();
+}
+
+const SB = { loaded: false, items: [], groups: {}, units: [], states: [], canEdit: false, group: '전체', part: '', q: '' };
+async function sbLoad(force) {
+  if (SB.loaded && !force) return;
+  const b = { action: 'sb_list' };
+  const d = force ? await acFetch(b, acKey(b)) : await api(b);
+  Object.assign(SB, { loaded: true, items: d.items, groups: d.groups, units: d.units, states: d.states, canEdit: d.canEdit });
+}
+const SB_URL = {};
+async function sbPhotoUrl(id, fid, thumb) {
+  const k = (thumb ? 't' : 'f') + fid;
+  if (SB_URL[k]) return SB_URL[k];
+  const d = await api({ action: 'sb_photo', id, fileId: fid, thumb: !!thumb });
+  const bin = atob(d.data); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return SB_URL[k] = URL.createObjectURL(new Blob([arr], { type: d.type }));
+}
+
+async function renderSpecTab() {
+  if (!SB.loaded) {
+    $('main').innerHTML = '<div class="loading">회사 스펙북을 불러오는 중...</div>';
+    try { await sbLoad(); } catch (e) { $('main').innerHTML = `<div class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</div>`; return; }
+    if (S.tab !== 'spec') return;
+  }
+  const groups = Object.keys(SB.groups);
+  const q = SB.q.trim().toLowerCase();
+  const hit = o => !q || [o.part, o.item, o.maker, o.spec, o.note, o.loc].join(' ').toLowerCase().includes(q);
+  let list = SB.items.filter(o => (SB.group === '전체' || o.group === SB.group) && hit(o));
+  const parts = SB.group === '전체' ? [] : (SB.groups[SB.group] || []);
+  if (SB.part && parts.includes(SB.part)) list = list.filter(o => o.part === SB.part);
+  const keys = []; list.forEach(o => { const k = o.group + '|' + o.part; if (!keys.includes(k)) keys.push(k); });
+  keys.sort((a, b) => { const [ga, pa] = a.split('|'), [gb, pb] = b.split('|'); return groups.indexOf(ga) - groups.indexOf(gb) || (SB.groups[ga] || []).indexOf(pa) - (SB.groups[gb] || []).indexOf(pb); });
+  const noPrice = SB.items.filter(o => o.price === '' && o.state !== '단종').length;
+  const noBase = groups.reduce((t, g) => t + (SB.groups[g] || []).filter(p => SB.items.some(o => o.group === g && o.part === p) && !SB.items.some(o => o.group === g && o.part === p && o.base === 'Y')).length, 0);
+  $('main').innerHTML = `
+    <div class="cr-bar"><h2>회사 스펙북 <span class="cr-sub" style="font-weight:500">품목 ${SB.items.length} · 단종 ${SB.items.filter(o => o.state === '단종').length}</span></h2>
+      ${SB.canEdit ? '<label class="btn ghost" for="sbImp" style="cursor:pointer">가져오기</label><input type="file" id="sbImp" accept=".json" hidden><button class="btn" type="button" id="sbNew">+ 품목 추가</button>' : ''}</div>
+    ${SB.canEdit && (noPrice || noBase) ? `<div class="notice" style="margin-bottom:12px">${noPrice ? `소비자가가 없는 품목 ${noPrice}개 — 건축주 화면에는 '금액 상담'으로 보입니다. ` : ''}${noBase ? `기본 사양이 지정되지 않은 항목 ${noBase}개 — 추가 금액 계산에 기본 사양이 필요합니다.` : ''}</div>` : ''}
+    <div class="f"><input type="text" id="sbQ" placeholder="검색 (예: 노바마루, 수전, 화이트)" value="${esc(SB.q)}"></div>
+    <div class="filters">${['전체', ...groups].map(g => { const n = g === '전체' ? SB.items.length : SB.items.filter(o => o.group === g).length; return (n || g === '전체' || g === SB.group) ? `<button class="chip" data-g="${esc(g)}" aria-pressed="${SB.group === g}">${esc(g)}<b>${n}</b></button>` : ''; }).join('')}</div>
+    ${parts.length ? `<div class="filters">${['', ...parts].map(p => `<button class="chip" data-p="${esc(p)}" aria-pressed="${SB.part === p}">${esc(p || '전체 항목')}<b>${p ? SB.items.filter(o => o.group === SB.group && o.part === p).length : SB.items.filter(o => o.group === SB.group).length}</b></button>`).join('')}</div>` : ''}
+    ${keys.length ? keys.map(k => { const [g, p] = k.split('|'); const its = list.filter(o => o.group === g && o.part === p); return `
+      <section class="panel" style="margin-bottom:12px"><div class="ds-phase">${esc(g)} · ${esc(p)} <span class="cr-sub">${its.length}</span></div>
+        <div class="sp-grid">${its.map(o => `<button type="button" class="sp-card ${o.state === '단종' ? 'off' : ''}" data-sb="${esc(o.id)}">
+          <span class="sp-img" data-mid="${esc(o.id)}" data-pid="${esc((o.photos[0] || {}).id || '')}">${o.photos.length ? '' : '<i>사진 없음</i>'}</span>
+          <span class="sp-tags">${o.base === 'Y' ? '<span class="st si-st 확정">기본 사양</span>' : ''}${o.state === '단종' ? '<span class="sp-tag warn">단종</span>' : ''}${String(o.loc || '').split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 2).map(l => `<span class="sp-tag">${esc(l)}</span>`).join('')}</span>
+          <span class="cr-id">${esc(o.item || o.part)}${o.maker ? ' · ' + esc(o.maker) : ''}</span>
+          <b class="sp-name">${esc(String(o.spec || '').split('\n').slice(0, 3).join('\n'))}</b>
+          ${o.note ? `<span class="sp-spec">${esc(o.note)}</span>` : ''}
+          <span class="sp-money ${o.price === '' ? 'muted' : ''}">${o.price === '' ? '소비자가 미입력' : esc(spWon(Number(o.price))) + ' / ' + esc(o.unit)}</span></button>`).join('')}</div></section>`; }).join('') : `<section class="panel empty"><h3>품목이 없습니다</h3>${SB.canEdit ? '[+ 품목 추가] 또는 [가져오기]로 스펙북을 채우세요.' : ''}</section>`}`;
+  const m = $('main');
+  m.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { SB.group = b.dataset.g; SB.part = ''; renderSpecTab(); });
+  m.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { SB.part = b.dataset.p; renderSpecTab(); });
+  m.querySelectorAll('[data-sb]').forEach(b => b.onclick = () => sbForm(SB.items.find(x => x.id === b.dataset.sb)));
+  m.querySelectorAll('.sp-img[data-pid]').forEach(im => { if (im.dataset.pid) sbPhotoUrl(im.dataset.mid, im.dataset.pid, true).then(u => im.style.backgroundImage = `url("${u}")`).catch(() => {}); });
+  $('sbQ').oninput = () => { SB.q = $('sbQ').value; clearTimeout(SB.t); SB.t = setTimeout(() => { renderSpecTab(); const i = $('sbQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  if ($('sbNew')) $('sbNew').onclick = () => sbForm(null);
+  if ($('sbImp')) $('sbImp').onchange = e => sbImport(e.target);
+}
+
+function sbForm(o) {
+  const ro = !SB.canEdit;
+  const g0 = o ? o.group : (SB.group !== '전체' ? SB.group : SI_ORDER[0]);
+  const body = openSheet(o ? esc(o.item || o.part) : '품목 추가', o ? `${esc(o.group)} · ${esc(o.part)}` : '회사 스펙북', `
+    ${o && o.photos.length ? `<div class="card sp-photo"><button type="button" class="sp-big" aria-label="사진 크게 보기"></button>${o.photos.length > 1 ? `<div class="thumbs">${o.photos.map((p, i) => `<button type="button" class="thumb" data-p="${esc(p.id)}" data-i="${i}"></button>`).join('')}</div>` : ''}</div>` : ''}
+    <div class="card">
+      <div class="f"><span class="lb">대분류</span>${segHtml('bg', Object.keys(SB.groups), g0)}</div>
+      <div class="cx-when"><div class="f"><label>항목</label><select id="bPart" ${ro ? 'disabled' : ''}></select></div>
+        <div class="f"><label>항목명</label><input type="text" id="bItem" value="${esc(o ? o.item : '')}" placeholder="예: 강마루, [언더] 세면대" ${ro ? 'disabled' : ''}></div></div>
+      <div class="f"><label>기본 위치</label><input type="text" id="bLoc" value="${esc(o ? o.loc : '')}" placeholder="예: 거실, 방-1 (현장에서 바꿀 수 있음)" ${ro ? 'disabled' : ''}></div>
+      <div class="f"><label>제조사</label><input type="text" id="bMaker" value="${esc(o ? o.maker : '')}" ${ro ? 'disabled' : ''}></div>
+      <div class="f"><label>품목 및 사양</label><textarea id="bSpec" rows="3" placeholder="모델·색상·규격" ${ro ? 'disabled' : ''}>${esc(o ? o.spec : '')}</textarea></div>
+      <div class="f"><label>비고</label><textarea id="bNote" rows="2" ${ro ? 'disabled' : ''}>${esc(o ? o.note : '')}</textarea></div>
+      <div class="cx-when"><div class="f"><label>소비자가 (견적서)</label><input type="number" id="bPrice" value="${esc(o ? o.price : '')}" placeholder="원" ${ro ? 'disabled' : ''}></div>
+        <div class="f"><label>단위</label><select id="bUnit" ${ro ? 'disabled' : ''}>${SB.units.map(u => `<option ${o && o.unit === u ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></div></div>
+      <label class="cx-check"><input type="checkbox" id="bBase" ${o && o.base === 'Y' ? 'checked' : ''} ${ro ? 'disabled' : ''}> 이 항목의 기본 사양 (건축주 추가 금액의 기준)</label>
+      <div class="f" style="margin-top:10px"><span class="lb">상태</span>${segHtml('bs', SB.states, o ? o.state : '판매중')}</div>
+      ${o ? `<div class="cr-sub">수정 ${esc(o.by)} · ${esc(o.updatedAt)}</div>` : ''}
+    </div>
+    ${ro ? '' : `<div class="card"><h4>사진</h4>
+      ${o && o.photos.length ? `<div class="thumbs" id="bOld">${o.photos.map(p => `<div class="thumb-wrap"><button type="button" class="thumb" data-p="${esc(p.id)}"></button><button type="button" class="thumb-x" data-rm="${esc(p.id)}">×</button></div>`).join('')}</div>` : ''}
+      <div class="f" style="margin-top:10px"><input type="file" id="bPhotos" multiple accept="image/*"></div></div>
+    <div class="actions sticky">${o ? '<button class="btn danger" type="button" id="bDel">삭제</button>' : ''}<button class="btn ghost" type="button" id="bClose">닫기</button><button class="btn" type="button" id="bSave">저장</button></div>`}`);
+  const fillParts = g => { $('bPart').innerHTML = (SB.groups[g] || []).map(p => `<option ${o && o.part === p ? 'selected' : ''}>${esc(p)}</option>`).join(''); };
+  fillParts(g0);
+  bindSegs(body, (n, v) => { if (n === 'bg') fillParts(v); });
+  if (o) {
+    const ids = o.photos.map(p => p.id), big = body.querySelector('.sp-big');
+    if (big) { sbPhotoUrl(o.id, ids[0], false).then(u => big.style.backgroundImage = `url("${u}")`).catch(() => {}); big.onclick = () => lightbox(ids, 0, fid => sbPhotoUrl(o.id, fid, false).then(url => ({ url }))); }
+    body.querySelectorAll('[data-p]').forEach(b => sbPhotoUrl(o.id, b.dataset.p, true).then(u => b.style.backgroundImage = `url("${u}")`).catch(() => {}));
+    body.querySelectorAll('.sp-photo [data-i]').forEach(b => b.onclick = () => lightbox(ids, Number(b.dataset.i), fid => sbPhotoUrl(o.id, fid, false).then(url => ({ url }))));
+  }
+  if (ro) return;
+  const removed = [];
+  body.querySelectorAll('#bOld [data-rm]').forEach(b => b.onclick = () => { removed.push(b.dataset.rm); b.closest('.thumb-wrap').remove(); });
+  $('bClose').onclick = closeSheet;
+  $('bSave').onclick = e => submitting(e.target, async () => {
+    const d = await api({ action: 'sb_save', id: o ? o.id : '', removePhotos: removed, photos: await readFiles($('bPhotos')),
+      fields: { group: segVal(body, 'bg'), part: $('bPart').value, item: $('bItem').value, loc: $('bLoc').value, maker: $('bMaker').value, spec: $('bSpec').value, note: $('bNote').value, price: $('bPrice').value, unit: $('bUnit').value, base: $('bBase').checked, state: segVal(body, 'bs') } });
+    if (d.item.base === 'Y') SB.items.forEach(x => { if (x.id !== d.item.id && x.group === d.item.group && x.part === d.item.part) x.base = ''; });
+    const i = SB.items.findIndex(x => x.id === d.item.id); if (i >= 0) SB.items[i] = d.item; else SB.items.push(d.item);
+    SI.site = null; closeSheet(); renderSpecTab(); toast('저장했습니다. 진행 중인 현장 후보에도 반영됩니다.');
+  });
+  if ($('bDel')) $('bDel').onclick = e => { if (confirm('이 품목을 삭제할까요? 현장에서 쓰는 품목은 단종으로 바꿔 주세요.')) submitting(e.target, async () => {
+    await api({ action: 'sb_delete', id: o.id }); SB.items = SB.items.filter(x => x.id !== o.id); closeSheet(); renderSpecTab(); toast('삭제했습니다');
+  }); };
+}
+
+async function sbImport(input) {
+  const f = (input.files || [])[0]; input.value = '';
+  if (!f) return;
+  let bundle;
+  try { bundle = JSON.parse(await f.text()); } catch (e) { toast('가져오기 파일을 읽지 못했습니다'); return; }
+  const items = (bundle.items || []).filter(x => x.group && x.part);
+  if (!items.length) { toast('가져올 품목이 없습니다'); return; }
+  if (!confirm(`스펙북 품목 ${items.length}개(사진 포함)를 가져올까요? 같은 품목은 건너뜁니다.`)) return;
+  const map = {};
+  let n = 0;
+  for (let i = 0; i < items.length; i += 6) {
+    const chunk = items.slice(i, i + 6);
+    toast(`가져오는 중... ${Math.min(i + 6, items.length)} / ${items.length}`);
+    try {
+      const d = await api({ action: 'sb_import', items: chunk });
+      d.done.forEach(x => { map[x.ref] = x.id; if (!x.dup) n++; });
+    } catch (e) { toast(`${i + 1}번째부터 실패: ${e.message}`); break; }
+  }
+  await sbLoad(true); renderSpecTab();
+  toast(`${n}개를 새로 가져왔습니다`);
+  const sel = items.filter(x => x.sel && map[x.ref]);
+  if (sel.length && S.sites.length) {
+    const body = openSheet('현장 확정 내역도 넣기', esc(bundle.site || ''), `
+      <div class="card"><p style="margin-top:0">이 파일에서 '확정'이었던 ${sel.length}건을 현장 스펙북에 확정으로 넣을 수 있습니다.</p>
+        <div class="f"><label for="biSite">현장</label><select id="biSite"><option value="">넣지 않기</option>${S.sites.map(s => `<option value="${esc(s.code)}" ${bundle.site && String(s.name).includes(bundle.site) ? 'selected' : ''}>${esc(s.code + ' ' + s.name)}</option>`).join('')}</select></div></div>
+      <div class="actions sticky"><button class="btn ghost" type="button" id="biX">닫기</button><button class="btn" type="button" id="biGo">확정으로 넣기</button></div>`);
+    $('biX').onclick = closeSheet;
+    $('biGo').onclick = e => submitting(e.target, async () => {
+      const code = $('biSite').value; if (!code) { closeSheet(); return; }
+      const d = await api({ action: 'si_offer', siteCode: code, masterIds: sel.map(x => map[x.ref]), status: '확정' });
+      SI.site = null; closeSheet(); toast(`${code} 현장에 ${d.items.length}건을 넣었습니다`);
+    });
+  }
 }
 
 const DT = { items: [], cats: [], canEdit: false, loaded: false, cat: '전체', q: '' };
@@ -7504,8 +7811,25 @@ function openSheet(title, sub, body) {
   document.body.appendChild(wrap);
   wrap.querySelector('.scrim').onclick = closeSheet;
   wrap.querySelector('.x').onclick = closeSheet;
+  sheetGrip(wrap.querySelector('.sheet'));
   document.body.style.overflow = 'hidden';
   return wrap.querySelector('.sheet-body');
+}
+function sheetGrip(sh) {
+  const key = 'bfp_sheet_w', clamp = w => Math.max(380, Math.min(window.innerWidth - 60, w));
+  let w0 = 0;
+  try { w0 = Number(localStorage.getItem(key)) || 0; } catch (e) {}
+  if (w0 && window.innerWidth > 760) sh.style.width = clamp(w0) + 'px';
+  const g = document.createElement('div');
+  g.className = 'sheet-grip'; g.title = '끌어서 너비 조절 · 두 번 누르면 기본 크기';
+  sh.appendChild(g);
+  g.onpointerdown = e => {
+    e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add('on'); document.body.style.userSelect = 'none';
+    const move = ev => { sh.style.width = clamp(window.innerWidth - ev.clientX) + 'px'; };
+    const up = () => { g.classList.remove('on'); document.body.style.userSelect = ''; g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); try { localStorage.setItem(key, String(sh.offsetWidth)); } catch (er) {} };
+    g.addEventListener('pointermove', move); g.addEventListener('pointerup', up);
+  };
+  g.ondblclick = () => { sh.style.width = ''; try { localStorage.removeItem(key); } catch (e) {} };
 }
 function closeSheet() { const w = $('sheetWrap'); if (w) w.remove(); document.body.style.overflow = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const lb = document.querySelector('.lightbox'); if (lb) lb.remove(); else closeSheet(); } });
