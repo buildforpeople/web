@@ -1265,6 +1265,8 @@
   .wx-t input[type=checkbox] { width: auto; min-width: 0; }
   .notice { color: var(--amber); }
   .notice b { color: var(--ink); }
+.sheet.drop-on{outline:3px dashed var(--accent);outline-offset:-10px}.sheet.drop-on::after{content:'여기에 놓으면 자료로 올라갑니다';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#3F7A5C;color:#fff;padding:14px 22px;border-radius:10px;font-weight:700;pointer-events:none;z-index:5}
+.gd-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}.gd-row:first-child{border-top:0}.gd-row.on .gd-nm b{color:var(--accent)}.gd-nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.gd-d{width:140px}
 </style>
 </head>
 <body>
@@ -1328,7 +1330,7 @@ function getToken() {
   return t;
 }
 
-const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|sb_list|dt_list|pf_get|st_get|fb_board|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief|dx_get|ev_list|ev_targets)$/;
+const API_READ = /^(me|dyk|ov_site|ov_all|rp_list|rp_get|sc_get|si_list|sb_list|dt_list|pf_get|st_get|fb_board|fb_done|lb_data|ci_list|cm_list|cr_list|cr_all|cr_meta|cr_history|cx_list|cx_meta|cx_logs|ds_get|ds_meta|ca_list|iv_list|vw_list|oa_list|rp_sign_get|dc_list|cx_brief|dx_get|ev_list|ev_targets)$/;
 const API_FILE_READ = /^(rp_photo|rp_photos|rp_daily|iv_photo|si_photo|sb_photo|dt_file|pf_file|ca_file|ca_files|cr_file|cx_file|cx_analyze|dc_view|sc_preview|dx_file|dx_ifc_get|cx_fu_draft)$/;
 const AC = { mem: {}, flight: {}, pending: false, timer: null };
 function acKey(body) {
@@ -1499,6 +1501,18 @@ function renderShell() {
   }).join('');
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
 
+  const lk = (location.hash.match(/^#cx=([^&]+)/) || [])[1];
+  if (lk) {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (S.tabs.includes('cx')) {
+      S.tab = 'cx'; const id = decodeURIComponent(lk);
+      (CX.loaded ? Promise.resolve() : cxLoad()).then(() => {
+        if (S.tab !== 'cx') return;
+        cxRenderList();
+        if (CX.items.some(x => x.id === id)) cxOpen(id); else toast('공유받은 고객을 찾을 수 없습니다');
+      }).catch(e => toast(e.message));
+    } else setTimeout(() => toast('고객상담 메뉴 권한이 없어 공유 링크를 열 수 없습니다'), 300);
+  }
   selectTab(S.tabs.includes(S.tab) ? S.tab : S.tabs[0]);
   if (S.tabs.includes('cx') && !CX.loaded) cxLoad().then(() => { if (S.tab === 'cx') cxRenderList(); }).catch(() => {});
   dykLoad();
@@ -1537,6 +1551,7 @@ function renderTab() {
 }
 
 const FB = { board: null, est: null, boardHtml: '', estHtml: '' };
+window.FB = FB;
 function fbDoc(html, data) {
   let h = html.replace(/<html(\s[^>]*)?>/i, '<html data-theme="dark">');
   const inject = `<script>window.BFP_DATA=${data ? JSON.stringify(data).replace(/<\//g, '<\\/') : 'null'};<\/script>
@@ -1834,12 +1849,44 @@ function siteSummaryHtml(s) {
     </section>`;
 }
 
+async function gdRender(s, fresh) {
+  const el = $('subBody'); if (!el) return;
+  const live = () => S.tab === 'site' && S.siteCode === s.code && S.siteSub === '공종 완료' && $('subBody');
+  let d = fresh;
+  if (!d) {
+    el.innerHTML = '<div class="loading">공종을 불러오는 중...</div>';
+    try { d = await api({ action: 'fb_done', siteCode: s.code }); }
+    catch (e) { if (live()) $('subBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+    if (!live()) return;
+  }
+  const n = d.groups.filter(g => g.done).length, t = today();
+  $('subBody').innerHTML = `
+    <div class="cr-bar"><h2 style="font-size:17px">공종 완료 <span class="cr-sub" style="font-weight:500">${n} / ${d.groups.length} 끝남</span></h2></div>
+    <div class="hint" style="margin-bottom:12px">공종 하나가 끝날 때마다 체크해 주세요. 공무팀 현장재정에 바로 반영됩니다.${d.linked ? '' : ' (현장재정에 아직 연결되지 않은 현장이라 전체 공종을 보여줍니다)'}</div>
+    <section class="panel" style="padding:0">${d.groups.map(g => `
+      <div class="gd-row ${g.done ? 'on' : ''}">
+        <div class="gd-nm"><b>${esc(g.name)}</b>${g.done ? `<span class="cr-sub">${esc(g.done.at)} 완료 · ${esc(g.done.by)}</span>` : '<span class="cr-sub">진행 중</span>'}</div>
+        ${d.canEdit ? (g.done ? `<button type="button" class="btn ghost sm" data-gu="${esc(g.code)}">완료 취소</button>`
+          : `<input type="date" class="gd-d" data-gd="${esc(g.code)}" value="${t}" max="${t}" aria-label="끝난 날"><button type="button" class="btn sm" data-gy="${esc(g.code)}">끝났어요</button>`)
+          : `<span class="st ${g.done ? '완료' : ''}">${g.done ? '완료' : '진행 중'}</span>`}
+      </div>`).join('')}</section>`;
+  const set = (btn, group, done) => submitting(btn, async () => {
+    const inp = $('subBody').querySelector(`[data-gd="${group}"]`);
+    const nd = await api({ action: 'fb_done_set', siteCode: s.code, group, done, date: inp ? inp.value : '' });
+    FB.board = null;
+    if (live()) gdRender(s, nd);
+    toast(done ? '완료로 체크했습니다' : '완료를 취소했습니다');
+  });
+  $('subBody').querySelectorAll('[data-gy]').forEach(b => b.onclick = () => set(b, b.dataset.gy, true));
+  $('subBody').querySelectorAll('[data-gu]').forEach(b => b.onclick = () => { if (confirm('완료 체크를 취소할까요?')) set(b, b.dataset.gu, false); });
+}
+
 function renderSiteTab() {
   const s = currentSite();
   if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3>담당 현장이 필요하면 관리자에게 요청하세요.</div>'; return; }
 
   const subs = S.me.role === 'client' ? ['대시보드', '설계', '현장보고', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW']
-    : ['대시보드', '현장보고', '출역', '공정표', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
+    : ['대시보드', '현장보고', '출역', '공정표', '공종 완료', '변경공사', '공지', '스펙북', '서류함', '360 VIEW'].concat(S.me.role === 'admin' || S.me.role === 'office' ? ['건축주 계정'] : []);
   if (!subs.includes(S.siteSub)) S.siteSub = subs[0];
 
   $('main').innerHTML = `
@@ -1854,7 +1901,7 @@ function renderSiteTab() {
     <div class="subnav" role="tablist">
       ${subs.map(x => `<button class="chip" aria-pressed="${x === S.siteSub}" data-sub="${esc(x)}">${esc(x)}</button>`).join('')}
     </div>
-    <div id="subBody">${['대시보드', '설계', '현장보고', '출역', '공정표', '변경공사', '건축주 계정', '360 VIEW', '스펙북', '서류함'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
+    <div id="subBody">${['대시보드', '설계', '현장보고', '출역', '공정표', '공종 완료', '변경공사', '건축주 계정', '360 VIEW', '스펙북', '서류함'].includes(S.siteSub) ? '<div class="loading">불러오는 중...</div>' : `<section class="panel empty"><h3>${esc(S.siteSub)}</h3>준비 중인 메뉴입니다.</section>`}</div>`;
   $('main').querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { S.siteSub = b.dataset.sub; renderSiteTab(); });
   { const fab = $('crFab'); if (fab) fab.hidden = !crActive(); }
   $('toInfo').onclick = () => selectTab('info');
@@ -1866,6 +1913,7 @@ function renderSiteTab() {
     return;
   }
   if (S.siteSub === '건축주 계정') { oaRender($('subBody')); return; }
+  if (S.siteSub === '공종 완료') { gdRender(s); return; }
   if (S.siteSub === '스펙북') {
     $('subBody').innerHTML = '<div id="siBody"><div class="loading">선정 소재를 불러오는 중...</div></div>';
     const show = () => { if (S.tab === 'site' && S.siteCode === s.code && S.siteSub === '스펙북') siRender(); };
@@ -1969,7 +2017,9 @@ async function dcView(it, req) {
     if ((e.ctrlKey || e.metaKey) && ['s', 'p', 'c', 'a'].includes(k) || e.key === 'PrintScreen' || (e.metaKey && e.shiftKey)) { e.preventDefault(); ov.classList.add('hide'); if (e.key === 'PrintScreen') try { navigator.clipboard.writeText(''); } catch (x) {} setTimeout(() => ov.classList.remove('hide'), 1500); }
   };
   const hide = () => ov.classList.add('hide'), show = () => { if (document.visibilityState === 'visible') ov.classList.remove('hide'); };
-  const close = () => { ov.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', keys, true); window.removeEventListener('blur', hide); window.removeEventListener('focus', show); document.removeEventListener('visibilitychange', vis); };
+  const drop = () => { ov.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', keys, true); window.removeEventListener('blur', hide); window.removeEventListener('focus', show); document.removeEventListener('visibilitychange', vis); };
+  const close = () => { drop(); lyGone('dcv'); };
+  lyOpen('dcv', drop);
   const vis = () => document.visibilityState === 'visible' ? show() : hide();
   ov.addEventListener('contextmenu', block); ov.addEventListener('dragstart', block); ov.addEventListener('selectstart', block);
   document.addEventListener('keydown', keys, true); window.addEventListener('blur', hide); window.addEventListener('focus', show); document.addEventListener('visibilitychange', vis);
@@ -5555,7 +5605,9 @@ async function lightbox(ids, startIndex, loader) {
     } catch (err) { window.open(cur.url, '_blank'); }
   };
   const move = n => { box.classList.remove('zoom'); i = (i + n + ids.length) % ids.length; show(); };
-  const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+  const drop = () => { box.remove(); document.removeEventListener('keydown', key); };
+  const close = () => { drop(); lyGone('lb'); };
+  lyOpen('lb', drop);
   const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') move(-1); if (e.key === 'ArrowRight') move(1); };
   document.addEventListener('keydown', key);
   box.querySelector('.lb-close').onclick = close;
@@ -7258,6 +7310,8 @@ function bimLeft() {
   if (BIM.edit) return bimFinEditor(el);
   const T = bimTable(), m = BIM.m;
   BIM.T = T;
+  const pv = el.querySelector('.bim-scroll'), vk = BIM.cat + '|' + BIM.floor, keep = pv && BIM.vk === vk ? [pv.scrollTop, pv.scrollLeft] : null;
+  BIM.vk = vk;
   let sec = '';
   const fmt = v => v === '' || v == null || v === 0 ? '–' : typeof v === 'number' ? dxN(r2(v)) : esc(v);
   const body = T.rows.map((r, i) => {
@@ -7272,6 +7326,7 @@ function bimLeft() {
     <div class="bim-foot">${T.mode === 'room' ? `벽 = 둘레 × 천장고 − 문·창 면적, 걸레받이 = 둘레 − 문 폭으로 계산했습니다.${guess ? ' 일부 실은 둘레 정보가 없어 정사각형으로 가정했습니다.' : ''} 마감 사양 출처: 지정 > 판독한 마감표 > 실 이름 기본값.
       ${DX.d.canEdit ? ' <button class="linkish" type="button" id="bimFin">실별 마감 사양 고치기</button>' : ''}` : '행을 누르면 3D에서 해당 부재가 강조됩니다. 층 이름(◎)을 누르면 그 층만 봅니다.'}
       ${(m.warn || []).length ? `<div style="color:var(--amber)">${m.warn.map(esc).join(' · ')}</div>` : ''}</div>`;
+  const nv = el.querySelector('.bim-scroll'); if (nv && keep) { nv.scrollTop = keep[0]; nv.scrollLeft = keep[1]; }
   el.querySelectorAll('[data-ri]').forEach(tr => tr.onclick = () => {
     const r = T.rows[Number(tr.dataset.ri)], k = 'r' + tr.dataset.ri;
     BIM.sel = BIM.sel === k ? '' : k;
@@ -7323,14 +7378,16 @@ function bimHead() {
   $('bimTbl').onclick = () => { const id = BIM.doc.id; bimClose(); ifcSheet(BIM.s, id); };
   $('bimX').onclick = bimClose;
 }
-function bimClose() {
+function bimDrop() {
   if (BIM.v) { try { BIM.v.dispose(); } catch (e) {} }
   BIM.v = null;
   const w = $('bim'); if (w) w.remove();
   document.body.style.overflow = '';
 }
+function bimClose() { bimDrop(); lyGone('bim'); }
 async function bimOpen(s, id) {
-  bimClose();
+  bimDrop();
+  lyOpen('bim', bimDrop);
   const doc = ifcDocs().find(x => x.id === id);
   const wrap = document.createElement('div');
   wrap.id = 'bim'; wrap.className = 'bim';
@@ -7802,8 +7859,28 @@ function crRenderList() {
   crRoot().querySelectorAll('.cr-row').forEach(b => b.onclick = () => crOpen(b.dataset.id));
 }
 
+const LY = { st: [], skip: 0 };
+function lyOpen(key, drop) {
+  const e = LY.st.find(x => x.key === key);
+  if (e) { e.drop = drop; e.gone = false; return; }
+  history.pushState({ bfpL: LY.st.length + 1 }, '');
+  LY.st.push({ key, drop, gone: false });
+}
+function lyGone(key) {
+  const e = LY.st.find(x => x.key === key);
+  if (!e) return;
+  e.gone = true;
+  setTimeout(() => { if (!e.gone) return; const i = LY.st.indexOf(e); if (i < 0) return; LY.st.splice(i, 1); LY.skip++; history.back(); }, 0);
+}
+window.addEventListener('popstate', () => {
+  if (LY.skip) { LY.skip--; return; }
+  const e = LY.st.pop();
+  if (e && !e.gone) e.drop();
+});
+function sheetDrop() { const w = $('sheetWrap'); if (w) w.remove(); document.body.style.overflow = ''; }
 function openSheet(title, sub, body) {
-  closeSheet();
+  sheetDrop();
+  lyOpen('sheet', sheetDrop);
   const wrap = document.createElement('div');
   wrap.id = 'sheetWrap';
   wrap.innerHTML = `<div class="scrim"></div><aside class="sheet" role="dialog" aria-modal="true">
@@ -7832,8 +7909,8 @@ function sheetGrip(sh) {
   };
   g.ondblclick = () => { sh.style.width = ''; try { localStorage.removeItem(key); } catch (e) {} };
 }
-function closeSheet() { const w = $('sheetWrap'); if (w) w.remove(); document.body.style.overflow = ''; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const lb = document.querySelector('.lightbox'); if (lb) lb.remove(); else closeSheet(); } });
+function closeSheet() { sheetDrop(); lyGone('sheet'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.lightbox, .dcv, #bim')) closeSheet(); });
 
 function segHtml(name, opts, val) {
   return `<div class="seg" data-seg="${name}">${opts.map(o => { const [v, l] = Array.isArray(o) ? o : [o, o]; return `<button type="button" data-v="${esc(v)}" aria-pressed="${v === val}">${esc(l)}</button>`; }).join('')}</div>`;
@@ -8787,7 +8864,8 @@ function cxOpenInner(id) {
     <div class="card" id="sumCard">
       <div class="cx-card-head"><h4>고객 정보</h4>
         <button type="button" class="star-btn ${o.star ? 'on' : ''}" id="starBtn" title="중요 표시">★</button>
-        <button class="btn ghost" type="button" id="xEdit" style="margin-left:auto;padding:5px 12px">수정</button></div>
+        <button class="btn ghost" type="button" id="xShare" style="margin-left:auto;padding:5px 12px">링크 공유</button>
+        <button class="btn ghost" type="button" id="xEdit" style="padding:5px 12px">수정</button></div>
       <dl class="kv">
         <dt>연락처</dt><dd>${o.phone ? `<button type="button" class="cx-link" id="cxTel">${esc(o.phone)}</button>` : '—'}</dd>
         <dt>이메일</dt><dd>${o.email ? `<button type="button" class="cx-link" id="cxMail">${esc(o.email)}</button>` : '—'}</dd>
@@ -8796,7 +8874,7 @@ function cxOpenInner(id) {
       <div class="cx-files-wrap">
         <h4 style="margin-bottom:8px">사진·자료</h4>
         <div id="cxFiles">${cxFilesHtml(o)}</div>
-        <details class="cx-up"><summary>자료 올리기</summary>
+        <details class="cx-up"><summary>자료 올리기 <span class="cr-sub" style="font-weight:400">· 한 번에 최대 30개 · 창에 파일을 끌어다 놓아도 됩니다</span></summary>
           <div class="f" style="margin-top:10px"><input type="file" id="cxUp" multiple accept="image/*,.pdf,.dwg,.dxf,.hwp,.docx,.xlsx"></div>
           <div class="f"><input type="text" id="cxUpNote" placeholder="자료 설명 (선택)"></div>
           <div class="actions"><button class="btn ghost" type="button" id="cxUpSave">올리기</button></div>
@@ -8969,11 +9047,39 @@ function cxOpenInner(id) {
     });
   };
   bindFiles();
+  body.querySelector('#xShare').onclick = async () => {
+    const url = location.origin + location.pathname + '#cx=' + encodeURIComponent(o.id);
+    if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ title: `${o.name} 고객 상세 · BFP`, url }); return; } catch (x) { if (x && x.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(url); toast('링크를 복사했습니다. 직원에게 붙여넣어 보내세요.'); }
+    catch (x) { prompt('아래 링크를 복사하세요', url); }
+  };
+  {
+    const sh = body.closest('.sheet'); let dc = 0;
+    const hasFiles = ev => ev.dataTransfer && [...ev.dataTransfer.types].includes('Files');
+    sh.addEventListener('dragenter', ev => { if (!hasFiles(ev)) return; ev.preventDefault(); dc++; sh.classList.add('drop-on'); });
+    sh.addEventListener('dragover', ev => { if (hasFiles(ev)) ev.preventDefault(); });
+    sh.addEventListener('dragleave', () => { if (--dc <= 0) { dc = 0; sh.classList.remove('drop-on'); } });
+    sh.addEventListener('drop', ev => {
+      if (!hasFiles(ev)) return; ev.preventDefault(); dc = 0; sh.classList.remove('drop-on');
+      const fs = [...ev.dataTransfer.files]; if (!fs.length) return;
+      if (fs.length > 30) { toast('한 번에 30개까지 올릴 수 있습니다'); return; }
+      const dt = new DataTransfer(); fs.forEach(f => dt.items.add(f)); $('cxUp').files = dt.files;
+      const det = body.querySelector('.cx-up'); if (det) { det.open = true; det.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      $('cxUpSave').click();
+    });
+  }
   body.querySelector('#cxUpSave').onclick = e => submitting(e.target, async () => {
     const input = $('cxUp');
     if (!input.files.length) throw new Error('올릴 파일을 선택하세요.');
-    const d = await api({ action: 'cx_upload', id: o.id, files: await readFiles(input), note: $('cxUpNote').value });
-    cxReplace(d.item); cxOpen(o.id); toast('자료를 올렸습니다');
+    if (input.files.length > 30) throw new Error('한 번에 30개까지 올릴 수 있습니다.');
+    const files = await readFiles(input), note = $('cxUpNote').value;
+    let d = null;
+    for (let i = 0; i < files.length; i += 5) {
+      e.target.textContent = `올리는 중... ${Math.min(i + 5, files.length)} / ${files.length}`;
+      d = await api({ action: 'cx_upload', id: o.id, files: files.slice(i, i + 5), note });
+      cxReplace(d.item);
+    }
+    cxOpen(o.id); toast(`자료 ${files.length}개를 올렸습니다`);
   });
 
   const update = async fields => {
