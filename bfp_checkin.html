@@ -27,6 +27,10 @@ h1{font-size:24px;margin:2px 0 2px;color:var(--ink)}.date{color:var(--muted);mar
 .times{display:flex;justify-content:center;gap:26px;margin-top:14px}.times div{font-size:13px;color:var(--muted)}.times strong{display:block;font-size:24px;color:var(--ink)}
 .row2{display:grid;grid-template-columns:1fr 110px;gap:10px}
 .empty{padding:60px 10px;text-align:center;color:var(--muted)}
+.card{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:16px;margin-bottom:14px}.card h2{font-size:18px;color:var(--ink);margin:0 0 4px}.card .sub{color:var(--muted);font-size:13.5px;margin-bottom:10px}
+.rules{margin:0 0 12px;padding-left:20px}.rules li{margin-bottom:7px;color:var(--ink);font-size:15px}
+.pad{position:relative;border:1px dashed var(--line2);border-radius:10px;background:#fff;touch-action:none;height:170px}.pad canvas{width:100%;height:100%;display:block;border-radius:10px}
+.pad span{position:absolute;left:12px;top:8px;color:#999;font-size:13px;pointer-events:none}.pad button{position:absolute;right:8px;top:6px;border:0;background:#eee;color:#333;border-radius:6px;padding:4px 10px;font-size:13px}
 </style>
 </head>
 <body>
@@ -36,7 +40,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUx
 const P = new URLSearchParams(location.search), SITE = P.get('s') || '', KEY = P.get('k') || '';
 const LS = 'bfp_ci_me';
 let ME = {}; try { ME = JSON.parse(localStorage.getItem(LS) || '{}'); } catch (e) {}
-let D = null, pick = ME.trade || '';
+let D = null, pick = ME.trade || '', GEO = '';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 async function api(body) {
@@ -44,13 +48,40 @@ async function api(body) {
   const d = await r.json(); if (!d.ok) throw new Error(d.error || '요청 실패'); return d;
 }
 const fmtDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${m}월 ${dd}일 (${'일월화수목금토'[new Date(y, m - 1, dd).getDay()]})`; };
+function geo() { try { navigator.geolocation.getCurrentPosition(p => { GEO = p.coords.latitude.toFixed(5) + ',' + p.coords.longitude.toFixed(5) + ',±' + Math.round(p.coords.accuracy) + 'm'; }, () => {}, { timeout: 8000, maximumAge: 60000 }); } catch (e) {} }
+function pad(el) {
+  el.innerHTML = '<canvas></canvas><span>여기에 손가락으로 서명</span><button type="button">지우기</button>';
+  const c = el.querySelector('canvas'), x = c.getContext('2d'); let on = false, any = false;
+  const fit = () => { const r = c.getBoundingClientRect(), k = devicePixelRatio || 1; c.width = r.width * k; c.height = r.height * k; x.scale(k, k); x.lineWidth = 2.6; x.lineCap = x.lineJoin = 'round'; x.strokeStyle = '#111'; any = false; el.querySelector('span').hidden = false; };
+  fit();
+  const pt = e => { const r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  c.onpointerdown = e => { on = true; c.setPointerCapture(e.pointerId); const [a, b] = pt(e); x.beginPath(); x.moveTo(a, b); };
+  c.onpointermove = e => { if (!on) return; const [a, b] = pt(e); x.lineTo(a, b); x.stroke(); if (!any) { any = true; el.querySelector('span').hidden = true; } };
+  c.onpointerup = c.onpointercancel = () => { on = false; };
+  el.querySelector('button').onclick = fit;
+  return { empty: () => !any, png: () => { const o = document.createElement('canvas'), w = 600, h = Math.round(w * c.height / c.width); o.width = w; o.height = h; const ox = o.getContext('2d'); ox.fillStyle = '#fff'; ox.fillRect(0, 0, w, h); ox.drawImage(c, 0, 0, w, h); return o.toDataURL('image/png').split(',')[1]; } };
+}
 function head() { return `<div class="brand">사람사는집 현장 출역</div><h1>${esc(D.site.name)}</h1><div class="date">${fmtDate(D.today)}</div>`; }
-function done(m) {
+function done(m, sf) {
   $('app').innerHTML = head() + `<div class="done"><div class="ok">✓</div><b>${esc(m.name)} 님 ${m.outAt ? '퇴근' : '출근'} 확인</b><span>${esc(m.trade)}${m.company ? ' · ' + esc(m.company) : ''}${m.extra ? ' · 함께 ' + m.extra + '명' : ''}</span>
     <div class="times"><div>출근<strong>${esc(m.inAt)}</strong></div><div>퇴근<strong>${esc(m.outAt || '–')}</strong></div></div></div>
     ${m.outAt ? '' : '<button class="btn" id="out">퇴근 찍기</button>'}<button class="btn ghost" id="edit">정보 고치기</button><div class="err" id="err"></div>`;
   if ($('out')) $('out').onclick = () => send(true, $('out'));
   $('edit').onclick = () => form(m);
+}
+function pledge(src, pl) {
+  $('app').innerHTML = head() + `<div class="card"><h2>안전수칙 서약</h2><div class="sub">이 현장에 처음 오셨습니다. 아래 내용을 읽고 서명해 주세요. (처음 한 번만)</div>
+    <ol class="rules">${pl.items.map(t => `<li>${esc(t)}</li>`).join('')}</ol>
+    <label class="agree" style="margin:6px 0 12px"><input type="checkbox" id="edu"><span>건설업 기초안전보건교육을 이수했습니다.</span></label>
+    <div class="pad" id="plPad"></div></div>
+    <button class="btn" id="plGo">서명하고 출근 확인</button><button class="btn ghost" id="plBack">뒤로</button><div class="err" id="err"></div>`;
+  const P1 = pad($('plPad'));
+  $('plBack').onclick = () => form(src);
+  $('plGo').onclick = () => {
+    if (!$('edu').checked) return $('err').textContent = '기초안전보건교육 이수 여부를 확인해 주세요.';
+    if (P1.empty()) return $('err').textContent = '서명을 해 주세요.';
+    send(false, $('plGo'), Object.assign({}, src, { sign: P1.png() }));
+  };
 }
 function form(m) {
   const v = m || ME;
@@ -60,24 +91,27 @@ function form(m) {
     <div class="f"><label>공종</label><div class="chips">${D.trades.map(t => `<button type="button" data-t="${esc(t)}" aria-pressed="${t === pick}">${esc(t)}</button>`).join('')}</div></div>
     <div class="row2"><div class="f"><label>소속 업체 (선택)</label><input id="co" value="${esc(v.company || '')}"></div>
       <div class="f"><label>함께 온 인원</label><select id="ex">${Array.from({ length: 16 }, (_, i) => `<option value="${i}" ${Number(v.extra || 0) === i ? 'selected' : ''}>${i ? i + '명' : '없음'}</option>`).join('')}</select></div></div>
-    <label class="agree"><input type="checkbox" id="ag" ${ME.agree ? 'checked' : ''}><span>현장 출역 확인과 안전관리를 위해 이름·연락처·공종을 수집하며, 1년 보관 후 삭제합니다. (주)사람사는집종합건설</span></label>
+    <label class="agree"><input type="checkbox" id="ag" ${ME.agree ? 'checked' : ''}><span>현장 출역 확인과 안전관리를 위해 이름·연락처·공종·위치와 안전서약 서명을 수집합니다. 출역 기록은 1년, 안전서약 서명은 3년 보관 후 삭제합니다. (주)사람사는집종합건설</span></label>
     <button class="btn" id="go">${m ? '저장' : '출근 확인'}</button><div class="err" id="err"></div>`;
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { pick = b.dataset.t; document.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   $('go').onclick = () => send(false, $('go'));
 }
-async function send(out, btn) {
-  const src = out ? ME : { name: $('nm').value.trim(), phone: $('ph').value.trim(), trade: pick, company: $('co').value.trim(), extra: Number($('ex').value), agree: $('ag').checked };
-  if (!out) { if (!src.name) return $('err').textContent = '이름을 입력해 주세요.'; if (!/^01\d{8,9}$/.test(src.phone.replace(/\D/g, ''))) return $('err').textContent = '휴대폰 번호를 확인해 주세요.'; if (!src.trade) return $('err').textContent = '공종을 골라 주세요.'; if (!src.agree) return $('err').textContent = '개인정보 수집에 동의해 주세요.'; }
+async function send(out, btn, pre) {
+  const src = pre || (out ? ME : { name: $('nm').value.trim(), phone: $('ph').value.trim(), trade: pick, company: $('co').value.trim(), extra: Number($('ex').value), agree: $('ag').checked });
+  if (!out && !pre) { if (!src.name) return $('err').textContent = '이름을 입력해 주세요.'; if (!/^01\d{8,9}$/.test(src.phone.replace(/\D/g, ''))) return $('err').textContent = '휴대폰 번호를 확인해 주세요.'; if (!src.trade) return $('err').textContent = '공종을 골라 주세요.'; if (!src.agree) return $('err').textContent = '개인정보 수집에 동의해 주세요.'; }
   btn.disabled = true; const t = btn.textContent; btn.textContent = '보내는 중...';
   try {
-    const d = await api(Object.assign({ action: 'cp_in', out }, src));
-    ME = Object.assign({}, src, { phone: d.mine.phone }); try { localStorage.setItem(LS, JSON.stringify(ME)); } catch (e) {}
-    done(d.mine);
+    const d = await api(Object.assign({ action: 'cp_in', out, geo: GEO }, src));
+    if (d.need === 'pledge') { pledge(src, d.pledge); return; }
+    const keep = Object.assign({}, src); delete keep.sign; delete keep.photo;
+    ME = Object.assign(keep, { phone: d.mine.phone }); try { localStorage.setItem(LS, JSON.stringify(ME)); } catch (e) {}
+    D.safety = d.safety; done(d.mine, d.safety);
   } catch (e) { $('err').textContent = e.message; btn.disabled = false; btn.textContent = t; }
 }
 (async () => {
   if (!SITE || !KEY) { $('app').innerHTML = '<div class="empty">현장에 붙은 QR코드를 휴대폰 카메라로 찍어 주세요.</div>'; return; }
-  try { D = await api({ action: 'cp_site', phone: ME.phone || '' }); D.mine ? done(D.mine) : form(); }
+  geo();
+  try { D = await api({ action: 'cp_site', phone: ME.phone || '' }); D.mine ? done(D.mine, D.safety) : form(); }
   catch (e) { $('app').innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 })();
 </script>
