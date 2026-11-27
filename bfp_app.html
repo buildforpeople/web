@@ -53,6 +53,24 @@
   .me { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
   .me .role { background: rgba(255,255,255,.16); padding: 2px 8px; border-radius: 999px; }
   .me button { background: none; border: 0; color: rgba(255,255,255,.8); font-size: 13px; padding: 4px; }
+  .dx-tree { display: none; }
+  .dx-kpis .ov-card .cr-sub { display: block; }
+  .dx-crumb { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .dx-title { margin: 0 0 10px; font-size: 20px; color: var(--ink); }
+  .dx-foot { display: flex; justify-content: flex-end; gap: 8px; margin: 16px 0 8px; }
+  @media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+    .dx-tree:not([hidden]) { display: block; margin: 2px 0 8px 18px; padding-left: 6px; border-left: 1px solid rgba(255,255,255,.12); }
+    .dx-tree .dt-h { font-size: 10.5px; letter-spacing: .05em; color: rgba(255,255,255,.34); padding: 8px 10px 2px; }
+    .dx-tree button { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: 0; color: rgba(255,255,255,.66); font: inherit; font-size: 13.5px; padding: 6px 10px; border-radius: 6px; text-align: left; cursor: pointer; }
+    .dx-tree button:hover { color: #fff; background: rgba(255,255,255,.06); }
+    .dx-tree button[aria-current="true"] { background: rgba(255,255,255,.11); color: #fff; font-weight: 600; }
+    .dx-tree .n { font-size: 10.5px; width: 12px; flex: none; color: rgba(255,255,255,.4); font-variant-numeric: tabular-nums; }
+    .dx-tree .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: #7DBA98; flex: none; }
+    .dx-tree .dot.w { background: #E0B05A; }
+    .dx-tree .soon { margin-left: auto; font-size: 10px; color: rgba(255,255,255,.45); border: 1px solid rgba(255,255,255,.15); border-radius: 4px; padding: 0 4px; flex: none; }
+    .dx-tree .go { margin-left: auto; font-size: 11px; opacity: .55; flex: none; }
+    .subnav.dx-chips { display: none; }
+  }
   .me .app-ver { font-size: 10.5px; color: var(--muted); opacity: .75; padding: 2px 0 2px 4px; letter-spacing: .01em; }
   .tabs-row { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0; }
   .tabs { width: 100%; min-width: 0; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
@@ -1285,7 +1303,7 @@
 <body>
 
 
-<script>const APP_VER = '1.2', APP_DATE = '2026.11.28';
+<script>const APP_VER = '1.3', APP_DATE = '2026.11.28';
 const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
 
 <section class="login" id="loginView">
@@ -1511,7 +1529,7 @@ function renderShell() {
   $('tabs').innerHTML = TAB_ORDER.map(key => {
     const grp = Object.keys(grpFirst).find(x => grpFirst[x] === key);
     const head = grp ? `<span class="tab-grp">${grp}</span>` : '';
-    if (S.tabs.includes(key)) return head + `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}<i class="tab-badge" data-badge="${key}" ${S.badges[key] ? '' : 'hidden'}>${S.badges[key] || ''}</i></button>`;
+    if (S.tabs.includes(key)) return head + `<button class="tab" role="tab" data-tab="${key}">${TAB_LABEL[key]}<i class="tab-badge" data-badge="${key}" ${S.badges[key] ? '' : 'hidden'}>${S.badges[key] || ''}</i></button>` + (key === 'design' ? '<div class="dx-tree" id="dxTree" hidden></div>' : '');
     const l = S.links.find(x => x.key === key);
     return l ? head + `<a class="tab ext" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}${EXT_ICON}</a>` : '';
   }).join('');
@@ -1545,6 +1563,7 @@ function renderShell() {
 function selectTab(t) {
   S.tab = t;
   $('tabs').querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  if ($('dxTree')) $('dxTree').hidden = t !== 'design';
   $('sitePickWrap').hidden = ['cx', 'all', 'detail', 'card', 'board', 'est', 'inv', 'labor'].includes(t);
   renderTab();
 }
@@ -3850,6 +3869,7 @@ function pfEnergyStat(d) {
     primary: area > 0 ? Math.round(kwh * f / area) : 0, area };
 }
 
+function pfAfter() { if (S.tab === 'design' && $('pfSection')) pfRender($('pfSection')); else renderInfoTab(); }
 async function pfLoad(code) {
   if (PF.site === code || PF.loading) return;
   PF.loading = true;
@@ -3995,7 +4015,7 @@ function pfPkgUse() {
   body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => {
     const p = pk.find(x => x.id === b.dataset.pk), over = p.items.filter(it => have.includes(it.part)).map(it => it.part);
     if (over.length && !confirm(`${over.join('·')} 구성을 '${p.name}' 내용으로 바꿉니다. 진행할까요?`)) return;
-    submitting(b, async () => { const r = await api({ action: 'pf_pkg_apply', siteCode: d.site.code, id: p.id }); PF.d.env = r.env; closeSheet(); renderInfoTab(); toast(`'${p.name}' 적용했습니다`); });
+    submitting(b, async () => { const r = await api({ action: 'pf_pkg_apply', siteCode: d.site.code, id: p.id }); PF.d.env = r.env; closeSheet(); pfAfter(); toast(`'${p.name}' 적용했습니다`); });
   });
   body.querySelectorAll('[data-pkdel]').forEach(b => b.onclick = () => {
     const p = pk.find(x => x.id === b.dataset.pkdel);
@@ -4129,14 +4149,14 @@ function pfEnvForm(o) {
   $('pClose').onclick = closeSheet;
   if ($('pDel')) $('pDel').onclick = e => { if (confirm(`${o.part} 구성을 삭제할까요?`)) submitting(e.target, async () => {
     const r = await api({ action: 'pf_delete', kind: 'env', id: o.id, siteCode: d.site.code });
-    PF.d.env = r.env; closeSheet(); renderInfoTab(); toast('삭제했습니다');
+    PF.d.env = r.env; closeSheet(); pfAfter(); toast('삭제했습니다');
   }); };
   $('pSave').onclick = e => submitting(e.target, async () => {
     const part = segVal(body, 'pPart');
     const r = await api({ action: 'pf_env_save', siteCode: d.site.code, id: o ? o.id : '', fields: {
       part, note: $('pNote').value, woodRatio: Number($('pWr').value) / 100,
       uValue: $('pU').value, layers: ['창호', '현관문'].includes(part) ? [] : collect() } });
-    PF.d.env = r.env; closeSheet(); renderInfoTab(); toast('저장했습니다');
+    PF.d.env = r.env; closeSheet(); pfAfter(); toast('저장했습니다');
   });
 }
 
@@ -6302,26 +6322,108 @@ async function dxLoad(code, fresh) {
   DX.site = code; DX.d = d;
   return d;
 }
-function dxSubs(d) { return d.mode === '외부' ? ['도면·견적자료', '일정', '회사 스펙북'] : ['보드', '도면·견적자료', '일정', '회사 스펙북']; }
+const DX_TREE = [
+  ['검토', [['사업성·규모', '사업성·규모'], ['법규 물어보기', '법규 물어보기', 'soon'], ['인허가 법규체크', '인허가 법규체크', 'soon']]],
+  ['설계', [['보드', '설계 진행 보드'], ['도면·견적자료', '도면·자료'], ['BIM 검토', 'BIM 검토'], ['외피·성능', '외피·성능']]],
+  ['정리', [['적산·견적', '적산·견적', 'go'], ['일정', '설계 일정'], ['회사 스펙북', '회사 스펙북', 'nonum']]]
+];
+const DX_SOON = {
+  '법규 물어보기': '지자체 조례·법령 원문을 찾아 근거와 함께 답하는 질문 창입니다. 근거를 못 찾으면 답하지 않습니다.',
+  '인허가 법규체크': '도면 판독값(면적·층수·주차 등)을 법규 한도와 맞대어 적합·부족·확인 필요로 정리하는 표입니다.'
+};
+function dxTreeList(d) {
+  let n = 0;
+  return DX_TREE.map(([g, items]) => [g, items.filter(([k]) => !(k === '보드' && d.mode === '외부')).map(([k, label, kind]) => ({ k, label, kind, no: kind === 'nonum' ? '' : ++n }))]);
+}
+function dxSubs(d) { return dxTreeList(d).flatMap(([, items]) => items.filter(x => x.kind !== 'go').map(x => x.k)); }
+function dxLabel(k) { for (const [, items] of DX_TREE) { const x = items.find(i => i[0] === k); if (x) return x[1]; } return k; }
+function dxGroupOf(k) { const g = DX_TREE.find(([, items]) => items.some(i => i[0] === k)); return g ? g[0] : ''; }
+function dxDot(k, d) {
+  if (k === '사업성·규모') return d.law && d.law.result ? 'ok' : '';
+  if (k === '보드') { const c = d.cards || []; if (!c.length) return ''; if (c.every(x => x.col === '완료')) return 'ok'; return c.some(x => x.col === '진행 중' || x.col === '건축주 확인') ? 'w' : ''; }
+  if (k === '도면·견적자료') return (d.docs || []).some(x => x.status === '완료' && !(x.result && x.result.kind === 'ifc')) ? 'ok' : '';
+  if (k === 'BIM 검토') return (d.docs || []).some(x => x.status === '완료' && x.result && x.result.kind === 'ifc') ? 'ok' : '';
+  return '';
+}
+function dxGoSub(k) {
+  if (k === '적산·견적') { if (S.tabs.includes('est')) selectTab('est'); else toast('견적 메뉴 권한이 없습니다'); return; }
+  DX.sub = k; if (DX.draw) DX.draw();
+}
+function dxTreeDraw() {
+  const el = $('dxTree'); if (!el) return;
+  const d = DX.d;
+  if (!d || S.tab !== 'design') { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = dxTreeList(d).map(([g, items]) => `<div class="dt-h">${esc(g)}</div>` + items.map(x => {
+    const dot = x.kind ? '' : dxDot(x.k, d);
+    return `<button type="button" data-dxt="${esc(x.k)}" aria-current="${x.k === DX.sub}"><span class="n">${x.no || '·'}</span>${esc(x.label)}${x.kind === 'soon' ? '<span class="soon">2단계</span>' : x.kind === 'go' ? '<span class="go">↗</span>' : dot ? `<span class="dot ${dot === 'w' ? 'w' : ''}"></span>` : ''}</button>`;
+  }).join('')).join('');
+  el.querySelectorAll('[data-dxt]').forEach(b => b.onclick = () => dxGoSub(b.dataset.dxt));
+}
+function dxSoonView(el, k) {
+  el.innerHTML = `<section class="panel empty"><h3>${esc(dxLabel(k))} · 2단계에서 만듭니다</h3>${esc(DX_SOON[k] || '')}</section>`;
+}
+function dxLawView(el, s) {
+  const L = DX.d.law, r = L && L.result;
+  let kp = '';
+  if (r) {
+    const z = r.zones[0] || null, area = (r.land && r.land.area) || (r.site && r.site.area) || 0;
+    const bcr = z ? (z.bcr != null ? z.bcr : z.lawBcr) : null, far = z ? (z.far != null ? z.far : z.lawFar) : null;
+    const py = a => (a * 121 / 400).toFixed(1);
+    const card = (l, v, sub) => `<div class="panel ov-card"><span class="cr-sub">${l}</span><b>${v}</b><span class="cr-sub">${sub}</span></div>`;
+    kp = `<div class="ov-cards dx-kpis">
+      ${card('건폐율', bcr != null ? bcr + '%' : '—', z ? (z.bcr != null ? '조례' : '법정 상한') + ' · ' + esc(z.zone) : '')}
+      ${card('용적률', far != null ? far + '%' : '—', z ? (z.far != null ? '조례' : '법정 상한') + ' · 법정 ' + z.lawFar + '%' : '')}
+      ${card('최대 건축면적', bcr != null && area ? Math.floor(area * bcr / 100).toLocaleString() + '㎡' : '—', bcr != null && area ? py(area * bcr / 100) + '평 · 이격은 아래 그림' : '')}
+      ${card('최대 연면적', far != null && area ? Math.floor(area * far / 100).toLocaleString() + '㎡' : '—', area ? '대지 ' + area.toLocaleString() + '㎡ (' + py(area) + '평) 기준' : '')}
+    </div>${r.zones.length > 1 ? '<div class="hint" style="margin:-4px 0 10px">용도지역이 둘 이상입니다. 위 숫자는 첫 번째 용도지역 기준이니 아래 표를 확인하세요.</div>' : ''}`;
+  }
+  el.innerHTML = kp + dxLawHtml(s);
+  const note = $('lwNote'); if (note) note.remove();
+  if ($('lwRun')) $('lwRun').onclick = e => submitting(e.target, async () => {
+    e.target.textContent = '조회 중... (30초~1분)';
+    const res = await api({ action: 'dx_law', siteCode: s.code, address: $('lwAddr').value });
+    DX.d.law = res.law; toast('법규 검토를 마쳤습니다');
+    if (DX.sub === '사업성·규모' && $('dxBody')) { dxLawView($('dxBody'), s); dxTreeDraw(); }
+  });
+}
+function dxBimView(el, s) {
+  const again = async () => { await dxLoad(s.code, true); if (DX.sub === 'BIM 검토' && S.siteCode === s.code && $('dxBody')) dxBimView($('dxBody'), s); };
+  el.innerHTML = ifcPanelHtml(DX.d);
+  ifcBind(el, s, again);
+  clearTimeout(DX.poll);
+  ifcProcessPending(s).then(ran => { if (ran) again().catch(() => {}); });
+  if ((DX.d.pending || []).some(p => p.kind === 'ifc') || ifcDocs().some(x => x.status === '분석 대기')) DX.poll = setTimeout(() => { if (S.tab === 'design' && DX.sub === 'BIM 검토' && S.siteCode === s.code) again().catch(() => {}); }, 8000);
+}
+async function dxPerfView(el, s) {
+  el.innerHTML = '<div id="pfSection"><div class="loading">불러오는 중...</div></div>';
+  try { await pfLoad(s.code); } catch (e) { if ($('pfSection')) $('pfSection').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; return; }
+  if (S.tab !== 'design' || S.siteCode !== s.code || DX.sub !== '외피·성능' || !$('pfSection')) return;
+  pfRender($('pfSection'));
+}
 
 function renderDesignTab() {
   const s = currentSite();
-  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; return; }
+  if (!s) { $('main').innerHTML = '<div class="panel empty"><h3>볼 수 있는 현장이 없습니다</h3></div>'; if ($('dxTree')) $('dxTree').hidden = true; return; }
   clearTimeout(DX.poll);
   if (DX.site !== s.code) { DX.d = null; DX.sub = ''; }
-  $('main').innerHTML = `<div id="dsBrief"></div><div id="dxHead"></div><div id="dxBody"><div class="loading">불러오는 중...</div></div>`;
+  $('main').innerHTML = `<div id="dsBrief"></div><div id="dxHead"></div><div id="dxBody"><div class="loading">불러오는 중...</div></div><div id="dxFoot"></div>`;
   dsBrief(s.code);
   const draw = () => {
     if (S.tab !== 'design' || S.siteCode !== s.code || !$('dxHead')) return;
     const d = DX.d, subs = dxSubs(d);
-    if (!subs.includes(DX.sub)) DX.sub = subs[0];
-    $('dxHead').innerHTML = `<div class="dx-top">
+    if (!subs.includes(DX.sub)) DX.sub = d.canEdit && !(d.law && d.law.result) ? '사업성·규모' : (d.mode === '외부' ? '도면·견적자료' : '보드');
+    clearTimeout(DX.poll);
+    const flat = dxTreeList(d).flatMap(([, items]) => items), cur = flat.find(x => x.k === DX.sub);
+    $('dxHead').innerHTML = `<div class="dx-crumb">설계 › ${esc(dxGroupOf(DX.sub))} › ${esc(dxLabel(DX.sub))}</div>
+      <h2 class="dx-title">${cur && cur.no ? cur.no + '. ' : ''}${esc(dxLabel(DX.sub))}</h2>
+      <div class="dx-top">
         ${d.canEdit ? segHtml('dxMode', [['자체', '자체설계'], ['외부', '외부사무소 설계']], d.mode) : `<span class="pill">${d.mode === '외부' ? '외부사무소 설계' : '자체설계'}</span>`}
         ${d.canEdit ? segHtml('dxGrade', (d.grades || Object.keys(DX_GR)).map(g => [g, '목표 ' + (DX_GR[g] ? DX_GR[g].name : g)]), d.grade || 'PHIKO') : `<span class="pill">목표 ${esc((DX_GR[d.grade] || DX_GR.PHIKO).name)}</span>`}
         ${d.mode === '외부' ? (d.canEdit ? `<div class="f" style="margin:0"><input type="text" id="dxOffice" placeholder="설계사무소 이름" value="${esc(d.office)}"></div>` : `<span class="cr-sub">${esc(d.office)}</span>`) : ''}
       </div>
-      <div class="subnav" role="tablist">${subs.map(x => `<button class="chip" aria-pressed="${x === DX.sub}" data-dxsub="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
-    $('dxHead').querySelectorAll('[data-dxsub]').forEach(b => b.onclick = () => { DX.sub = b.dataset.dxsub; draw(); });
+      <div class="subnav dx-chips" role="tablist">${flat.map(x => `<button class="chip" aria-pressed="${x.k === DX.sub}" data-dxsub="${esc(x.k)}">${esc(x.label)}${x.kind === 'go' ? ' ↗' : ''}</button>`).join('')}</div>`;
+    $('dxHead').querySelectorAll('[data-dxsub]').forEach(b => b.onclick = () => dxGoSub(b.dataset.dxsub));
     bindSegs($('dxHead'), async (n, v) => {
       if (n === 'dxGrade') {
         try { await api({ action: 'dx_mode', siteCode: s.code, mode: d.mode, office: d.office, grade: v }); d.grade = v; toast('목표 등급: ' + DX_GR[v].name); draw(); } catch (e) { toast(e.message); }
@@ -6337,11 +6439,20 @@ function renderDesignTab() {
     });
     if ($('dxOffice')) $('dxOffice').onchange = e => api({ action: 'dx_mode', siteCode: s.code, mode: d.mode, office: e.target.value }).then(() => { d.office = e.target.value; toast('저장했습니다'); }).catch(x => toast(x.message));
     const body = $('dxBody');
-    if (DX.sub === '보드') dxBoard(body, s);
+    if (DX.sub === '사업성·규모') dxLawView(body, s);
+    else if (DX_SOON[DX.sub]) dxSoonView(body, DX.sub);
+    else if (DX.sub === '보드') dxBoard(body, s);
     else if (DX.sub === '도면·견적자료') dxDocsView(body, s);
+    else if (DX.sub === 'BIM 검토') dxBimView(body, s);
+    else if (DX.sub === '외피·성능') dxPerfView(body, s);
     else if (DX.sub === '회사 스펙북') renderSpecTab();
     else dxSchedule(body, s);
+    const seq = flat.filter(x => x.no && !x.kind), i = seq.findIndex(x => x.k === DX.sub), nx = i >= 0 ? seq[i + 1] : null;
+    $('dxFoot').innerHTML = nx ? `<div class="dx-foot"><button class="btn ghost" type="button" id="dxNext">다음: ${nx.no}. ${esc(nx.label)} →</button></div>` : '';
+    if ($('dxNext')) $('dxNext').onclick = () => { dxGoSub(nx.k); window.scrollTo({ top: 0 }); };
+    dxTreeDraw();
   };
+  DX.draw = draw;
   if (DX.site === s.code && DX.d) draw();
   dxLoad(s.code).then(draw).catch(e => { if ($('dxBody')) $('dxBody').innerHTML = `<section class="panel empty"><h3>불러오지 못했습니다</h3>${esc(e.message)}</section>`; });
 }
@@ -6783,14 +6894,13 @@ function dxDocsView(el, s) {
   const list = d.nasList || [];
   const pdfDocs = d.docs.filter(x => !(x.result && x.result.kind === 'ifc'));
   el.innerHTML = `
-    ${ifcPanelHtml(d)}
     ${d.canEdit ? `<section class="panel dx-nas" style="padding:16px;margin-bottom:12px">
       <h4 style="margin:0 0 4px">사무실 NAS에서 읽어오기</h4>
       <div class="hint">NAS 폴더: ${d.nasFolder ? `<b>${esc(d.nasFolder)}</b>` : '마스터에 NAS 폴더 경로가 없습니다'} · 사무실 PC가 켜져 있으면 몇 분 안에 처리됩니다. NAS 파일은 읽기만 하고 수정·이동하지 않습니다.</div>
       ${pend.length ? `<div class="notice" style="margin-top:10px">사무실 PC 처리 대기 ${pend.length}건 · ${pend.map(p => `${p.kind === 'list' ? '목록' : p.kind === 'ifc' ? 'IFC' : '파일 ' + p.paths.length + '개 판독'} (${esc(p.at.slice(5))} ${esc(p.by)})`).join(', ')} <button class="linkish" type="button" id="xRef">새로고침</button></div>` : ''}
       ${d.nasFail ? `<div class="notice" style="margin-top:10px">최근 요청 실패: ${esc(d.nasFail)}</div>` : ''}
       <div class="actions" style="justify-content:flex-start"><button class="btn ghost" type="button" id="xList" ${d.nasFolder ? '' : 'disabled'}>${list.length ? '목록 다시 읽기' : '파일 목록 읽어오기'}</button></div>
-      ${list.length ? `<div class="hint">목록 ${esc(d.nasListAt)} 기준 · 판독할 PDF·이미지를 고르세요 (최대 10개). IFC는 위 BIM 모델에서 고릅니다.</div>
+      ${list.length ? `<div class="hint">목록 ${esc(d.nasListAt)} 기준 · 판독할 PDF·이미지를 고르세요 (최대 10개). IFC는 'BIM 검토' 메뉴에서 고릅니다.</div>
         <ul>${list.map((f, i) => { const ok = DX_EXT_OK.test(f.name || f.path); return `<li><label class="${ok ? '' : 'dis'}"><input type="checkbox" data-np="${i}" ${ok ? '' : 'disabled'}> ${esc(f.path || f.name)} <span class="cr-sub">${f.size ? Math.round(f.size / 1024) + 'KB' : ''} ${esc(f.mtime || '')}</span></label></li>`; }).join('')}</ul>
         <div class="actions" style="justify-content:flex-start"><button class="btn" type="button" id="xPick">선택한 파일 판독</button></div>` : ''}
     </section>
@@ -6803,7 +6913,6 @@ function dxDocsView(el, s) {
     ${pdfDocs.length ? pdfDocs.map(dxDocHtml).join('') : '<section class="panel empty"><h3>판독한 PDF 도면이 없습니다</h3>IFC가 없을 때는 NAS에서 읽어오거나 PDF를 직접 올려주세요.</section>'}`;
   const again = async () => { await dxLoad(s.code, true); if (DX.sub === '도면·견적자료' && S.siteCode === s.code && $('dxBody')) dxDocsView($('dxBody'), s); };
   if ($('xRef')) $('xRef').onclick = () => again().catch(e => toast(e.message));
-  ifcBind(el, s, again);
   if ($('xList')) $('xList').onclick = e => submitting(e.target, async () => { await api({ action: 'dx_nas_request', siteCode: s.code, kind: 'list' }); await again(); toast('사무실 PC에 목록 요청을 보냈습니다'); });
   if ($('xPick')) $('xPick').onclick = e => submitting(e.target, async () => {
     const paths = [...el.querySelectorAll('[data-np]:checked')].map(x => list[Number(x.dataset.np)].path || list[Number(x.dataset.np)].name);
