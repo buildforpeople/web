@@ -53,6 +53,7 @@
   .me { display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
   .me .role { background: rgba(255,255,255,.16); padding: 2px 8px; border-radius: 999px; }
   .me button { background: none; border: 0; color: rgba(255,255,255,.8); font-size: 13px; padding: 4px; }
+  .me .app-ver { font-size: 10.5px; color: var(--muted); opacity: .75; padding: 2px 0 2px 4px; letter-spacing: .01em; }
   .tabs-row { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0; }
   .tabs { width: 100%; min-width: 0; padding: 0 12px; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
   .dyk { align-self: flex-start; max-width: calc(100% - 24px); min-width: 0; margin: 2px 12px 9px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; border-radius: 999px; padding: 5px 12px 5px 6px; font-size: 13px; text-align: left; }
@@ -899,6 +900,7 @@
       border-radius: 12px; padding: 10px 12px; }
     .dyk-text { white-space: normal; line-height: 1.45; font-size: 13px; }
     .me { order: 9; margin-top: auto; padding: 14px 20px 18px; border-top: 1px solid rgba(255,255,255,.12); flex-wrap: wrap; }
+    .me .app-ver { flex-basis: 100%; text-align: left; padding: 2px 0 0; }
     main { margin-left: var(--side); max-width: 1640px; padding: 26px 34px 60px; }
 
     .ca-grid { min-width: 1150px; }
@@ -1283,7 +1285,8 @@
 <body>
 
 
-<script>const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
+<script>const APP_VER = '1.1', APP_DATE = '2026.11.28';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
 
 <section class="login" id="loginView">
   <div class="login-card">
@@ -1302,7 +1305,7 @@
         <span class="sp sp-y" id="yearPickWrap"><select id="yearPick" aria-label="연도 선택"></select></span>
         <span class="sp sp-s"><select id="sitePick" aria-label="현장 선택"></select></span>
       </div>
-      <div class="me"><span id="meName"></span><span class="role" id="meRole"></span><button type="button" id="logoutBtn">로그아웃</button></div>
+      <div class="me"><span id="meName"></span><span class="role" id="meRole"></span><button type="button" id="logoutBtn">로그아웃</button><button type="button" class="app-ver" id="appVer" title="누르면 최신 버전으로 새로고침"></button></div>
     </div>
     <div class="tabs-row"><nav class="tabs" id="tabs" role="tablist"></nav>
       <button type="button" class="dyk" id="dyk" hidden aria-live="polite"><span class="dyk-tag">알고 계셨나요</span><span class="dyk-text" id="dykText"></span></button></div>
@@ -1466,6 +1469,8 @@ async function start() {
   }
 }
 
+$('appVer').textContent = `v${APP_VER} · ${APP_DATE}`;
+$('appVer').onclick = () => { $('appVer').textContent = '새로고침 중...'; fetch(location.href, { cache: 'reload' }).catch(() => {}).finally(() => location.reload()); };
 $('logoutBtn').onclick = () => {
   sessionStorage.removeItem(TOKEN_KEY);
   if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
@@ -3950,13 +3955,13 @@ const PF_AIR_RULE = '고기밀 주택: 약 1회(100L) 이하 교환 (90점/100) 
 function pfEnvList(el) {
   const d = PF.d, list = d.env || [];
   el.innerHTML = `<div class="cr-bar"><h2 style="font-size:17px">외피 구성</h2>
-      ${d.canEdit ? `<span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" id="pfPkgUse">패키지 적용</button>${list.length ? '<button class="btn ghost" type="button" id="pfPkgSave">패키지로 저장</button>' : ''}<button class="btn ghost" type="button" id="pfEnvNew">+ 부위 추가</button></span>` : ''}</div>
+      ${d.canEdit ? `<span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" id="pfPkgUse">패키지 적용</button><button class="btn ghost" type="button" id="pfEnvNew">+ 부위 추가</button></span>` : ''}</div>
     ${list.length ? list.map(e => {
       const u = Number(e.uValue), layers = e.layers || [];
       return `<section class="panel ov-block pf-env" data-id="${esc(e.id)}">
         <div class="pf-head"><div><span class="cr-id">${esc(e.part)}${e.woodRatio ? ' · 목재 비율 ' + Math.round(e.woodRatio * 100) + '%' : ''}</span>
           <h4 style="margin:2px 0">U = ${u.toFixed(3)}</h4><div class="pf-stds">${pfBadges(e.part, u)}</div></div>
-          ${d.canEdit ? `<span style="margin-left:auto"><button class="btn ghost" type="button" data-edit="${esc(e.id)}">수정</button></span>` : ''}</div>
+          ${d.canEdit ? `<span style="margin-left:auto;display:flex;gap:6px"><button class="btn ghost" type="button" data-pksave="${esc(e.id)}">패키지로 저장</button><button class="btn ghost" type="button" data-edit="${esc(e.id)}">수정</button></span>` : ''}</div>
         ${layers.length ? `<table class="pf-layers"><tr><th>층 (실내 → 실외)</th><th>두께</th><th>λ</th><th>R</th></tr>
           ${layers.map(l => { const t = (Number(l.thick) || 0) / 1000, k = Number(l.k) || 0, r = k > 0 ? t / k : (Number(l.r) || 0);
             return `<tr><td>${esc(l.name)}${l.inWood ? ' <span class="tag">구조재 사이</span>' : ''}</td><td>${l.thick ? l.thick + 'mm' : '—'}</td><td>${k ? k.toFixed(3) : '—'}</td><td>${r ? r.toFixed(3) : '—'}</td></tr>`;
@@ -3966,21 +3971,27 @@ function pfEnvList(el) {
     }).join('') : `<section class="panel empty"><h3>등록된 외피 구성이 없습니다</h3>${d.canEdit ? '[+ 부위 추가]로 지붕·외벽·바닥·창호를 입력하면 U값이 자동 계산됩니다.' : ''}</section>`}`;
   if ($('pfEnvNew')) $('pfEnvNew').onclick = () => pfEnvForm(null);
   if ($('pfPkgUse')) $('pfPkgUse').onclick = pfPkgUse;
-  if ($('pfPkgSave')) $('pfPkgSave').onclick = pfPkgSaveForm;
+  el.querySelectorAll('[data-pksave]').forEach(b => b.onclick = e => { e.stopPropagation(); pfPkgSaveForm((PF.d.env || []).find(x => x.id === b.dataset.pksave)); });
   el.querySelectorAll('[data-edit]').forEach(b => b.onclick = e => { e.stopPropagation(); pfEnvForm((PF.d.env || []).find(x => x.id === b.dataset.edit)); });
 }
 
 function pfPkgLine(it) { return `${esc(it.part)} U ${Number(it.uValue || 0).toFixed(3)}`; }
+function pfPkgLayers(it) { return (it.layers || []).map(l => `${l.name}${l.thick ? ' ' + l.thick : ''}`).join(' · '); }
 function pfPkgUse() {
   const d = PF.d, pk = d.pkgs || [], have = (d.env || []).map(e => e.part);
-  const body = openSheet('외피 패키지 적용', esc(d.site.code + ' ' + d.site.name), pk.length ? `
-    <div class="hint" style="margin-bottom:12px">패키지를 누르면 그 구성이 이 현장에 한 번에 들어갑니다. 같은 부위가 이미 있으면 패키지 내용으로 바뀝니다.</div>
-    ${pk.map(p => `<section class="panel pf-pkg"><div class="pf-pkg-main"><b>${esc(p.name)}</b>${p.desc ? `<span class="cr-sub">${esc(p.desc)}</span>` : ''}
-        <div class="pf-pkg-parts">${p.items.map(it => `<span class="${have.includes(it.part) ? 'over' : ''}">${pfPkgLine(it)}</span>`).join('')}</div>
+  const parts = d.parts.map(p => p.key), single = pk.filter(p => p.items.length === 1), multi = pk.filter(p => p.items.length > 1);
+  const card = p => `<section class="panel pf-pkg"><div class="pf-pkg-main"><b>${esc(p.name)}</b>${p.desc ? `<span class="cr-sub">${esc(p.desc)}</span>` : ''}
+        ${p.items.length === 1 ? `<div class="cr-sub">U ${Number(p.items[0].uValue || 0).toFixed(3)}${p.items[0].layers && p.items[0].layers.length ? ' · ' + esc(pfPkgLayers(p.items[0])) : ''}</div>`
+          : `<div class="pf-pkg-parts">${p.items.map(it => `<span class="${have.includes(it.part) ? 'over' : ''}">${pfPkgLine(it)}</span>`).join('')}</div>`}
         <div class="cr-sub">${esc(p.by || '')} · ${esc(String(p.updatedAt || '').slice(0, 10))}</div></div>
-      <div class="pf-pkg-b"><button type="button" class="btn sm" data-pk="${esc(p.id)}">적용</button><button type="button" class="linkish" data-pkdel="${esc(p.id)}">삭제</button></div></section>`).join('')}
-    <div class="hint">노란 테두리 부위는 이 현장에 이미 있어 덮어씁니다.</div>`
-    : `<div class="panel empty"><h3>저장된 패키지가 없습니다</h3>한 현장에서 외피 구성을 입력한 뒤 [패키지로 저장]을 누르면 다른 현장에서 불러올 수 있습니다.</div>`);
+      <div class="pf-pkg-b"><button type="button" class="btn sm" data-pk="${esc(p.id)}">적용</button><button type="button" class="linkish" data-pkdel="${esc(p.id)}">삭제</button></div></section>`;
+  const groups = [...parts, ...single.map(p => p.items[0].part).filter(x => !parts.includes(x))].filter((x, i, a) => a.indexOf(x) === i)
+    .map(part => [part, single.filter(p => p.items[0].part === part)]).filter(g => g[1].length);
+  const body = openSheet('외피 패키지 적용', esc(d.site.code + ' ' + d.site.name), pk.length ? `
+    <div class="hint" style="margin-bottom:12px">부위별 패키지입니다. 적용하면 이 현장의 그 부위가 패키지 내용으로 들어가고, 이미 있으면 바뀝니다.</div>
+    ${groups.map(([part, list]) => `<h4 style="margin:14px 0 8px">${esc(part)}${have.includes(part) ? ' <span class="cr-sub" style="font-weight:400">· 이 현장에 이미 있음 (적용하면 바뀜)</span>' : ''}</h4>${list.map(card).join('')}`).join('')}
+    ${multi.length ? `<h4 style="margin:18px 0 8px">여러 부위 묶음 <span class="cr-sub" style="font-weight:400">· 이전 방식</span></h4>${multi.map(card).join('')}<div class="hint">노란 테두리 부위는 이 현장에 이미 있어 덮어씁니다.</div>` : ''}`
+    : `<div class="panel empty"><h3>저장된 패키지가 없습니다</h3>외피 구성 각 부위의 [패키지로 저장]을 누르면 다른 현장에서 불러올 수 있습니다.</div>`);
   body.querySelectorAll('[data-pk]').forEach(b => b.onclick = () => {
     const p = pk.find(x => x.id === b.dataset.pk), over = p.items.filter(it => have.includes(it.part)).map(it => it.part);
     if (over.length && !confirm(`${over.join('·')} 구성을 '${p.name}' 내용으로 바꿉니다. 진행할까요?`)) return;
@@ -3992,19 +4003,19 @@ function pfPkgUse() {
     submitting(b, async () => { const r = await api({ action: 'pf_pkg_delete', siteCode: d.site.code, id: p.id }); PF.d.pkgs = r.pkgs; pfPkgUse(); toast('삭제했습니다'); });
   });
 }
-function pfPkgSaveForm() {
-  const d = PF.d, env = d.env || [], pk = d.pkgs || [];
-  const body = openSheet('외피 패키지로 저장', esc(d.site.code + ' ' + d.site.name), `
-    <div class="hint" style="margin-bottom:12px">이 현장의 외피 구성을 템플릿으로 저장합니다. 같은 이름이 있으면 새 내용으로 바뀝니다.</div>
-    <div class="f"><label>패키지 이름</label><input type="text" id="pkN" list="pkNames" placeholder="예: CLT 표준 외피"><datalist id="pkNames">${pk.map(p => `<option value="${esc(p.name)}">`).join('')}</datalist></div>
-    <div class="f"><label>설명 (선택)</label><input type="text" id="pkD" placeholder="예: CLT 120 + 목섬유 외단열 200, 3중 유리"></div>
-    <div class="f"><span class="lb">넣을 부위</span>${env.map(e => `<label class="check"><input type="checkbox" class="pkP" value="${esc(e.part)}" checked> ${esc(e.part)} <span class="hint">U ${Number(e.uValue).toFixed(3)}</span></label>`).join('')}</div>
+function pfPkgSaveForm(env) {
+  if (!env) return;
+  const d = PF.d, part = env.part, pk = (d.pkgs || []).filter(p => p.items.length === 1 && p.items[0].part === part);
+  const body = openSheet(`${esc(part)} 패키지로 저장`, esc(d.site.code + ' ' + d.site.name), `
+    <div class="hint" style="margin-bottom:12px">이 현장의 <b>${esc(part)}</b> 구성(U ${Number(env.uValue).toFixed(3)})을 패키지로 저장합니다. 다른 현장에서 [패키지 적용]으로 불러올 수 있고, 같은 이름의 ${esc(part)} 패키지가 있으면 새 내용으로 바뀝니다.</div>
+    ${(env.layers || []).length ? `<div class="cr-sub" style="margin-bottom:12px">${esc(pfPkgLayers(env))}</div>` : ''}
+    <div class="f"><label>패키지 이름</label><input type="text" id="pkN" list="pkNames" placeholder="${part === '외벽' ? '예: CLT 100 + 네오폴 150 외단열' : part === '지붕' ? '예: 경목 2x10 + 글라스울 275' : '예: ' + esc(part) + ' 표준'}"><datalist id="pkNames">${pk.map(p => `<option value="${esc(p.name)}">`).join('')}</datalist></div>
+    <div class="f"><label>설명 (선택)</label><input type="text" id="pkD" placeholder="예: 스타코 마감, 중부1 기준 통과"></div>
     <div class="actions"><button class="btn" type="button" id="pkGo">저장</button></div>`);
   body.querySelector('#pkGo').onclick = e => submitting(e.target, async () => {
     const name = $('pkN').value.trim(); if (!name) throw new Error('패키지 이름을 입력하세요.');
-    const parts = [...body.querySelectorAll('.pkP:checked')].map(x => x.value); if (!parts.length) throw new Error('부위를 하나 이상 고르세요.');
-    if (pk.some(p => p.name === name) && !confirm(`'${name}' 패키지를 지금 내용으로 바꿀까요?`)) return;
-    const r = await api({ action: 'pf_pkg_save', siteCode: d.site.code, name, desc: $('pkD').value, parts });
+    if (pk.some(p => p.name === name) && !confirm(`'${name}' ${part} 패키지를 지금 내용으로 바꿀까요?`)) return;
+    const r = await api({ action: 'pf_pkg_save', siteCode: d.site.code, name, desc: $('pkD').value, parts: [part] });
     PF.d.pkgs = r.pkgs; closeSheet(); toast(`'${name}' 패키지로 저장했습니다`);
   });
 }
