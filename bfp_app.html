@@ -1265,10 +1265,12 @@
   .dx-site .sv-l { font-size: var(--fs); fill: var(--muted); text-anchor: middle; dominant-baseline: middle; font-family: inherit; }
   .dx-site .sv-l.road { fill: var(--ink); }
   .dx-site .sv-l.rect { fill: #f2c14e; font-weight: 700; }
+  .dx-site .sv-foot { fill: rgba(242,193,78,.22); stroke: #f2c14e; stroke-width: .16; stroke-linejoin: round; }
+  .dx-site .sv-foot-r rect { fill: rgba(242,193,78,.4); }
   .dx-site .sv-l.n { fill: var(--ink); font-weight: 700; }
   .dx-site-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin: 6px 0 2px; }
   .dx-site-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -2px; }
-  .dx-site-legend .lg-b { background: #5fb38a; opacity: .7; } .dx-site-legend .lg-r { background: #8a8f98; opacity: .5; } .dx-site-legend .lg-x { border: 1.5px dashed #f2c14e; }
+  .dx-site-legend .lg-b { background: #5fb38a; opacity: .7; } .dx-site-legend .lg-r { background: #8a8f98; opacity: .5; } .dx-site-legend .lg-x { background: rgba(242,193,78,.3); border: 1.5px solid #f2c14e; }
   .dx-pr-i { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; }
   .dx-pr-i input { margin-top: 3px; flex: none; }
   .dx-pr-i > span { display: flex; flex-direction: column; gap: 2px; }
@@ -1303,7 +1305,7 @@
 <body>
 
 
-<script>const APP_VER = '1.3', APP_DATE = '2026.11.28';
+<script>const APP_VER = '1.4', APP_DATE = '2026.11.28';
 const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
 
 <section class="login" id="loginView">
@@ -6644,7 +6646,47 @@ function dxLawHtml(s) {
     ${body}</div>`;
 }
 
-function dxSiteSvg(st) {
+function dxPolyArea(P) { let a = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; }
+function dxFootprint(st, target) {
+  const R = st.ring.slice(0, st.ring.length > 1 && st.ring[0][0] === st.ring[st.ring.length - 1][0] && st.ring[0][1] === st.ring[st.ring.length - 1][1] ? -1 : undefined);
+  const sg = dxPolyArea(R) >= 0 ? 1 : -1;
+  const E = st.edges.map(e => { const dx = e.b[0] - e.a[0], dy = e.b[1] - e.a[1], L = Math.hypot(dx, dy) || 1; return { a: e.a, b: e.b, d: e.d || 0, nx: -dy / L * sg, ny: dx / L * sg }; });
+  const convex = R.every((p, i) => { const a = R[(i + R.length - 1) % R.length], c = R[(i + 1) % R.length]; return ((p[0] - a[0]) * (c[1] - p[1]) - (p[1] - a[1]) * (c[0] - p[0])) * sg >= -1e-6; });
+  const segD = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0; return Math.hypot(a[0] + t * dx - p[0], a[1] + t * dy - p[1]); };
+  const inRing = p => { let x = p[0], y = p[1], c = false; for (let i = 0, j = R.length - 1; i < R.length; j = i++) { const [xi, yi] = R[i], [xj, yj] = R[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+  const clip = t => {
+    let P = R.slice();
+    for (const e of E) {
+      const f = p => (p[0] - e.a[0]) * e.nx + (p[1] - e.a[1]) * e.ny - (e.d + t), out = [];
+      for (let i = 0; i < P.length; i++) {
+        const p = P[i], q = P[(i + 1) % P.length], fp = f(p), fq = f(q);
+        if (fp >= 0) out.push(p);
+        if ((fp >= 0) !== (fq >= 0)) { const k = fp / (fp - fq); out.push([p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k]); }
+      }
+      P = out; if (P.length < 3) return [];
+    }
+    return P;
+  };
+  const step = 0.25, [x0, y0, x1, y1] = st.bbox;
+  const raster = t => {
+    const runs = []; let n = 0;
+    for (let y = y0 + step / 2; y < y1; y += step) {
+      let s0 = null;
+      for (let x = x0 + step / 2; x < x1 + step; x += step) {
+        const ok = x < x1 && inRing([x, y]) && E.every(e => segD([x, y], e.a, e.b) >= e.d + t);
+        if (ok) { n++; if (s0 === null) s0 = x - step / 2; } else if (s0 !== null) { runs.push([y - step / 2, s0, x - step / 2]); s0 = null; }
+      }
+    }
+    return { runs, area: n * step * step };
+  };
+  const areaAt = t => convex ? Math.abs(dxPolyArea(clip(t))) : raster(t).area;
+  const full = areaAt(0);
+  let t = 0;
+  if (target && full > target) { let lo = 0, hi = 30; for (let i = 0; i < 22; i++) { const m = (lo + hi) / 2; if (areaAt(m) > target) lo = m; else hi = m; } t = hi; }
+  if (convex) { const P = clip(t); return P.length ? { poly: P, area: Math.abs(dxPolyArea(P)), inset: t, full } : null; }
+  const r = raster(t); return r.area ? { runs: r.runs, step, area: r.area, inset: t, full } : null;
+}
+function dxSiteSvg(st, foot) {
   const [x0, y0, x1, y1] = st.bbox, pad = 6, W = x1 - x0 + pad * 2, H = y1 - y0 + pad * 2;
   const fs = Math.max(0.9, Math.min(W, H) / 26);
   const X = x => (x - x0 + pad).toFixed(2), Y = y => (y1 - y + pad).toFixed(2);
@@ -6657,13 +6699,13 @@ function dxSiteSvg(st) {
     return L < 2.5 ? '' : `<text x="${X(mx + ix * off)}" y="${Y(my + iy * off)}" transform="rotate(${deg.toFixed(1)} ${X(mx + ix * off)} ${Y(my + iy * off)})" class="sv-l ${e.kind}">${esc(t)}</text>`;
   };
   const th = st.northDeg * Math.PI / 180, al = 2.2;
-  const rect = st.rect;
+  const rect = null, fc = foot && foot.poly ? foot.poly.reduce((c, p) => [c[0] + p[0] / foot.poly.length, c[1] + p[1] / foot.poly.length], [0, 0]) : null;
   return `<svg class="dx-site" viewBox="0 0 ${W.toFixed(1)} ${H.toFixed(1)}" style="--fs:${fs.toFixed(2)}px" role="img" aria-label="대지와 건축 가능 영역">
     ${st.roads.map(r => `<path d="${path(r)}" class="sv-road"/>`).join('')}
     <g class="sv-build">${st.runs.map(r => `<rect x="${X(r[1])}" y="${Y(r[0] + st.step)}" width="${(r[2] - r[1]).toFixed(2)}" height="${(st.step + 0.03).toFixed(2)}"/>`).join('')}</g>
     <path d="${path(st.ring)}" class="sv-lot"/>
-    ${rect ? `<rect x="${X(rect.x)}" y="${Y(rect.y + rect.d)}" width="${rect.w}" height="${rect.d}" class="sv-rect"/>
-      <text x="${X(rect.x + rect.w / 2)}" y="${Y(rect.y + rect.d / 2)}" class="sv-l rect">${rect.w}×${rect.d}m</text>` : ''}
+    ${foot && foot.poly ? `<path d="${path(foot.poly)}" class="sv-foot"/><text x="${X(fc[0])}" y="${Y(fc[1])}" class="sv-l rect">${Math.round(foot.area)}㎡</text>` : ''}
+    ${foot && foot.runs ? `<g class="sv-foot-r">${foot.runs.map(r => `<rect x="${X(r[1])}" y="${Y(r[0] + foot.step)}" width="${(r[2] - r[1]).toFixed(2)}" height="${(foot.step + 0.03).toFixed(2)}"/>`).join('')}</g>` : ''}
     ${st.edges.map(lab).join('')}
     <g transform="translate(${(W - 3.2).toFixed(2)} ${(3.6).toFixed(2)})">
       <circle r=".35" class="sv-nd"/><line x1="0" y1="0" x2=""${(Math.cos(th) * al).toFixed(2)}" y2="${(-Math.sin(th) * al).toFixed(2)}" class="sv-n"/>
@@ -6677,15 +6719,16 @@ function dxSiteHtml(r) {
   const byBcr = bcr != null ? lotA * bcr / 100 : null;
   const real = byBcr != null ? Math.min(byBcr, st.buildable) : st.buildable;
   const py = a => (a * 121 / 400).toFixed(1);
+  let foot = null; try { foot = dxFootprint(st, byBcr != null && byBcr < st.buildable ? byBcr : 0); } catch (e) {}
   return `<h5 style="margin:12px 0 4px">대지 모양과 건축 가능 영역</h5>
-    <div class="dx-site-wrap">${dxSiteSvg(st)}</div>
-    <div class="dx-site-legend"><span><i class="lg-b"></i>건축 가능 영역</span><span><i class="lg-r"></i>도로</span><span><i class="lg-x"></i>앉힐 수 있는 가장 큰 직사각형</span></div>
+    <div class="dx-site-wrap">${dxSiteSvg(st, foot)}</div>
+    <div class="dx-site-legend"><span><i class="lg-b"></i>건축 가능 영역</span><span><i class="lg-r"></i>도로</span>${foot ? `<span><i class="lg-x"></i>${foot.inset > 0.05 ? '건폐율 한도 1층 범위 (대지 모양을 따라 안쪽으로)' : '건축 가능 외곽선'}</span>` : ''}</div>
     <div class="dx-limit">
       <span>대지 ${lotA.toLocaleString()}㎡ (${py(lotA)}평)${r.land && r.land.area && Math.abs(r.land.area - st.area) > 3 ? ` <span class="cr-sub">도면상 ${st.area}㎡</span>` : ''}</span>
       <span>이격 후 건축 가능 ${st.buildable.toLocaleString()}㎡ (${py(st.buildable)}평)</span>
       ${byBcr != null ? `<span>건폐율 ${bcr}% 상한 ${Math.floor(byBcr).toLocaleString()}㎡</span>` : ''}
       <span class="${real < (byBcr || 0) ? 'warn' : ''}">실제 1층 최대 약 <b>${Math.floor(real).toLocaleString()}㎡ (${py(real)}평)</b>${byBcr != null ? (real < byBcr ? ' · 이격이 더 좁음' : ' · 건폐율이 한도') : ''}</span>
-      ${st.rect ? `<span>가장 큰 직사각형 ${st.rect.w}×${st.rect.d}m</span>` : ''}
+      ${foot && foot.inset > 0.05 ? `<span>1층 범위 예시 ${Math.round(foot.area)}㎡ · 이격선에서 ${foot.inset.toFixed(1)}m 안쪽</span>` : ''}
     </div>
     <div class="hint">${st.edges.filter(e => e.why.length).map(e => `${e.kind === 'road' ? '도로' : '인접대지'} ${e.len}m 변: ${e.why.join(', ')}`).join(' · ')}</div>
     <div class="hint">${st.notes.map(esc).join('<br>')}</div>`;
@@ -6732,7 +6775,7 @@ function dxPrDesc(desc, grade) {
   if (G[desc]) return esc(G[desc]) + (desc === 'u' ? ` <span class="cr-sub">· 에너지 ${esc(G.en)}</span>` : '');
   if (desc === 'site') {
     const st = DX.d.law && DX.d.law.result && DX.d.law.result.site;
-    return st ? `법규 검토 결과: 이격 후 건축 가능 ${st.buildable}㎡ (${(st.buildable * 121 / 400).toFixed(1)}평)${st.rect ? `, 가장 큰 직사각형 ${st.rect.w}×${st.rect.d}m` : ''}. 정북 이격 ${st.house ? '1.5m 반영' : '해당 없음'}.` : '법규 검토 카드에서 대지 분석을 먼저 실행하세요.';
+    return st ? `법규 검토 결과: 이격 후 건축 가능 ${st.buildable}㎡ (${(st.buildable * 121 / 400).toFixed(1)}평). 정북 이격 ${st.house ? '1.5m 반영' : '해당 없음'}.` : '법규 검토 카드에서 대지 분석을 먼저 실행하세요.';
   }
   if (desc === 'eave') return `서울 기준 하지 남중고도 약 76°, 동지 약 29°. 처마 깊이 ≈ 창 하단~처마 높이 × 0.25~0.3. <span class="dx-eave">높이 <input type="number" step="0.1" min="0.5" max="8" class="dx-eave-h" placeholder="2.4">m → 처마 <b class="dx-eave-o">-</b></span>`;
   return esc(desc);
