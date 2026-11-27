@@ -1285,7 +1285,7 @@
 <body>
 
 
-<script>const APP_VER = '1.1', APP_DATE = '2026.11.28';
+<script>const APP_VER = '1.2', APP_DATE = '2026.11.28';
 const API_URL = 'https://script.google.com/macros/s/AKfycbzc21WNSYNOg55Bc5W_lcUxMBmi4KN0JrkAMB84cvi6AbGf1Xsmy10MoTQz93BuxIdigA/exec';</script>
 
 <section class="login" id="loginView">
@@ -4049,7 +4049,11 @@ function pfEnvForm(o) {
     <div class="actions sticky">${o && d.canEdit ? '<button class="btn danger" type="button" id="pDel">삭제</button>' : ''}
       <button class="btn ghost" type="button" id="pClose">닫기</button><button class="btn" type="button" id="pSave">저장</button></div>`);
 
-  const matOpts = v => `<option value="">자재 선택</option>` + mats.map(m => `<option value="${esc(m.name)}" ${m.name === v ? 'selected' : ''}>${esc(m.name)}${m.k ? ` (λ ${m.k})` : ''}</option>`).join('');
+  const matOpt = (m, v) => `<option value="${esc(m.name)}" ${m.name === v ? 'selected' : ''}>${esc(m.name)}${m.k ? ` (λ ${m.k})` : ''}</option>`;
+  const matGroups = [...new Set(mats.map(m => m.g || ''))];
+  const matOpts = v => `<option value="">자재 선택</option>` + (matGroups.some(Boolean)
+    ? matGroups.map(g => `<optgroup label="${esc(g || '기타')}">${mats.filter(m => (m.g || '') === g).map(m => matOpt(m, v)).join('')}</optgroup>`).join('')
+    : mats.map(m => matOpt(m, v)).join('')) + (v && !mats.some(m => m.name === v) ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '');
   const addRow = (l) => {
     const div = document.createElement('div');
     div.className = 'pf-row';
